@@ -1,5 +1,22 @@
 # Changelog 5.x
 
+## 5.23.0 (2024-10-28)
+### Features
+* feat(admin-web/assets): new archive ems by @theus77 in https://github.com/ems-project/elasticms/pull/1041
+* feat(admin/release): unpublish revision table use es query by @Davidmattei in https://github.com/ems-project/elasticms/pull/1052
+* feat(common/cli): file structure api or storage manager by @Davidmattei in https://github.com/ems-project/elasticms/pull/1045
+* feat(common/twig): new filter ems_valid_email by @Davidmattei in https://github.com/ems-project/elasticms/pull/1051
+* feat(contentType/field): asset field type add label field by @theus77 in https://github.com/ems-project/elasticms/pull/1055
+* feat(contentType/version): new not blank version option by @Davidmattei in https://github.com/ems-project/elasticms/pull/1054
+### Bug Fixes
+* fix(common/storage): log error on register services by @Davidmattei in https://github.com/ems-project/elasticms/pull/1046
+### Code Refactoring
+* refactor(admin): useless security access control since PR#1039 by @theus77 in https://github.com/ems-project/elasticms/pull/1057
+* refactor(asset): deprecated emsch proxy routes by @theus77 in https://github.com/ems-project/elasticms/pull/1050
+* refactor(common/cli): file structure use new ems archive by @theus77 in https://github.com/ems-project/elasticms/pull/1043
+### Chores
+* chore(doc): add example ems_dom_crawler twig filter by @Davidmattei in https://github.com/ems-project/elasticms/pull/1047
+
 ## 5.22.2 (2024-10-28)
 ### Bug Fixes
 * fix(admin/contentType): locale default null not 'en' by @Davidmattei in https://github.com/ems-project/elasticms/pull/1049
