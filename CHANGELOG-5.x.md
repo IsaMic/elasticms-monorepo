@@ -1,5 +1,11 @@
 # Changelog 5.x
 
+## 5.22.2 (2024-10-28)
+### Bug Fixes
+* fix(admin/contentType): locale default null not 'en' by @Davidmattei in https://github.com/ems-project/elasticms/pull/1049
+* fix(admin/security): give public access to route prefixed with /bundle by @theus77 in https://github.com/ems-project/elasticms/pull/1053
+* fix(common/storage): s3 upload key bucket aware by @Davidmattei in https://github.com/ems-project/elasticms/pull/1044
+
 ## 5.22.1 (2024-10-11)
 ### Bug Fixes
 * fix(admin/cli): reindex skip lock and with_warnings false by @Davidmattei in https://github.com/ems-project/elasticms/pull/1035
