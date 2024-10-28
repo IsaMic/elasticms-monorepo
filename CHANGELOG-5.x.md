@@ -1,5 +1,9 @@
 # Changelog 5.x
 
+## 5.21.4 (2024-10-28)
+### Bug Fixes
+* fix(admin/security): give public access to route prefixed with /bundle by @theus77 in https://github.com/ems-project/elasticms/pull/1053
+
 ## 5.21.3 (2024-10-11)
 ### Bug Fixes
 * fix(admin/datatable): revert remove table-responsive by @Davidmattei in https://github.com/ems-project/elasticms/pull/1023
