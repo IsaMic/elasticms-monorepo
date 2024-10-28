@@ -19,6 +19,10 @@
 ### Code Refactoring
 * refactor(admin/datatable): i18n & wysiwyg datatables by @Davidmattei in https://github.com/ems-project/elasticms/pull/974
 
+## 5.19.5 (2024-10-28)
+### Bug Fixes
+* fix(admin/security): give public access to route prefixed with /bundle by @theus77 in https://github.com/ems-project/elasticms/pull/1053
+
 ## 5.19.4 (2024-10-11)
 ### Bug Fixes
 * fix(ems/asset): unzip assets in admin (both in edit and view revision) by @theus77 in https://github.com/ems-project/elasticms/pull/1039
