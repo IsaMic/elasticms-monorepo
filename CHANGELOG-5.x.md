@@ -1,5 +1,11 @@
 # Changelog 5.x
 
+## 5.22.2 (2024-10-28)
+### Bug Fixes
+* fix(admin/contentType): locale default null not 'en' by @Davidmattei in https://github.com/ems-project/elasticms/pull/1049
+* fix(admin/security): give public access to route prefixed with /bundle by @theus77 in https://github.com/ems-project/elasticms/pull/1053
+* fix(common/storage): s3 upload key bucket aware by @Davidmattei in https://github.com/ems-project/elasticms/pull/1044
+
 ## 5.22.1 (2024-10-11)
 ### Bug Fixes
 * fix(admin/cli): reindex skip lock and with_warnings false by @Davidmattei in https://github.com/ems-project/elasticms/pull/1035
@@ -27,6 +33,10 @@
 * refactor(admin/cli): replace EmsCommand.php by AbstractCommand from c…   …ommon by @Davidmattei in https://github.com/ems-project/elasticms/pull/1022
 ### Chores
 * chore(demo): remove double 'french_stop' from backup. by @theus77 in https://github.com/ems-project/elasticms/pull/1018
+
+## 5.21.4 (2024-10-28)
+### Bug Fixes
+* fix(admin/security): give public access to route prefixed with /bundle by @theus77 in https://github.com/ems-project/elasticms/pull/1053
 
 ## 5.21.3 (2024-10-11)
 ### Bug Fixes
@@ -60,6 +70,10 @@
 ### Code Refactoring
 * refactor(common): use helper types and remove common types by @theus77 in https://github.com/ems-project/elasticms/pull/998
 
+## 5.20.3 (2024-10-28)
+### Bug Fixes
+* fix(admin/security): give public access to route prefixed with /bundle by @theus77 in https://github.com/ems-project/elasticms/pull/1053
+
 ## 5.20.2 (2024-10-11)
 ### Bug Fixes
 * fix(ems/asset): unzip assets in admin (both in edit and view revision) by @theus77 in https://github.com/ems-project/elasticms/pull/1039
@@ -78,6 +92,10 @@
 * fix(admin/twig): align core and admin templates by @Davidmattei in https://github.com/ems-project/elasticms/pull/988
 ### Code Refactoring
 * refactor(admin/datatable): i18n & wysiwyg datatables by @Davidmattei in https://github.com/ems-project/elasticms/pull/974
+
+## 5.19.5 (2024-10-28)
+### Bug Fixes
+* fix(admin/security): give public access to route prefixed with /bundle by @theus77 in https://github.com/ems-project/elasticms/pull/1053
 
 ## 5.19.4 (2024-10-11)
 ### Bug Fixes
