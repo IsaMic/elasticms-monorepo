@@ -1,5 +1,9 @@
 # Changelog 5.x
 
+## 5.22.3 (2024-11-04)
+### Bug Fixes
+* fix(admin/contentType): locale option array on dateRange by @Davidmattei in https://github.com/ems-project/elasticms/pull/1059
+
 ## 5.22.2 (2024-10-28)
 ### Bug Fixes
 * fix(admin/contentType): locale default null not 'en' by @Davidmattei in https://github.com/ems-project/elasticms/pull/1049
