@@ -1,5 +1,10 @@
 # Changelog 5.x
 
+## 5.23.2 (2024-11-12)
+### Bug Fixes
+* fix(admin/form-submission): remove file fields (which are saved as empty array) by @theus77 in https://github.com/ems-project/elasticms/pull/1072
+* fix(admin/revision): add ouuid_idx for better performance by @theus77 in https://github.com/ems-project/elasticms/pull/1068
+
 ## 5.23.1 (2024-11-04)
 ### Bug Fixes
 * fix(admin/contentType): locale option array on dateRange by @Davidmattei in https://github.com/ems-project/elasticms/pull/1059

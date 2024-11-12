@@ -94,6 +94,7 @@ class ReleaseCommand extends AbstractCommand
 
             return self::SUCCESS;
         } catch (\Throwable $e) {
+            throw $e;
             $this->io->error($e->getMessage());
 
             return self::FAILURE;
