@@ -1,5 +1,10 @@
 # Changelog 5.x
 
+## 5.23.3 (2024-11-26)
+### Bug Fixes
+* fix(admin/field): multiple asset must use the id of the children (not the parent) by @theus77 in https://github.com/ems-project/elasticms/pull/1075
+* fix(common/storage): If 404 the file is missing (otherwise throws an error) in HTTP storage service by @theus77 in https://github.com/ems-project/elasticms/pull/1077
+
 ## 5.23.2 (2024-11-12)
 ### Bug Fixes
 * fix(admin/form-submission): remove file fields (which are saved as empty array) by @theus77 in https://github.com/ems-project/elasticms/pull/1072
