@@ -1,5 +1,24 @@
 # Changelog 5.x
 
+## 5.24.0 (2024-11-26)
+### Features
+* feat(admin/cli): forward form submissions by @theus77 in https://github.com/ems-project/elasticms/pull/1070
+* feat(cli): preload archive in cache by @theus77 in https://github.com/ems-project/elasticms/pull/1079
+* feat(common/api): publish api (client/server)+ command by @theus77 in https://github.com/ems-project/elasticms/pull/1080
+* feat(helper/uuid): generate uuid from value by @Davidmattei in https://github.com/ems-project/elasticms/pull/1064
+### Bug Fixes
+* fix(admin/cli): activate content type command fix configure by @Davidmattei in https://github.com/ems-project/elasticms/pull/1074
+* fix(admin/cli): reindex command doctrine paginate with bulkSize by @Davidmattei in https://github.com/ems-project/elasticms/pull/1071
+* fix(admin/revision): data not consumed error on publishing new version by @Davidmattei in https://github.com/ems-project/elasticms/pull/1066
+* fix(admin/revision): finalize draft setMetaFields by @Davidmattei in https://github.com/ems-project/elasticms/pull/1065
+* fix(admin/revision): no 'data_not_consumed' warning for private fields by @Davidmattei in https://github.com/ems-project/elasticms/pull/1069
+* fix(cli/command): file import config normal merge (for overwritting) by @Davidmattei in https://github.com/ems-project/elasticms/pull/1063
+* fix(cli/command): file reader import generate version uuid by @Davidmattei in https://github.com/ems-project/elasticms/pull/1067
+* fix(cli/file-import): improvements and config(s) hashes or files by @Davidmattei in https://github.com/ems-project/elasticms/pull/1056
+* fix(cli/file-structure): improve push command (save_hash_file, chunk size) by @theus77 in https://github.com/ems-project/elasticms/pull/1076
+### Code Refactoring
+* refactor(web): routing and templating match the content type name by @theus77 in https://github.com/ems-project/elasticms/pull/1073
+
 ## 5.23.3 (2024-11-26)
 ### Bug Fixes
 * fix(admin/field): multiple asset must use the id of the children (not the parent) by @theus77 in https://github.com/ems-project/elasticms/pull/1075
