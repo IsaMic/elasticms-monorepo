@@ -1,5 +1,17 @@
 # Changelog 5.x
 
+## 5.23.4 (2024-12-09)
+### Bug Fixes
+* fix(admin/asset): extractor test the filesize before downloading it by @theus77 in https://github.com/ems-project/elasticms/pull/1096
+* fix(admin/asset): on upload correct set preview link by @theus77 in https://github.com/ems-project/elasticms/pull/1098
+* fix(admin/field): deep recompute time field type by @theus77 in https://github.com/ems-project/elasticms/pull/1094
+* fix(admin/job): avoid that JSON messages are hidden (overwrite) by @theus77 in https://github.com/ems-project/elasticms/pull/1100
+* fix(admin/revision): restore trash locked exception by @Davidmattei in https://github.com/ems-project/elasticms/pull/1087
+* fix(cli/file-reader): import miss formated excel by @theus77 in https://github.com/ems-project/elasticms/pull/1090
+* fix(common/mime-types): add XLIFF mimetype support by @theus77 in https://github.com/ems-project/elasticms/pull/1097
+* fix(common/pdf): allow domPDF to use TempFile (in the system dir) by @theus77 in https://github.com/ems-project/elasticms/pull/1086
+* fix(web/client): updateStyleSets set correct mimetype and filename by @theus77 in https://github.com/ems-project/elasticms/pull/1099
+
 ## 5.23.3 (2024-11-26)
 ### Bug Fixes
 * fix(admin/field): multiple asset must use the id of the children (not the parent) by @theus77 in https://github.com/ems-project/elasticms/pull/1075
@@ -33,6 +45,15 @@
 * refactor(common/cli): file structure use new ems archive by @theus77 in https://github.com/ems-project/elasticms/pull/1043
 ### Chores
 * chore(doc): add example ems_dom_crawler twig filter by @Davidmattei in https://github.com/ems-project/elasticms/pull/1047
+
+## 5.22.4 (2024-12-09)
+### Bug Fixes
+* fix(admin/asset): extractor test the filesize before downloading it by @theus77 in https://github.com/ems-project/elasticms/pull/1096
+* fix(admin/asset): on upload correct set preview link by @theus77 in https://github.com/ems-project/elasticms/pull/1098
+* fix(admin/field): deep recompute time field type by @theus77 in https://github.com/ems-project/elasticms/pull/1094
+* fix(admin/job): avoid that JSON messages are hidden (overwrite) by @theus77 in https://github.com/ems-project/elasticms/pull/1100
+* fix(admin/revision): restore trash locked exception by @Davidmattei in https://github.com/ems-project/elasticms/pull/1087
+* fix(common/mime-types): add XLIFF mimetype support by @theus77 in https://github.com/ems-project/elasticms/pull/1097
 
 ## 5.22.3 (2024-11-04)
 ### Bug Fixes
@@ -71,6 +92,14 @@
 * refactor(admin/cli): replace EmsCommand.php by AbstractCommand from c…   …ommon by @Davidmattei in https://github.com/ems-project/elasticms/pull/1022
 ### Chores
 * chore(demo): remove double 'french_stop' from backup. by @theus77 in https://github.com/ems-project/elasticms/pull/1018
+
+## 5.21.5 (2024-12-09)
+### Bug Fixes
+* fix(admin/asset): extractor test the filesize before downloading it by @theus77 in https://github.com/ems-project/elasticms/pull/1096
+* fix(admin/asset): on upload correct set preview link by @theus77 in https://github.com/ems-project/elasticms/pull/1098
+* fix(admin/field): deep recompute time field type by @theus77 in https://github.com/ems-project/elasticms/pull/1094
+* fix(admin/job): avoid that JSON messages are hidden (overwrite) by @theus77 in https://github.com/ems-project/elasticms/pull/1100
+* fix(admin/revision): restore trash locked exception by @Davidmattei in https://github.com/ems-project/elasticms/pull/1087
 
 ## 5.21.4 (2024-10-28)
 ### Bug Fixes
