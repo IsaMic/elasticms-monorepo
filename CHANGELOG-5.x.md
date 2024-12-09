@@ -1,5 +1,13 @@
 # Changelog 5.x
 
+## 5.21.5 (2024-12-09)
+### Bug Fixes
+* fix(admin/asset): extractor test the filesize before downloading it by @theus77 in https://github.com/ems-project/elasticms/pull/1096
+* fix(admin/asset): on upload correct set preview link by @theus77 in https://github.com/ems-project/elasticms/pull/1098
+* fix(admin/field): deep recompute time field type by @theus77 in https://github.com/ems-project/elasticms/pull/1094
+* fix(admin/job): avoid that JSON messages are hidden (overwrite) by @theus77 in https://github.com/ems-project/elasticms/pull/1100
+* fix(admin/revision): restore trash locked exception by @Davidmattei in https://github.com/ems-project/elasticms/pull/1087
+
 ## 5.21.4 (2024-10-28)
 ### Bug Fixes
 * fix(admin/security): give public access to route prefixed with /bundle by @theus77 in https://github.com/ems-project/elasticms/pull/1053
