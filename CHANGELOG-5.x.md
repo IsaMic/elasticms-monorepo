@@ -1,5 +1,9 @@
 # Changelog 5.x
 
+## 5.23.5 (2024-12-17)
+### Bug Fixes
+* fix(common/pdf): dom pdf correct set $sysCacheDir by @theus77 in https://github.com/ems-project/elasticms/pull/1103
+
 ## 5.23.4 (2024-12-09)
 ### Bug Fixes
 * fix(admin/asset): extractor test the filesize before downloading it by @theus77 in https://github.com/ems-project/elasticms/pull/1096
