@@ -1,5 +1,18 @@
 # Changelog 5.x
 
+## 5.25.0 (2024-12-18)
+### Features
+* feat(admin/environment): cli align unpublish not published documents by @Davidmattei in https://github.com/ems-project/elasticms/pull/1089
+* feat(admin/submission): add export command filter by expression by @theus77 in https://github.com/ems-project/elasticms/pull/1085
+* feat(cli): enable symfony debug bundle in dev mode by @Davidmattei in https://github.com/ems-project/elasticms/pull/1081
+* feat(common/twig): new filter ems_date by @Davidmattei in https://github.com/ems-project/elasticms/pull/1102
+* feat(common/twig): new filter ems_int by @Davidmattei in https://github.com/ems-project/elasticms/pull/1104
+### Bug Fixes
+* fix(web/translations): support locales without EMSCH_LOCALES by @theus77 in https://github.com/ems-project/elasticms/pull/1107
+* fix(web/twig): ems_template_exists use template builder by @theus77 in https://github.com/ems-project/elasticms/pull/1062
+### Code Refactoring
+* refactor(common): add ems:submissions:forward from core by @theus77 in https://github.com/ems-project/elasticms/pull/1106
+
 ## 5.24.3 (2024-12-17)
 ### Bug Fixes
 * fix(common/pdf): dom pdf correct set $sysCacheDir by @theus77 in https://github.com/ems-project/elasticms/pull/1103
