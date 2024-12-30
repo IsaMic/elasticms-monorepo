@@ -1,37 +1,36 @@
 import { defineConfig } from 'vite'
 import inject from '@rollup/plugin-inject'
-import { fileURLToPath, URL } from 'node:url'
+import liveReload from 'vite-plugin-live-reload'
 
 export default defineConfig({
   server: {
-    proxy: {
-      '/index.php': {
-        target: 'http://127.0.0.1:8881',
-        changeOrigin: false,
-        secure: false,
-        xfwd: true,
-        headers: {
-          'x-ems-debug': 'debug'
-        },
-      },
-      '/bundles': {
-        target: 'http://127.0.0.1:8881',
-        changeOrigin: false,
-        secure: false,
-        xfwd: true,
-      },
-    },
+    host: '0.0.0.0',
+    origin: 'http://localhost:5173',
+    port: 5173,
+    strictPort: true,
+    hmr: true,
+    watch: {
+      usePolling: true,
+    }
   },
+  base: './',
   plugins: [
+    liveReload('../src/Resources/views/**/*.twig'),
+    liveReload('../../core-bundle/src/Resources/views/**/*.twig'),
     inject({
       jQuery: 'jquery',
-      $: 'jquery'
+      $: 'jquery',
+      exclude: ['**/*.scss', '**/*.css']
     })
   ],
   resolve: {
-    alias: {
-      '~bootstrap': fileURLToPath(new URL('./node_modules/bootstrap', import.meta.url)),
-      '@': fileURLToPath(new URL('./src', import.meta.url))
+    extensions: ['.js', '.ts']
+  },
+  css: {
+    preprocessorOptions: {
+      scss: {
+        api: 'modern-compiler',
+      }
     }
   },
   build: {
@@ -50,7 +49,6 @@ export default defineConfig({
         'edit-revision': 'src/edit-revision.js',
         hierarchical: 'src/hierarchical.js',
         i18n: 'src/i18n.js',
-        index: 'index.html',
         'managed-alias': 'src/managed-alias.js'
       }
     }
