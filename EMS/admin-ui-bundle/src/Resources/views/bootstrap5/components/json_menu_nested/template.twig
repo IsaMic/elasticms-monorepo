@@ -160,7 +160,7 @@
     {% set menuMore = template.block('jmn_button_more_menu', _context)|raw  %}
     {% if menuMore|length > 0 %}
         <div class="btn-group btn-group-sm">
-            <button type="button" class="btn btn-sm btn-default dropdown-toggle jmn-dropdown-more" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button>
+            <button type="button" class="btn btn-sm btn-default dropdown-toggle jmn-dropdown-more" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button>
             <ul class="{{ html_classes('dropdown-menu', { 'pull-right': (dropDown|default('right') == 'right') }) }}">
                 {{ menuMore|raw }}
             </ul>
@@ -178,7 +178,7 @@
 {%- endblock jmn_button_more_menu -%}
 
 {%- block jmn_button_copy -%}
-    <button class="jmn-btn-copy">{{- buttonLabel|default(node == config.nodes.root ? 'Copy all' : 'Copy') -}}</button>
+    <button class="jmn-btn-copy dropdown-item">{{- buttonLabel|default(node == config.nodes.root ? 'Copy all' : 'Copy') -}}</button>
 {%- endblock jmn_button_copy -%}
 
 {%- block jmn_button_paste -%}
@@ -186,7 +186,7 @@
         {%- set rootPaste = node == config.nodes.root and render.copyItem.type == config.nodes.root.type -%}
         {%- set itemPaste = render.copyItem.type in config.nodes.children(node)|keys -%}
         {%- if rootPaste or itemPaste -%}
-            <button class="jmn-btn-paste">{{- buttonLabel|default('Paste') -}}</button>
+            <button class="jmn-btn-paste dropdown-item">{{- buttonLabel|default('Paste') -}}</button>
         {%- endif -%}
     {%- endif -%}
 {%- endblock jmn_button_paste -%}
