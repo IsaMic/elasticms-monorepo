@@ -1,5 +1,14 @@
 # Changelog 5.x
 
+## 5.25.1 (2025-01-09)
+### Bug Fixes
+* fix(common/job): escape jobs command by @Davidmattei in https://github.com/ems-project/elasticms/pull/1121
+* fix(common/storage): put zip archive in cache by @theus77 in https://github.com/ems-project/elasticms/pull/1108
+* fix(core/field): a symfony form type name can not start by a dash by @theus77 in https://github.com/ems-project/elasticms/pull/1119
+* fix(core/file): return size and mimetype in the file api by @theus77 in https://github.com/ems-project/elasticms/pull/1118
+* fix(helper/file): bigger chunks for tempFile by @theus77 in https://github.com/ems-project/elasticms/pull/1109
+* fix(web/routing): emsch_routing transform with query string by @theus77 in https://github.com/ems-project/elasticms/pull/1120
+
 ## 5.25.0 (2024-12-18)
 ### Features
 * feat(admin/environment): cli align unpublish not published documents by @Davidmattei in https://github.com/ems-project/elasticms/pull/1089
