@@ -47,6 +47,12 @@
 ### Code Refactoring
 * refactor(web): routing and templating match the content type name by @theus77 in https://github.com/ems-project/elasticms/pull/1073
 
+## 5.23.6 (2025-01-09)
+### Bug Fixes
+* fix(core/file): return size and mimetype in the file api by @theus77 in https://github.com/ems-project/elasticms/pull/1118
+* fix(helper/file): bigger chunks for tempFile by @theus77 in https://github.com/ems-project/elasticms/pull/1109
+* fix(web/routing): emsch_routing transform with query string by @theus77 in https://github.com/ems-project/elasticms/pull/1120
+
 ## 5.23.5 (2024-12-17)
 ### Bug Fixes
 * fix(common/pdf): dom pdf correct set $sysCacheDir by @theus77 in https://github.com/ems-project/elasticms/pull/1103
