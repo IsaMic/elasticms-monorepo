@@ -1,5 +1,12 @@
 # Changelog 5.x
 
+## 5.24.4 (2025-01-09)
+### Bug Fixes
+* fix(common/storage): put zip archive in cache by @theus77 in https://github.com/ems-project/elasticms/pull/1108
+* fix(core/file): return size and mimetype in the file api by @theus77 in https://github.com/ems-project/elasticms/pull/1118
+* fix(helper/file): bigger chunks for tempFile by @theus77 in https://github.com/ems-project/elasticms/pull/1109
+* fix(web/routing): emsch_routing transform with query string by @theus77 in https://github.com/ems-project/elasticms/pull/1120
+
 ## 5.24.3 (2024-12-17)
 ### Bug Fixes
 * fix(common/pdf): dom pdf correct set $sysCacheDir by @theus77 in https://github.com/ems-project/elasticms/pull/1103
