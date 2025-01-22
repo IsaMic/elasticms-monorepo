@@ -4,7 +4,7 @@
     "authors": [
         {
             "name": "EMS Community",
-            "homepage": "https://github.com/ems-project/EMSClientHelperBundle/contributors"
+            "homepage": "https://github.com/ems-project/elasticms/contributors"
         }
     ],
     "license": "MIT",
@@ -47,7 +47,7 @@
         "onelogin/php-saml": "^4.1",
         "phpoffice/phpspreadsheet": "^1.29",
         "promphp/prometheus_client_php": "^2.9",
-        "psr/simple-cache": "^2.0",
+        "psr/simple-cache": "^3.0",
         "ramsey/uuid-doctrine": "^2.1",
         "ruflin/elastica": "^7.3",
         "scssphp/scssphp": "^2.0",
@@ -111,7 +111,6 @@
         "twig/twig": "^3.8"
     },
     "require-dev": {
-        "dg/bypass-finals": "^1.5",
         "friendsofphp/php-cs-fixer": "^3.41",
         "http-interop/http-factory-guzzle": "^1.2",
         "knplabs/github-api": "^3.13",
@@ -124,17 +123,15 @@
         "phpstan/phpstan-doctrine": "^2.0",
         "phpstan/phpstan-phpunit": "^2.0",
         "phpstan/phpstan-symfony": "^2.0",
-        "phpunit/phpunit": "^9.5",
+        "phpunit/phpunit": "^11.5",
         "rector/rector": "^2.0",
         "roave/security-advisories": "dev-latest",
         "symfony/browser-kit": "6.4.*",
         "symfony/css-selector": "6.4.*",
         "symfony/debug-bundle": "6.4.*",
-        "symfony/phpunit-bridge": "6.4.*",
         "symfony/var-dumper": "6.4.*",
         "symfony/web-profiler-bundle": "6.4.*",
-        "symplify/monorepo-builder": "^11.2",
-        "zalas/phpunit-globals": "^2.6"
+        "symplify/monorepo-builder": "^11.2"
     },
     "config": {
         "sort-packages": true,
@@ -147,10 +144,6 @@
         }
     },
     "autoload": {
-        "exclude-from-classmap": [
-            "EMS/helpers/tests/",
-            "EMS/xliff/tests/"
-        ],
         "psr-4": {
             "App\\Admin\\": "elasticms-admin/src/",
             "App\\CLI\\": "elasticms-cli/src/",
@@ -208,7 +201,7 @@
         "rector": "rector",
         "phpcs": "PHP_CS_FIXER_IGNORE_ENV=1 php-cs-fixer fix",
         "phpstan": "phpstan analyse --memory-limit 1G",
-        "phpunit": "phpunit",
+        "phpunit": "phpunit --display-deprecations",
         "phpall": [
             "@phpunit",
             "@phpstan",
