@@ -156,11 +156,7 @@
             "EMS\\Helpers\\": "EMS/helpers/src/",
             "EMS\\SubmissionBundle\\": "EMS/submission-bundle/src/",
             "EMS\\Xliff\\": "EMS/xliff/src/",
-            "Application\\Migrations\\Scripts\\": "EMS/core-bundle/migrations/scripts",
-            "Application\\Migrations\\": [
-                "EMS/core-bundle/migrations/pdo_mysql",
-                "EMS/core-bundle/migrations/pdo_pgsql"
-            ]
+            "Application\\Migrations\\Scripts\\": "EMS/core-bundle/migrations/scripts"
         }
     },
     "autoload-dev": {
