@@ -54,6 +54,12 @@
 ### Code Refactoring
 * refactor(web): routing and templating match the content type name by @theus77 in https://github.com/ems-project/elasticms/pull/1073
 
+## 5.23.7 (2025-02-03)
+### Bug Fixes
+* fix(admin/twig): escape label in data links by @theus77 in https://github.com/ems-project/elasticms/pull/1132
+* fix(core/twig): html escape special chars in display label by @Davidmattei in https://github.com/ems-project/elasticms/pull/1124
+* fix(web): performance issue with getHierarchy function by @theus77 in https://github.com/ems-project/elasticms/pull/1155
+
 ## 5.23.6 (2025-01-09)
 ### Bug Fixes
 * fix(core/file): return size and mimetype in the file api by @theus77 in https://github.com/ems-project/elasticms/pull/1118
