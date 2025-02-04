@@ -1,6 +1,6 @@
 # Changelog 6.x
 
-## 6.0.0 (2025-02-03)
+## 6.0.0 (2025-02-04)
 ### Features
 * feat(admin): media library and datatable improvements by @Davidmattei in https://github.com/ems-project/elasticms/pull/1005
 * feat(admin): wywiwyg editor field for ckeditor 4 or 5 by @theus77 in https://github.com/ems-project/elasticms/pull/1129
@@ -13,7 +13,6 @@
 * feat(core/field-type): new FieldTypeService for building tree by @Davidmattei in https://github.com/ems-project/elasticms/pull/788
 * feat(core/users): permissions overview (r-n-r-summary) by @OzkanO2 in https://github.com/ems-project/elasticms/pull/780
 * feat(demo): use vite instead of webpack by @Davidmattei in https://github.com/ems-project/elasticms/pull/1178
-* feat(docker): Add a NPM_EXTRA_CMD to customize the npm config by @theus77 in https://github.com/ems-project/elasticms/pull/1175
 * feat(elasticsearch/mapping): new EMSCO_DYNAMIC_MAPPING  configuration by @theus77 in https://github.com/ems-project/elasticms/pull/711
 * feat(ems): add core bridge (api & service) by @Davidmattei in https://github.com/ems-project/elasticms/pull/1143
 * feat(web/emsch): add FormController with FormType by @Davidmattei in https://github.com/ems-project/elasticms/pull/1138
@@ -25,24 +24,18 @@
 * fix(admin): hide sensitive info to non authenticated users by @theus77 in https://github.com/ems-project/elasticms/pull/758
 * fix(admin): migration issues by @Davidmattei in https://github.com/ems-project/elasticms/pull/1122
 * fix(admin): slug config names use separator '_' by @Davidmattei in https://github.com/ems-project/elasticms/pull/1173
-* fix(admin/field): add help text support for VersionTagFieldType by @theus77 in https://github.com/ems-project/elasticms/pull/1170
-* fix(admin/submission): export command use ems property accessor  by @theus77 in https://github.com/ems-project/elasticms/pull/1142
-* fix(admin/twig): escape label in data links by @theus77 in https://github.com/ems-project/elasticms/pull/1132
 * fix(autosave): empty warnings by @theus77 in https://github.com/ems-project/elasticms/pull/792
 * fix(bootstrap 5): need a clearfix when text counter and no help by @theus77 in https://github.com/ems-project/elasticms/pull/839
-* fix(common/twig): add ems_asset_head(s) and implement for wysiwyg field by @theus77 in https://github.com/ems-project/elasticms/pull/1171
 * fix(core/bootstrap5): tabs in edit revision by @theus77 in https://github.com/ems-project/elasticms/pull/734
 * fix(core/flash-messages): obvious duplicate alerts by @theus77 in https://github.com/ems-project/elasticms/pull/794
 * fix(core/rector): entities $id is not readonly by @theus77 in https://github.com/ems-project/elasticms/pull/735
 * fix(core/revision): empty environment actions, no dropdown by @Davidmattei in https://github.com/ems-project/elasticms/pull/885
-* fix(core/twig): html escape special chars in display label by @Davidmattei in https://github.com/ems-project/elasticms/pull/1124
 * fix(core/ui): select2 icon picker by @theus77 in https://github.com/ems-project/elasticms/pull/1158
 * fix(core/wywiwyg): delegate label to RevisionService::display by @theus77 in https://github.com/ems-project/elasticms/pull/840
 * fix(demo): double css import by @theus77 in https://github.com/ems-project/elasticms/pull/791
 * fix(demo): using session in stateless api calls by @Davidmattei in https://github.com/ems-project/elasticms/pull/776
 * fix(demo/structure): get default environment for section by @theus77 in https://github.com/ems-project/elasticms/pull/709
 * fix(docker): introduce POSTGRES_VERSION env variable by @Davidmattei in https://github.com/ems-project/elasticms/pull/1137
-* fix(file-structure::push): avoid silent error when it's not possible to update the .hash file by @theus77 in https://github.com/ems-project/elasticms/pull/1146
 * fix(helper): prevent tempFile destructor from being called too early by @Davidmattei in https://github.com/ems-project/elasticms/pull/1160
 * fix(helper/color): gd alpha's range is [0,127] while HLML alpha range is [0,255] by @theus77 in https://github.com/ems-project/elasticms/pull/1168
 * fix(phpstan): resolve baseline issues by @Davidmattei in https://github.com/ems-project/elasticms/pull/1128
@@ -58,9 +51,6 @@
 * fix(symfony/6.4): remove sensio/framework-extra-bundle & annotations  by @Davidmattei in https://github.com/ems-project/elasticms/pull/708
 * fix(symfony/6.4): throw UserNotFoundException if ldap server (dn == '') is not defined by @theus77 in https://github.com/ems-project/elasticms/pull/700
 * fix(twig): apply deprecation_info for twig functions and filters by @Davidmattei in https://github.com/ems-project/elasticms/pull/1126
-* fix(twig): deprecate ems function and filters with deprecation_info by @Davidmattei in https://github.com/ems-project/elasticms/pull/1125
-* fix(web): error templates based on request format (json, xml, html, ...) by @theus77 in https://github.com/ems-project/elasticms/pull/1152
-* fix(web): performance issue with getHierarchy function by @theus77 in https://github.com/ems-project/elasticms/pull/1155
 * fix: closuse in elastica exception by @theus77 in https://github.com/ems-project/elasticms/pull/1150
 * fix: deprecations and upgrade packages (domPdf, phpOffice, guzzle) by @Davidmattei in https://github.com/ems-project/elasticms/pull/1153
 * fix: index are deprecated (an cause issues) by @theus77 in https://github.com/ems-project/elasticms/pull/1151
@@ -133,7 +123,6 @@
 ### Chores
 * chore(phpcs): enable modernize_types_casting by @Davidmattei in https://github.com/ems-project/elasticms/pull/1166
 * chore(phpcs): enable no alias functions by @Davidmattei in https://github.com/ems-project/elasticms/pull/1167
-* chore: add POSTGRES_VERSION environment variable for dev docker by @theus77 in https://github.com/ems-project/elasticms/pull/1148
 * chore: composer lint script by @Davidmattei in https://github.com/ems-project/elasticms/pull/1164
 * chore: enable strict types by @Davidmattei in https://github.com/ems-project/elasticms/pull/1133
 * chore: fix last phpUnit deprecations (doctrine) by @Davidmattei in https://github.com/ems-project/elasticms/pull/1157
