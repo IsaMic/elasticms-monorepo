@@ -1,7 +1,8 @@
 # Changelog 6.x
 
-## 6.0.0 (2025-02-04)
+## 6.0.0 (2025-02-05)
 ### Features
+* feat(admin): cke4 features in bootstrap5 by @theus77 in https://github.com/ems-project/elasticms/pull/1179
 * feat(admin): media library and datatable improvements by @Davidmattei in https://github.com/ems-project/elasticms/pull/1005
 * feat(admin): wywiwyg editor field for ckeditor 4 or 5 by @theus77 in https://github.com/ems-project/elasticms/pull/1129
 * feat(admin-ui): migrate bootstrap 3 to 5 by @sylver4 in https://github.com/ems-project/elasticms/pull/596
@@ -10,12 +11,14 @@
 * feat(bridge): improve bridge data delete and info bridge for documents by @Davidmattei in https://github.com/ems-project/elasticms/pull/1154
 * feat(cli/command): add ems:document:merge  by @theus77 in https://github.com/ems-project/elasticms/pull/1113
 * feat(common/api): use sf client this enables profiler by @Davidmattei in https://github.com/ems-project/elasticms/pull/1144
+* feat(common/asset): vite php dev server by @Davidmattei in https://github.com/ems-project/elasticms/pull/1182
 * feat(core/field-type): new FieldTypeService for building tree by @Davidmattei in https://github.com/ems-project/elasticms/pull/788
 * feat(core/users): permissions overview (r-n-r-summary) by @OzkanO2 in https://github.com/ems-project/elasticms/pull/780
 * feat(demo): use vite instead of webpack by @Davidmattei in https://github.com/ems-project/elasticms/pull/1178
 * feat(elasticsearch/mapping): new EMSCO_DYNAMIC_MAPPING  configuration by @theus77 in https://github.com/ems-project/elasticms/pull/711
 * feat(ems): add core bridge (api & service) by @Davidmattei in https://github.com/ems-project/elasticms/pull/1143
 * feat(web/emsch): add FormController with FormType by @Davidmattei in https://github.com/ems-project/elasticms/pull/1138
+* feat(web/twig): add new emsch_asset_redirect by @theus77 in https://github.com/ems-project/elasticms/pull/1184
 * feat(wysiwyg/preview): prefixed styleset css, remove iframe by @theus77 in https://github.com/ems-project/elasticms/pull/790
 * feat: edit image in CKE5 by @theus77 in https://github.com/ems-project/elasticms/pull/872
 * feat: require php 8.4 by @Davidmattei in https://github.com/ems-project/elasticms/pull/1123
@@ -26,6 +29,8 @@
 * fix(admin): slug config names use separator '_' by @Davidmattei in https://github.com/ems-project/elasticms/pull/1173
 * fix(autosave): empty warnings by @theus77 in https://github.com/ems-project/elasticms/pull/792
 * fix(bootstrap 5): need a clearfix when text counter and no help by @theus77 in https://github.com/ems-project/elasticms/pull/839
+* fix(common): (new Encoder())->slug replaces '.' by '-'.  by @theus77 in https://github.com/ems-project/elasticms/pull/1186
+* fix(common/vite): make vite optional  by @Davidmattei in https://github.com/ems-project/elasticms/pull/1183
 * fix(core/bootstrap5): tabs in edit revision by @theus77 in https://github.com/ems-project/elasticms/pull/734
 * fix(core/flash-messages): obvious duplicate alerts by @theus77 in https://github.com/ems-project/elasticms/pull/794
 * fix(core/rector): entities $id is not readonly by @theus77 in https://github.com/ems-project/elasticms/pull/735
@@ -33,9 +38,11 @@
 * fix(core/ui): select2 icon picker by @theus77 in https://github.com/ems-project/elasticms/pull/1158
 * fix(core/wywiwyg): delegate label to RevisionService::display by @theus77 in https://github.com/ems-project/elasticms/pull/840
 * fix(demo): double css import by @theus77 in https://github.com/ems-project/elasticms/pull/791
+* fix(demo): fix favicon redirect to avoid _get_file_path: true by @theus77 in https://github.com/ems-project/elasticms/pull/1185
 * fix(demo): using session in stateless api calls by @Davidmattei in https://github.com/ems-project/elasticms/pull/776
 * fix(demo/structure): get default environment for section by @theus77 in https://github.com/ems-project/elasticms/pull/709
 * fix(docker): introduce POSTGRES_VERSION env variable by @Davidmattei in https://github.com/ems-project/elasticms/pull/1137
+* fix(emsch/asset): still need to update the styleset on admin side by @theus77 in https://github.com/ems-project/elasticms/pull/1181
 * fix(helper): prevent tempFile destructor from being called too early by @Davidmattei in https://github.com/ems-project/elasticms/pull/1160
 * fix(helper/color): gd alpha's range is [0,127] while HLML alpha range is [0,255] by @theus77 in https://github.com/ems-project/elasticms/pull/1168
 * fix(phpstan): resolve baseline issues by @Davidmattei in https://github.com/ems-project/elasticms/pull/1128
@@ -80,6 +87,7 @@
 * refactor(admin-ui): sidebar control by @theus77 in https://github.com/ems-project/elasticms/pull/736
 * refactor(admin-ui): stylelint issues by @theus77 in https://github.com/ems-project/elasticms/pull/723
 * refactor(admin-ui): twig extensions by @theus77 in https://github.com/ems-project/elasticms/pull/715
+* refactor(admin/ui): align tabs by @theus77 in https://github.com/ems-project/elasticms/pull/1180
 * refactor(admin/wysiwyg): cke5 apply profile and docs by @theus77 in https://github.com/ems-project/elasticms/pull/819
 * refactor(bootstrap 5): date field types, textareas and some fixes by @theus77 in https://github.com/ems-project/elasticms/pull/772
 * refactor(bootstrap 5): edit revision by @theus77 in https://github.com/ems-project/elasticms/pull/767
