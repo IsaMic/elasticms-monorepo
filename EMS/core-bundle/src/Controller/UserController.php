@@ -2,7 +2,7 @@
 
 namespace EMS\CoreBundle\Controller;
 
-use EMS\CommonBundle\Contracts\SpreadsheetGeneratorServiceInterface;
+use EMS\CommonBundle\Contracts\Spreadsheet\SpreadsheetGeneratorServiceInterface;
 use EMS\CommonBundle\Helper\EmsFields;
 use EMS\CoreBundle\Core\DataTable\DataTableFactory;
 use EMS\CoreBundle\Core\User\UserManager;

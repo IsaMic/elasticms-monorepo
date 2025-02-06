@@ -2,9 +2,10 @@
 
 declare(strict_types=1);
 
-namespace EMS\CommonBundle\Common;
+namespace EMS\CommonBundle\Common\Spreadsheet;
 
-use EMS\CommonBundle\Contracts\SpreadsheetGeneratorServiceInterface;
+use EMS\CommonBundle\Common\Converter;
+use EMS\CommonBundle\Contracts\Spreadsheet\SpreadsheetGeneratorServiceInterface;
 use EMS\Helpers\File\TempFile;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Settings;
@@ -86,9 +87,17 @@ final class SpreadsheetGeneratorService implements SpreadsheetGeneratorServiceIn
             $sheet = (0 === $i) ? $spreadsheet->getActiveSheet() : $spreadsheet->createSheet($i);
             $sheet->setTitle($sheetConfig['name']);
             $j = 1;
+
             foreach ($sheetConfig['rows'] as $row) {
                 $k = 1;
                 foreach ($row as $value) {
+                    if (null != $sheetConfig['validations'][$k - 1]) {
+                        $spreadsheetValidation = $sheetConfig['validations'][$k - 1];
+                        \dump($spreadsheetValidation);
+                        $validation = $spreadsheetValidation->addValidation($sheet->getCell(Coordinate::stringFromColumnIndex($k).$j)->getDataValidation());
+                        $sheet->setDataValidation(Coordinate::stringFromColumnIndex($k).$j, $validation);
+                    }
+
                     if (!\is_array($value)) {
                         $value = [self::CELL_DATA => $value];
                     }

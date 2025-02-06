@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace EMS\CoreBundle\Form\Data;
 
+use EMS\CommonBundle\Common\Spreadsheet\SpreadsheetValidation;
 use EMS\CoreBundle\Helper\DataTableRequest;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\Translation\TranslatableMessage;
@@ -157,6 +158,19 @@ abstract class TableAbstract implements TableInterface
     public function getColumns(): array
     {
         return $this->columns;
+    }
+
+    /**
+     * @return array<SpreadsheetValidation|null>
+     */
+    public function getColumnsValidations(): array
+    {
+        $validations = [];
+        foreach ($this->columns as $index => $col) {
+            $validations[$index] = $col->getValidation();
+        }
+
+        return $validations;
     }
 
     public function addItemActionCollection(null|string|TranslatableMessage $labelKey = null, ?string $icon = null): TableItemActionCollection

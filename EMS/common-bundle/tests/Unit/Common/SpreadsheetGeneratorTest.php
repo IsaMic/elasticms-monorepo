@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace EMS\CommonBundle\Tests\Unit\Common;
 
-use EMS\CommonBundle\Common\SpreadsheetGeneratorService;
+use EMS\CommonBundle\Common\Spreadsheet\SpreadsheetGeneratorService;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
