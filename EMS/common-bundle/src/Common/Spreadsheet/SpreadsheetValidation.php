@@ -7,7 +7,7 @@ namespace EMS\CommonBundle\Common\Spreadsheet;
 use EMS\CommonBundle\Contracts\Spreadsheet\SpreadsheetValidationInterface;
 use PhpOffice\PhpSpreadsheet\Cell\DataValidation;
 
-final class SpreadsheetValidation implements SpreadsheetValidationInterface
+final readonly class SpreadsheetValidation implements SpreadsheetValidationInterface
 {
     private string $type;
     private string $formula;
