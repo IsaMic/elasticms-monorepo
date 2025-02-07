@@ -94,9 +94,8 @@ final class SpreadsheetGeneratorService implements SpreadsheetGeneratorServiceIn
             foreach ($sheetConfig['rows'] as $row) {
                 $k = 1;
                 foreach ($row as $value) {
-                    if (null != $sheetConfig['validations'][$k - 1]) {
+                    if (\array_key_exists('validations', $sheetConfig) && null != $sheetConfig['validations'][$k - 1]) {
                         $spreadsheetValidation = $sheetConfig['validations'][$k - 1];
-                        \dump($spreadsheetValidation);
                         $validation = $spreadsheetValidation->addValidation($sheet->getCell(Coordinate::stringFromColumnIndex($k).$j)->getDataValidation());
                         $sheet->setDataValidation(Coordinate::stringFromColumnIndex($k).$j, $validation);
                     }
