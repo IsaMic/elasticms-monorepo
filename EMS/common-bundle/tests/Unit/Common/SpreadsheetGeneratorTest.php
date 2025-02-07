@@ -21,18 +21,18 @@ class SpreadsheetGeneratorTest extends TestCase
 
     public function testConfigToExcel(): void
     {
-        $config = \json_decode('{"filename":"export","writer":"xlsx","active_sheet":0,"sheets":[{"name":"Export form","color":"#FF0000","rows":[["apple","banana"],["pineapple","strawberry"]]},{"name":"Export form sheet 2","rows":[["a1","a2"],["b1","b3"]]}]}', true);
+        $config = \json_decode('{"filename":"export","writer":"xlsx","active_sheet":0,"sheets":[{"name":"Export form","color":"#FF0000","rows":[["apple","banana"],["pineapple","strawberry"]],"validations":[null,null]},{"name":"Export form sheet 2","rows":[["a1","a2"],["b1","b3"]],"validations":[null,null]}]}', true);
         $this->assertSame('Export form', $this->callMethod($this->spreadSheetGenerator, 'buildUpSheets', [$config])->getActiveSheet()->getTitle());
         $this->assertSame('pineapple', $this->callMethod($this->spreadSheetGenerator, 'buildUpSheets', [$config])->getActiveSheet()->getCell('A2')->getValue());
 
-        $configColor = \json_decode('{"filename":"export_with_color","writer":"xlsx","active_sheet":0,"sheets":[{"name":"Export form with Color","color":"#FF0000","rows":[[{"data":"apple"},{"data":"banana","style":{"fill":{"fillType":"solid","color":{"rgb":"F9D73F"}}}}],[{"data":"pineapple","style":{"fill":{"fillType":"solid","color":{"rgb":"F9D73F"}}}},{"data":"strawberry","style":{}}]]}]}', true);
+        $configColor = \json_decode('{"filename":"export_with_color","writer":"xlsx","active_sheet":0,"sheets":[{"name":"Export form with Color","color":"#FF0000","rows":[[{"data":"apple"},{"data":"banana","style":{"fill":{"fillType":"solid","color":{"rgb":"F9D73F"}}}}],[{"data":"pineapple","style":{"fill":{"fillType":"solid","color":{"rgb":"F9D73F"}}}},{"data":"strawberry","style":{}}]],"validations":[null,null]}]}', true);
         $this->assertSame('Export form with Color', $this->callMethod($this->spreadSheetGenerator, 'buildUpSheets', [$configColor])->getActiveSheet()->getTitle());
         $this->assertSame('pineapple', $this->callMethod($this->spreadSheetGenerator, 'buildUpSheets', [$configColor])->getActiveSheet()->getCell('A2')->getValue());
     }
 
     public function testConfigToCsv(): void
     {
-        $config = \json_decode('{"filename":"test-export","writer":"csv","disposition":"inline","sheets":[{"rows":[["apple","banana"],["pineapple","strawberry"],["àï$@,& & \\" \' ! @ # $ €","foobar"]]}]}', true);
+        $config = \json_decode('{"filename":"test-export","writer":"csv","disposition":"inline","sheets":[{"rows":[["apple","banana"],["pineapple","strawberry"],["àï$@,& & \\" \' ! @ # $ €","foobar"]],"validations":[null,null]}]}', true);
         /** @var StreamedResponse $csv */
         $csv = $this->callMethod($this->spreadSheetGenerator, 'getCsvResponse', [$config]);
 

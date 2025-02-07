@@ -40,7 +40,7 @@ class SpreadsheetGeneratorServiceAiTest extends TestCase
         $config = [
             'writer' => SpreadsheetGeneratorService::XLSX_WRITER,
             'filename' => 'test',
-            'sheets' => [['name' => 'Sheet1', 'rows' => [['A1', 'B1']]]],
+            'sheets' => [['name' => 'Sheet1', 'rows' => [['A1', 'B1']], 'validations' => [null, null]]],
             'disposition' => 'attachment',
         ];
 
@@ -55,7 +55,7 @@ class SpreadsheetGeneratorServiceAiTest extends TestCase
         $config = [
             'writer' => SpreadsheetGeneratorService::CSV_WRITER,
             'filename' => 'test',
-            'sheets' => [['name' => 'Sheet1', 'rows' => [['A1', 'B1']]]],
+            'sheets' => [['name' => 'Sheet1', 'rows' => [['A1', 'B1']], 'validations' => [null, null]]],
             'disposition' => 'attachment',
         ];
 
@@ -70,7 +70,7 @@ class SpreadsheetGeneratorServiceAiTest extends TestCase
         $config = [
             'writer' => SpreadsheetGeneratorService::XLSX_WRITER,
             'filename' => 'test',
-            'sheets' => [['name' => 'Sheet1', 'rows' => [['A1', 'B1']]]],
+            'sheets' => [['name' => 'Sheet1', 'rows' => [['A1', 'B1']], 'validations' => [null, null]]],
             'disposition' => 'attachment',
         ];
 
@@ -85,7 +85,7 @@ class SpreadsheetGeneratorServiceAiTest extends TestCase
         $config = [
             'writer' => SpreadsheetGeneratorService::CSV_WRITER,
             'filename' => 'test',
-            'sheets' => [['name' => 'Sheet1', 'rows' => [['A1', 'B1']]]],
+            'sheets' => [['name' => 'Sheet1', 'rows' => [['A1', 'B1']], 'validations' => [null, null]]],
             'disposition' => 'attachment',
         ];
 
