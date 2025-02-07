@@ -1,77 +1,27 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CommonBundle\Entity;
 
-use Doctrine\ORM\Mapping as ORM;
-
-/**
- * Analyzer.
- *
- * @ORM\Table(name="asset_storage")
- *
- * @ORM\Entity(repositoryClass="EMS\CommonBundle\Repository\AssetStorageRepository")
- *
- * @ORM\HasLifecycleCallbacks()
- */
 class AssetStorage implements EntityInterface
 {
-    /**
-     * @ORM\Column(name="id", type="integer")
-     *
-     * @ORM\Id
-     *
-     * @ORM\GeneratedValue(strategy="AUTO")
-     */
-    private ?int $id = null;
+    use CreatedModifiedTrait;
+    use IdentifierIntegerTrait;
 
-    /**
-     * @ORM\Column(name="created", type="datetime")
-     */
-    private ?\DateTime $created = null;
-
-    /**
-     * @ORM\Column(name="modified", type="datetime")
-     */
-    private ?\DateTime $modified = null;
-
-    /**
-     * @ORM\Column(name="hash", type="string", length=1024, unique=true)
-     */
     private ?string $hash = null;
-
     /**
      * @var string|resource
-     *
-     * @ORM\Column(name="contents", type="blob")
+     * @phpstan-ignore-next-line
      */
     private $contents;
-
-    /**
-     * @ORM\Column(name="size", type="bigint")
-     */
     private ?string $size = null;
-
-    /**
-     * @ORM\Column(name="confirmed", type="boolean", options={"default" : 0})
-     */
     private ?bool $confirmed = null;
 
-    public function setId(int $id): void
+    public function __construct()
     {
-        $this->id = $id;
-    }
-
-    /**
-     * @ORM\PrePersist
-     *
-     * @ORM\PreUpdate
-     */
-    public function updateModified(): void
-    {
+        $this->created = new \DateTime();
         $this->modified = new \DateTime();
-        if (null === $this->created) {
-            $this->created = $this->modified;
-        }
     }
 
     public function getHash(): string
@@ -103,43 +53,6 @@ class AssetStorage implements EntityInterface
         $this->contents = $contents;
 
         return $this;
-    }
-
-    public function getId(): ?int
-    {
-        return $this->id;
-    }
-
-    public function setCreated(\DateTime $created): AssetStorage
-    {
-        $this->created = $created;
-
-        return $this;
-    }
-
-    public function getCreated(): \DateTime
-    {
-        if (null === $this->created) {
-            throw new \RuntimeException('Not yet created');
-        }
-
-        return $this->created;
-    }
-
-    public function setModified(\DateTime $modified): AssetStorage
-    {
-        $this->modified = $modified;
-
-        return $this;
-    }
-
-    public function getModified(): \DateTime
-    {
-        if (null === $this->modified) {
-            throw new \RuntimeException('Unexpected null modified');
-        }
-
-        return $this->modified;
     }
 
     public function getSize(): int

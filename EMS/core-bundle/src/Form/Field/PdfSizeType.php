@@ -12,11 +12,12 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class PdfSizeType extends ChoiceType
 {
+    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         $choices = [];
         foreach (CPDF::$PAPER_SIZES as $id => $size) {
-            $choices[\sprintf('pdf_size.%s', Encoder::webalize($id))] = $id;
+            $choices[\sprintf('pdf_size.%s', new Encoder()->slug($id)->toString())] = $id;
         }
 
         parent::configureOptions($resolver);

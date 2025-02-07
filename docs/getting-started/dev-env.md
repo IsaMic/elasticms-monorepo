@@ -15,12 +15,13 @@
 
 ## Start external micro-services
 
-elasticMS comes with multiple micro-services:
+ElasticMS works with multiple micro-services:
 
 * Redis: cache and session
 * elasticsearch: for indexing contents
 * Tika: for extracting data from assets
-* PosgresSQL or MySQL: As authentic source of data
+* PosgresSQL or MariaDB: As authentic source of data
+* S3 like: to store assets
 
 In order to simplify development all those services are available in a docker compose and can be easily started with those make commands:
 
@@ -111,6 +112,26 @@ To make a dump:
 ```bash
 make db-dump/"db_example" SCHEMA="schema_example_adm"
 ```
+
+## Admin UI
+
+The Admin UI bundles uses vite for building the assets, while the core bundle uses webpack.
+Vite comes with a great dev server, which will automatic reload pages on js/css and twig changes.
+
+1) Installation
+```bash
+cd EMS/admin-ui-bundle
+npm install
+npm run build
+```
+
+2) Running dev server
+```bash
+npm run dev
+npm run dev -- --debug # debug mode
+```
+
+> Make sure you set **EMS_VITE_DEV_SERVER**='http://localhost:5173'
 
 ## Identity provider (IDP) (Keycloak)
 
@@ -205,3 +226,15 @@ zend.assertions = 1
 ```
 
 You can easily locate your php.ini file with the command: `php --info|grep php.ini`
+
+## Works with the bootstrap5 theme
+
+First build the assets (a manifest is needed by the Admin UI bundle)
+```shell
+cd EMS/admin-ui-bundle/assets
+npm install
+npm run build
+cd ../../../elasticms-admin/
+php bin/console a:i --symlink
+```
+

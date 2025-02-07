@@ -95,6 +95,7 @@ class StorageManager implements FileManagerInterface
         return false;
     }
 
+    #[\Override]
     public function heads(string ...$fileHashes): \Traversable
     {
         $uniqueFileHashes = \array_unique($fileHashes);
@@ -123,6 +124,7 @@ class StorageManager implements FileManagerInterface
         return $storages;
     }
 
+    #[\Override]
     public function getStream(string $hash): StreamInterface
     {
         /** @var StorageInterface[] $missingIn */
@@ -144,21 +146,26 @@ class StorageManager implements FileManagerInterface
         throw new NotFoundException($hash);
     }
 
+    #[\Override]
     public function getContents(string $hash): string
     {
         return $this->getStream($hash)->getContents();
     }
 
-    public function getPublicImage(string $name): string
+    /**
+     * @return array<string, mixed>
+     */
+    public function getConfig(string $hash): mixed
     {
-        $file = $this->fileLocator->locate('@EMSCommonBundle/Resources/public/images/'.$name);
-        if (\is_array($file)) {
-            return $file[0] ?? '';
-        }
-
-        return $file;
+        return Json::decode($this->getStream($hash)->getContents());
     }
 
+    public function getPublicImage(string $name): string
+    {
+        return $this->fileLocator->locate('@EMSCommonBundle/public/images/'.$name);
+    }
+
+    #[\Override]
     public function getHashAlgo(): string
     {
         return $this->hashAlgo;
@@ -402,7 +409,7 @@ class StorageManager implements FileManagerInterface
     /**
      * @param array<string, mixed> $config
      */
-    public function saveConfig(array $config): string
+    public function saveConfig(array $config, int $usageType = StorageInterface::STORAGE_USAGE_CONFIG): string
     {
         if (\is_array($config[EmsFields::ASSET_CONFIG_FILE_NAMES] ?? null) && \count($config[EmsFields::ASSET_CONFIG_FILE_NAMES]) > 0) {
             $hashContext = \hash_init('sha1');
@@ -430,9 +437,10 @@ class StorageManager implements FileManagerInterface
         Json::normalize($config);
         $normalizedArray = Json::encode($config);
 
-        return $this->saveContents($normalizedArray, 'assetConfig.json', 'application/json', StorageInterface::STORAGE_USAGE_CONFIG);
+        return $this->saveContents($normalizedArray, 'assetConfig.json', 'application/json', $usageType);
     }
 
+    #[\Override]
     public function getFile(string $filenameOrHash): FileInterface
     {
         if (\file_exists($filenameOrHash)) {
@@ -527,7 +535,7 @@ class StorageManager implements FileManagerInterface
         }
     }
 
-    public function getStreamFromArchive(string $hash, string $path, bool $extract = true, string $indexResource = null): StreamWrapper
+    public function getStreamFromArchive(string $hash, string $path, bool $extract = true, ?string $indexResource = null): StreamWrapper
     {
         if (null !== $indexResource && ('' === $path || \str_ends_with($path, '/'))) {
             $path .= $indexResource;
@@ -643,6 +651,7 @@ class StorageManager implements FileManagerInterface
         return new StreamWrapper($this->getStream($file->hash), $file->type, $file->size);
     }
 
+    #[\Override]
     public function uploadFile(string $realPath, ?string $mimeType = null, ?string $filename = null, ?callable $callback = null): string
     {
         $fileHash = $this->computeFileHash($realPath);
@@ -675,6 +684,7 @@ class StorageManager implements FileManagerInterface
         return $fileHash;
     }
 
+    #[\Override]
     public function uploadContents(string $contents, string $filename, string $mimeType): string
     {
         return $this->saveContents(
@@ -685,6 +695,7 @@ class StorageManager implements FileManagerInterface
         );
     }
 
+    #[\Override]
     public function downloadFile(string $hash): string
     {
         return $this->getFile($hash)->getFilename();
@@ -693,12 +704,14 @@ class StorageManager implements FileManagerInterface
     /**
      * @param int<1, max> $chunkSize
      */
+    #[\Override]
     public function setHeadChunkSize(int $chunkSize): void
     {
         $this->headChunkSize = $chunkSize;
     }
 
-    public function loadArchiveItemsInCache(string $archiveHash, Archive $archive, callable $callback = null): void
+    #[\Override]
+    public function loadArchiveItemsInCache(string $archiveHash, Archive $archive, ?callable $callback = null): void
     {
         foreach ($this->adapters as $adapter) {
             if ($adapter->loadArchiveItemsInCache($archiveHash, $archive, $callback)) {

@@ -12,15 +12,17 @@ use EMS\CommonBundle\Storage\NotFoundException;
 use EMS\CoreBundle\Entity\CacheAssetExtractor;
 use EMS\CoreBundle\Helper\AssetExtractor\ExtractedData;
 use EMS\CoreBundle\Tika\TikaWrapper;
+use EMS\Helpers\File\File;
 use EMS\Helpers\File\TempFile;
+use EMS\Helpers\Standard\Type;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpKernel\CacheWarmer\CacheWarmerInterface;
 
 class AssetExtractorService implements CacheWarmerInterface
 {
-    private const CONTENT_EP = '/tika';
-    private const HELLO_EP = '/tika';
-    private const META_EP = '/meta';
+    private const string CONTENT_EP = '/tika';
+    private const string HELLO_EP = '/tika';
+    private const string META_EP = '/meta';
     private ?TikaWrapper $wrapper = null;
 
     public function __construct(
@@ -44,7 +46,7 @@ class AssetExtractorService implements CacheWarmerInterface
         $filename = $this->projectDir.'/var/tika-app.jar';
         if (!\file_exists($filename) && $this->tikaDownloadUrl) {
             try {
-                \file_put_contents($filename, \fopen($this->tikaDownloadUrl, 'r'));
+                File::putContents($filename, Type::string(\fopen($this->tikaDownloadUrl, 'r')));
             } catch (\Throwable) {
                 if (\file_exists($filename)) {
                     \unlink($filename);
@@ -76,7 +78,7 @@ class AssetExtractorService implements CacheWarmerInterface
             ];
         } else {
             $tempFile = TempFile::create();
-            \file_put_contents($tempFile->path, "elasticms's built in TikaWrapper : àêïôú");
+            File::putContents($tempFile->path, "elasticms's built in TikaWrapper : àêïôú");
 
             return [
                 'code' => 200,
@@ -90,12 +92,12 @@ class AssetExtractorService implements CacheWarmerInterface
      *
      * @return mixed[]
      */
-    public function extractData(string $hash, string $file = null, bool $forced = false): array
+    public function extractData(string $hash, ?string $file = null, bool $forced = false): array
     {
         return $this->extractMetaData($hash, $file, $forced)->getSource();
     }
 
-    public function extractMetaData(string $hash, string $file = null, bool $forced = false, string $filename = null): ExtractedData
+    public function extractMetaData(string $hash, ?string $file = null, bool $forced = false, ?string $filename = null): ExtractedData
     {
         $manager = $this->doctrine->getManager();
         $repository = $manager->getRepository(CacheAssetExtractor::class);
@@ -213,12 +215,14 @@ class AssetExtractorService implements CacheWarmerInterface
         return \preg_replace('/\n|\r/', '', $string) ?? '';
     }
 
+    #[\Override]
     public function isOptional(): bool
     {
         return false;
     }
 
-    public function warmUp(string $cacheDir): array
+    #[\Override]
+    public function warmUp($cacheDir, ?string $buildDir = null): array
     {
         if (empty($this->tikaServer)) {
             $this->getTikaWrapper();
@@ -240,9 +244,7 @@ class AssetExtractorService implements CacheWarmerInterface
             $meta = ExtractedData::fromJsonString($result->getBody()->__toString(), $this->tikaMaxContent);
         } else {
             $tempFile = TempFile::create();
-            if (false === \file_put_contents($tempFile->path, $text)) {
-                throw new \RuntimeException('Unexpected false result on file_put_contents');
-            }
+            File::putContents($tempFile->path, $text);
             $meta = ExtractedData::fromMetaString($this->getTikaWrapper()->getMetadata($tempFile->path), $this->tikaMaxContent);
         }
 

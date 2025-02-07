@@ -26,31 +26,36 @@ class VersionTagFieldType extends DataFieldType
         ElasticsearchService $elasticsearchService,
         private readonly RevisionService $revisionService,
         private readonly EnvironmentService $environmentService,
-        private readonly ContentTypeService $contentTypeService
+        private readonly ContentTypeService $contentTypeService,
     ) {
         parent::__construct($authorizationChecker, $formRegistry, $elasticsearchService);
     }
 
+    #[\Override]
     public function getLabel(): string
     {
         return 'Select version tag';
     }
 
+    #[\Override]
     public static function getIcon(): string
     {
         return 'fa fa-snowflake-o';
     }
 
+    #[\Override]
     public function getBlockPrefix(): string
     {
         return 'ems_version_tag';
     }
 
+    #[\Override]
     public function generateMapping(FieldType $current): array
     {
         return [$current->getName() => ['type' => 'keyword']];
     }
 
+    #[\Override]
     public function buildOptionsForm(FormBuilderInterface $builder, array $options): void
     {
         parent::buildOptionsForm($builder, $options);
@@ -61,6 +66,7 @@ class VersionTagFieldType extends DataFieldType
         ;
     }
 
+    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         /** @var FieldType $fieldType */
@@ -95,9 +101,7 @@ class VersionTagFieldType extends DataFieldType
         ]);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function buildObjectArray(DataField $data, array &$out): void
     {
         if (!$data->giveFieldType()->getDeleted()) {
@@ -105,19 +109,16 @@ class VersionTagFieldType extends DataFieldType
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function viewTransform(DataField $dataField)
     {
         return ['value' => parent::viewTransform($dataField)];
     }
 
     /**
-     * {@inheritDoc}
-     *
      * @param array<mixed> $data
      */
+    #[\Override]
     public function reverseViewTransform($data, FieldType $fieldType): DataField
     {
         return parent::reverseViewTransform($data['value'], $fieldType);

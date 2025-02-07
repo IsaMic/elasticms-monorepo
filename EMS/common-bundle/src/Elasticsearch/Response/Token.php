@@ -6,7 +6,7 @@ namespace EMS\CommonBundle\Elasticsearch\Response;
 
 use EMS\Helpers\Standard\Type;
 
-class Token
+class Token implements \Stringable
 {
     /**
      * @param array<string, int|string> $token
@@ -20,6 +20,7 @@ class Token
         return Type::string($this->token['token']);
     }
 
+    #[\Override]
     public function __toString(): string
     {
         return $this->getToken();

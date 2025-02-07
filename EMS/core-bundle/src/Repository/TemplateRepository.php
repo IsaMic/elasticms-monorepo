@@ -1,10 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Repository;
 
 use Doctrine\Bundle\DoctrineBundle\Registry;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\ORM\NonUniqueResultException;
+use Doctrine\ORM\Query\Parameter;
 use Doctrine\ORM\QueryBuilder;
 use EMS\CoreBundle\Entity\ContentType;
 use EMS\CoreBundle\Entity\Template;
@@ -12,7 +17,7 @@ use EMS\CoreBundle\Entity\Template;
 /**
  * @extends ServiceEntityRepository<Template>
  *
- * @method Template[] findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+ * @method Template[] findBy(mixed[] $criteria, mixed[] $orderBy = null, $limit = null, $offset = null)
  */
 class TemplateRepository extends ServiceEntityRepository
 {
@@ -34,7 +39,10 @@ class TemplateRepository extends ServiceEntityRepository
 
         if (null != $contentTypes) {
             $qb->andWhere('t.contentType IN (:cts)')
-            ->setParameters(['option' => $option, 'cts' => $contentTypes]);
+            ->setParameters(new ArrayCollection([
+                new Parameter('option', $option),
+                new Parameter('cts', $contentTypes),
+            ]));
         } else {
             $qb->setParameter('option', $option);
         }
@@ -57,7 +65,7 @@ class TemplateRepository extends ServiceEntityRepository
         $this->addSearchFilters($qb, $contentType, $searchValue);
 
         try {
-            return \intval($qb->getQuery()->getSingleScalarResult());
+            return (int) $qb->getQuery()->getSingleScalarResult();
         } catch (NonUniqueResultException) {
             return 0;
         }
@@ -81,7 +89,7 @@ class TemplateRepository extends ServiceEntityRepository
     public function getByIds(string ...$ids): array
     {
         $qb = $this->createQueryBuilder('a');
-        $qb->andWhere('a.id IN (:ids)')->setParameter('ids', $ids);
+        $qb->andWhere('a.id IN (:ids)')->setParameter('ids', $ids, ArrayParameterType::INTEGER);
 
         return $qb->getQuery()->getResult();
     }
@@ -131,7 +139,7 @@ class TemplateRepository extends ServiceEntityRepository
 
     public function save(Template $action): void
     {
-        $this->_em->persist($action);
-        $this->_em->flush();
+        $this->getEntityManager()->persist($action);
+        $this->getEntityManager()->flush();
     }
 }

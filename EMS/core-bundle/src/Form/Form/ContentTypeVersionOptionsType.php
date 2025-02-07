@@ -9,12 +9,16 @@ use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\FormBuilderInterface;
 
+/**
+ * @extends AbstractType<mixed>
+ */
 class ContentTypeVersionOptionsType extends AbstractType
 {
     /**
-     * @param FormBuilderInterface<FormBuilderInterface> $builder
-     * @param array<string, mixed>                       $options
+     * @param FormBuilderInterface<mixed> $builder
+     * @param array<string, mixed>        $options
      */
+    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder

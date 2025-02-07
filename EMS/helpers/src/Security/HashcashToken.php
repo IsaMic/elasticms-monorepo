@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\Helpers\Security;
 
 use Symfony\Component\String\ByteString;
@@ -37,7 +39,7 @@ class HashcashToken
 
     public static function generate(string $token, int $difficulty): self
     {
-        $hashcashLevel = \intval(\floor(\log($difficulty, 2) / 4.0));
+        $hashcashLevel = (int) \floor(\log($difficulty, 2) / 4.0);
         $regex = \sprintf('/^0{%d}/', $hashcashLevel);
 
         do {

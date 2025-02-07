@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\FormBundle\Components\Field;
 
 use EMS\FormBundle\Components\Form\SendConfirmationType;
@@ -10,16 +12,19 @@ use EMS\FormBundle\Components\Validation\VerificationCode;
  */
 class SendConfirmation extends AbstractField
 {
+    #[\Override]
     public function getHtmlClass(): string
     {
         return 'number';
     }
 
+    #[\Override]
     public function getFieldClass(): string
     {
         return SendConfirmationType::class;
     }
 
+    #[\Override]
     public function getOptions(): array
     {
         $options = parent::getOptions();

@@ -23,10 +23,11 @@ class EnvironmentManagedAliasDataTableType extends AbstractTableType implements 
 
     public function __construct(
         private readonly AliasService $aliasService,
-        private readonly string $templateNamespace
+        private readonly string $templateNamespace,
     ) {
     }
 
+    #[\Override]
     public function build(QueryTable $table): void
     {
         $table->setDefaultOrder('name')->setLabelAttribute('name');
@@ -63,21 +64,25 @@ class EnvironmentManagedAliasDataTableType extends AbstractTableType implements 
         $this->addItemDelete($table, 'managed_alias', Routes::ADMIN_MANAGED_ALIAS_DELETE);
     }
 
+    #[\Override]
     public function getRoles(): array
     {
         return [Roles::ROLE_ADMIN];
     }
 
+    #[\Override]
     public function getQueryName(): string
     {
         return 'managedAlias';
     }
 
+    #[\Override]
     public function isSortable(): bool
     {
         return false;
     }
 
+    #[\Override]
     public function query(int $from, int $size, ?string $orderField, string $orderDirection, string $searchValue, mixed $context = null): array
     {
         $dataSource = $this->getDataSource($searchValue);
@@ -89,6 +94,7 @@ class EnvironmentManagedAliasDataTableType extends AbstractTableType implements 
         return $dataSource->getData($from, $size);
     }
 
+    #[\Override]
     public function countQuery(string $searchValue = '', mixed $context = null): int
     {
         return $this->getDataSource($searchValue)->count();

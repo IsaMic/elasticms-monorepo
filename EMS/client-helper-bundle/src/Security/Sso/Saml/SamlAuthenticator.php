@@ -9,12 +9,12 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
-use Symfony\Component\Security\Core\Security;
 use Symfony\Component\Security\Http\Authenticator\AbstractAuthenticator;
 use Symfony\Component\Security\Http\Authenticator\Passport\Badge\UserBadge;
 use Symfony\Component\Security\Http\Authenticator\Passport\Passport;
 use Symfony\Component\Security\Http\Authenticator\Passport\SelfValidatingPassport;
 use Symfony\Component\Security\Http\HttpUtils;
+use Symfony\Component\Security\Http\SecurityRequestAttributes;
 use Symfony\Component\Security\Http\Util\TargetPathTrait;
 
 class SamlAuthenticator extends AbstractAuthenticator
@@ -27,6 +27,7 @@ class SamlAuthenticator extends AbstractAuthenticator
     ) {
     }
 
+    #[\Override]
     public function supports(Request $request): ?bool
     {
         return $this->samlService->isEnabled()
@@ -34,6 +35,7 @@ class SamlAuthenticator extends AbstractAuthenticator
             && $this->httpUtils->checkRequestPath($request, SamlService::ROUTE_ACS);
     }
 
+    #[\Override]
     public function authenticate(Request $request): Passport
     {
         $auth = $this->samlService->auth();
@@ -51,6 +53,7 @@ class SamlAuthenticator extends AbstractAuthenticator
         );
     }
 
+    #[\Override]
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response
     {
         $loginPath = $this->httpUtils->generateUri($request, SamlService::ROUTE_LOGIN);
@@ -61,9 +64,10 @@ class SamlAuthenticator extends AbstractAuthenticator
         return $this->httpUtils->createRedirectResponse($request, $path);
     }
 
+    #[\Override]
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception): ?Response
     {
-        $request->getSession()->set(Security::AUTHENTICATION_ERROR, $exception);
+        $request->getSession()->set(SecurityRequestAttributes::AUTHENTICATION_ERROR, $exception);
 
         return $this->httpUtils->createRedirectResponse($request, SamlService::ROUTE_LOGIN);
     }

@@ -9,17 +9,22 @@ use EMS\CoreBundle\Commands;
 use EMS\CoreBundle\Entity\Job;
 use EMS\CoreBundle\Service\JobService;
 use EMS\CoreBundle\Service\ReleaseService;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
+#[AsCommand(
+    name: Commands::JOB_RUN,
+    description: 'Execute the next pending job if exists. If not execute the oldest due scheduled job if exists.',
+    hidden: false,
+    aliases: ['ems:job:run']
+)]
 class JobCommand extends AbstractCommand
 {
-    protected static $defaultName = Commands::JOB_RUN;
-
-    private const OPTION_DUMP = 'dump';
-    private const OPTION_TAG = 'tag';
-    private const USER_JOB_COMMAND = 'User-Job-Command';
+    private const string OPTION_DUMP = 'dump';
+    private const string OPTION_TAG = 'tag';
+    private const string USER_JOB_COMMAND = 'User-Job-Command';
 
     private bool $dump = false;
     private ?string $tag = null;
@@ -28,20 +33,22 @@ class JobCommand extends AbstractCommand
         private readonly JobService $jobService,
         private readonly ReleaseService $releaseService,
         private readonly string $dateFormat,
-        private readonly string $cleanJobsTimeString
+        private readonly string $cleanJobsTimeString,
     ) {
         parent::__construct();
     }
 
+    #[\Override]
     protected function configure(): void
     {
         $this
-            ->setDescription('Execute the next pending job if exists. If not execute the oldest due scheduled job if exists.')
+
             ->addOption(self::OPTION_DUMP, null, InputOption::VALUE_NONE, 'Shows the job\'s output at the end of the execution')
             ->addOption(self::OPTION_TAG, null, InputOption::VALUE_OPTIONAL, 'Will treat the next scheduled job flagged with the provided tag (do not execute pending jobs)')
         ;
     }
 
+    #[\Override]
     protected function initialize(InputInterface $input, OutputInterface $output): void
     {
         parent::initialize($input, $output);
@@ -49,6 +56,7 @@ class JobCommand extends AbstractCommand
         $this->tag = $this->getOptionStringNull(self::OPTION_TAG);
     }
 
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $this->io->title('EMSCO - Job - Run');

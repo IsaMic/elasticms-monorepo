@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Entity\Helper;
 
 use EMS\CoreBundle\Entity\ContentType;
@@ -25,37 +27,36 @@ class JsonNormalizer implements NormalizerInterface, DenormalizerInterface
      * @var array<mixed>
      */
     private array $toSkip = ['ContentType' => ['id',
-                                         'indexAnalysisConfiguration', ],
-                       'FieldType' => ['id',
-                                          'contentType',
-                                          'parent',
-                                          'children',
-                                          'displayOptions',
-                                          'mappingOptions',
-                                          'restrictionOptions',
-                                          'migrationOptions',
-                                          'extraOptions',
-                                       'fieldRoles',
-                                         ],
-                       'Template' => ['id',
-                                         'created',
-                                         'modified',
-                                         'environments',
-                                        ],
-                       'View' => ['id',
-                                     'created',
-                                     'modified',
-                                    ],
+        'indexAnalysisConfiguration', ],
+        'FieldType' => ['id',
+            'contentType',
+            'parent',
+            'children',
+            'displayOptions',
+            'mappingOptions',
+            'restrictionOptions',
+            'migrationOptions',
+            'extraOptions',
+            'fieldRoles',
+        ],
+        'Template' => ['id',
+            'created',
+            'modified',
+            'environments',
+        ],
+        'View' => ['id',
+            'created',
+            'modified',
+        ],
     ];
 
     /**
-     * {@inheritDoc}
-     *
      * @param mixed        $object
      * @param array<mixed> $context
      *
      * @return array<mixed>
      */
+    #[\Override]
     public function normalize($object, $format = null, array $context = []): array
     {
         $data = [];
@@ -63,8 +64,8 @@ class JsonNormalizer implements NormalizerInterface, DenormalizerInterface
         $reflectionClass = new \ReflectionClass($object);
 
         $data['__jsonclass__'] = [
-                $object::class,
-                [], // constructor arguments
+            $object::class,
+            [], // constructor arguments
         ];
         // Parsing all methods of the object
         foreach ($reflectionClass->getMethods(\ReflectionMethod::IS_PUBLIC) as $reflectionMethod) {
@@ -141,6 +142,7 @@ class JsonNormalizer implements NormalizerInterface, DenormalizerInterface
      *
      * @return array<mixed>|object
      */
+    #[\Override]
     public function denormalize($data, $class, $format = null, array $context = []): array|object
     {
         $class = $data['__jsonclass__'][0];
@@ -188,17 +190,13 @@ class JsonNormalizer implements NormalizerInterface, DenormalizerInterface
         return $object;
     }
 
-    /**
-     * {@inheritdoc}
-     */
+    #[\Override]
     public function supportsNormalization($data, $format = null): bool
     {
         return \is_object($data) && 'json' === $format;
     }
 
-    /**
-     * {@inheritdoc}
-     */
+    #[\Override]
     public function supportsDenormalization($data, $type, $format = null): bool
     {
         return isset($data['__jsonclass__']) && 'json' === $format;

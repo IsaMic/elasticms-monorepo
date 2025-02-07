@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace EMS\CoreBundle\Core\Revision\Task;
 
-use EMS\CommonBundle\Common\Standard\DateTime;
 use EMS\CoreBundle\Entity\Task;
+use EMS\Helpers\Standard\DateTime;
 
 final class TaskLog
 {
@@ -18,8 +18,8 @@ final class TaskLog
     public ?\DateTimeInterface $taskDeadline = null;
     public ?string $taskAssignee = null;
 
-    private const STATUS_CREATED = 'created';
-    private const STATUS_UPDATED = 'updated';
+    private const string STATUS_CREATED = 'created';
+    private const string STATUS_UPDATED = 'updated';
 
     private function __construct(public string $assignee, public string $username)
     {

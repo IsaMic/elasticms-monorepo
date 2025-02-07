@@ -11,6 +11,9 @@ use EMS\ClientHelperBundle\Helper\Elasticsearch\ClientRequest;
 use EMS\ClientHelperBundle\Helper\Elasticsearch\ClientRequestManager;
 use EMS\ClientHelperBundle\Helper\Templating\TemplateDocument;
 use EMS\CommonBundle\Common\EMSLink;
+use EMS\CommonBundle\Contracts\Twig\TemplateFactoryInterface;
+use EMS\CommonBundle\Contracts\Twig\TemplateInterface;
+use EMS\Helpers\Standard\Json;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Profiler\Profiler;
@@ -18,22 +21,20 @@ use Symfony\Component\PropertyAccess\PropertyAccess;
 use Symfony\Component\Routing\Route as SymfonyRoute;
 use Symfony\Component\Routing\RouterInterface;
 
-final class Handler implements HandlerInterface
+final readonly class Handler implements HandlerInterface
 {
-    private readonly ClientRequest $clientRequest;
+    private ClientRequest $clientRequest;
 
     public function __construct(
         ClientRequestManager $manager,
-        private readonly RouterInterface $router,
-        private readonly ?Profiler $profiler
+        private TemplateFactoryInterface $templateFactory,
+        private RouterInterface $router,
+        private ?Profiler $profiler,
     ) {
         $this->clientRequest = $manager->getDefault();
     }
 
-    /**
-     * @return array{template: string, context: array<mixed>}
-     */
-    public function handle(Request $request): array
+    public function handle(Request $request): TemplateInterface
     {
         $emschRequest = EmschRequest::fromRequest($request);
 
@@ -50,10 +51,10 @@ final class Handler implements HandlerInterface
             $context['emsLink'] = EMSLink::fromDocument($document);
         }
 
-        return [
-            'template' => $this->getTemplate($request, $route, $document),
-            'context' => $context,
-        ];
+        return $this->templateFactory->create(
+            templateName: $this->getTemplateName($request, $route, $document),
+            context: $context
+        );
     }
 
     private function getRoute(Request $request): SymfonyRoute
@@ -87,7 +88,7 @@ final class Handler implements HandlerInterface
         }
 
         try {
-            return $this->clientRequest->searchOne($route->getOption('type'), \json_decode($json, true, 512, JSON_THROW_ON_ERROR), $indexRegex);
+            return $this->clientRequest->searchOne($route->getOption('type'), Json::decode($json), $indexRegex);
         } catch (SingleResultException) {
             throw new NotFoundHttpException();
         }
@@ -96,7 +97,7 @@ final class Handler implements HandlerInterface
     /**
      * @param ?array<mixed> $document
      */
-    private function getTemplate(Request $request, SymfonyRoute $route, array $document = null): string
+    private function getTemplateName(Request $request, SymfonyRoute $route, ?array $document = null): string
     {
         $template = $route->getOption('template');
 

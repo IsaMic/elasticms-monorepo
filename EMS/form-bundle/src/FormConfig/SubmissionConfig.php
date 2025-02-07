@@ -9,13 +9,14 @@ class SubmissionConfig implements \JsonSerializable
     public function __construct(
         private readonly string $class,
         private readonly string $endpoint,
-        private readonly string $message)
-    {
+        private readonly string $message
+    ) {
     }
 
     /**
      * @return array<string, mixed>
      */
+    #[\Override]
     public function jsonSerialize(): array
     {
         return \get_object_vars($this);

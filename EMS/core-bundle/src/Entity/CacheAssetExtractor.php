@@ -1,58 +1,26 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Entity;
 
-use Doctrine\ORM\Mapping as ORM;
 use EMS\CommonBundle\Entity\CreatedModifiedTrait;
-use EMS\Helpers\Standard\DateTime;
+use EMS\CommonBundle\Entity\IdentifierIntegerTrait;
 
-/**
- * @ORM\Table(name="cache_asset_extractor")
- *
- * @ORM\Entity()
- *
- * @ORM\HasLifecycleCallbacks()
- */
 class CacheAssetExtractor
 {
     use CreatedModifiedTrait;
-    /**
-     * @ORM\Column(name="id", type="integer")
-     *
-     * @ORM\Id
-     *
-     * @ORM\GeneratedValue(strategy="AUTO")
-     */
-    private int $id;
+    use IdentifierIntegerTrait;
 
-    /**
-     * @ORM\Column(name="hash", type="string", nullable=false, unique=true)
-     */
     private string $hash;
 
-    /**
-     * @ORM\Column(name="data", type="json", nullable=true)
-     *
-     * @var mixed[]|null
-     */
+    /** @var mixed[]|null */
     private ?array $data = null;
 
     public function __construct()
     {
-        $this->created = DateTime::create('now');
-        $this->modified = DateTime::create('now');
-    }
-
-    public function getId(): int
-    {
-        return $this->id;
-    }
-
-    public function setId(int $id): self
-    {
-        $this->id = $id;
-
-        return $this;
+        $this->created = new \DateTime();
+        $this->modified = new \DateTime();
     }
 
     public function getHash(): string

@@ -1,6 +1,6 @@
-//
 // Component: Pagination
-//
+
+@use "sass:color";
 
 .pagination-month {
   .page-item {
@@ -13,6 +13,7 @@
       flex-direction: column;
       box-shadow: none;
     }
+
     &:first-child,
     &:last-child {
       .page-link {
@@ -20,11 +21,13 @@
         font-size: $font-size-lg;
       }
     }
+
     .page-month {
       margin-bottom: 0;
       font-size: $font-size-lg;
       font-weight: $font-weight-bold;
     }
+
     .page-year {
       margin-bottom: 0;
     }
@@ -35,6 +38,7 @@
       font-size: ($font-size-lg * 1.25);
     }
   }
+
   &.pagination-sm {
     .page-month {
       font-size: ($font-size-base);
@@ -42,11 +46,11 @@
   }
 }
 
-@include dark-mode () {
+@include dark-mode {
   .page-item {
     &.disabled a,
     &.disabled .page-link {
-      background-color: lighten($dark, 2.5%) !important;
+      background-color: color.adjust($dark, $lightness: 2.5%) !important;
       border-color: $gray-600 !important;
       color: $gray-600;
     }
@@ -67,6 +71,7 @@
         }
       }
     }
+
     &:not(.active) {
       .page-link {
         background-color: $dark;
@@ -74,8 +79,8 @@
 
         &:hover,
         &:focus {
-          color: lighten($primary-alt, 5%);
-          background-color: lighten($dark, 5%);
+          color: color.adjust($primary-alt, $lightness: 5%);
+          background-color: color.adjust($dark, $lightness: 5%);
         }
       }
     }

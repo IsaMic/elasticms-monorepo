@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Form\DataField;
 
 use EMS\CoreBundle\Entity\DataField;
@@ -11,19 +13,19 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class CheckboxFieldType extends DataFieldType
 {
+    #[\Override]
     public function getLabel(): string
     {
         return 'Checkbox field';
     }
 
+    #[\Override]
     public static function getIcon(): string
     {
         return 'glyphicon glyphicon-check';
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function importData(DataField $dataField, array|string|int|float|bool|null $sourceArray, bool $isMigration): array
     {
         $migrationOptions = $dataField->giveFieldType()->getMigrationOptions();
@@ -35,36 +37,33 @@ class CheckboxFieldType extends DataFieldType
     }
 
     /**
-     * @param FormBuilderInterface<FormBuilderInterface> $builder
-     * @param array<string, mixed>                       $options
+     * @param FormBuilderInterface<mixed> $builder
+     * @param array<string, mixed>        $options
      */
+    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         /** @var FieldType $fieldType */
         $fieldType = $builder->getOptions()['metadata'];
 
         $builder->add('value', CheckboxType::class, [
-                'label' => ($options['question_label'] ?: $options['label'] ?? false),
-                'disabled' => $this->isDisabled($options),
-                'required' => false,
+            'label' => ($options['question_label'] ?: $options['label'] ?? false),
+            'disabled' => $this->isDisabled($options),
+            'required' => false,
         ]);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function modelTransform($data, FieldType $fieldType): DataField
     {
         $dataField = new DataField();
-        $dataField->setRawData(\boolval($data));
+        $dataField->setRawData((bool) $data);
         $dataField->setFieldType($fieldType);
 
         return $dataField;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function viewTransform(DataField $dataField)
     {
         $out = parent::viewTransform($dataField);
@@ -72,19 +71,19 @@ class CheckboxFieldType extends DataFieldType
         return ['value' => ((null !== $out && !empty($out)) ? true : false)];
     }
 
+    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         parent::configureOptions($resolver);
         $resolver->setDefaults([
-                'question_label' => false,
+            'question_label' => false,
         ]);
     }
 
     /**
-     * {@inheritDoc}
-     *
      * @param array<mixed> $data
      */
+    #[\Override]
     public function reverseViewTransform($data, FieldType $fieldType): DataField
     {
         $out = parent::reverseViewTransform($data, $fieldType);
@@ -97,9 +96,7 @@ class CheckboxFieldType extends DataFieldType
         return $out;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function buildObjectArray(DataField $data, array &$out): void
     {
         if (!$data->giveFieldType()->getDeleted()) {
@@ -111,19 +108,15 @@ class CheckboxFieldType extends DataFieldType
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function generateMapping(FieldType $current): array
     {
         return [
-                $current->getName() => $this->elasticsearchService->updateMapping(\array_merge(['type' => 'boolean'], \array_filter($current->getMappingOptions()))),
+            $current->getName() => $this->elasticsearchService->updateMapping(\array_merge(['type' => 'boolean'], \array_filter($current->getMappingOptions()))),
         ];
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function buildOptionsForm(FormBuilderInterface $builder, array $options): void
     {
         parent::buildOptionsForm($builder, $options);
@@ -131,13 +124,13 @@ class CheckboxFieldType extends DataFieldType
 
         // String specific display options
         $optionsForm->get('displayOptions')->add('question_label', TextType::class, [
-                'required' => false,
-//         ] )->add ( 'labels', TextareaType::class, [
-//                 'required' => false,
+            'required' => false,
+            //         ] )->add ( 'labels', TextareaType::class, [
+            //                 'required' => false,
         ]);
 
-//         // String specific mapping options
-//         $optionsForm->get ( 'mappingOptions' )->add ( 'analyzer', AnalyzerPickerType::class);
+        //         // String specific mapping options
+        //         $optionsForm->get ( 'mappingOptions' )->add ( 'analyzer', AnalyzerPickerType::class);
         $optionsForm->get('restrictionOptions')->remove('mandatory');
         $optionsForm->get('restrictionOptions')->remove('mandatory_if');
     }

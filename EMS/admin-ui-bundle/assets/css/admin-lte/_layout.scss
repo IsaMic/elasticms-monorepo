@@ -1,6 +1,7 @@
-//
 // Core: Layout
-//
+
+@use "sass:color";
+@use "sass:map";
 
 html {
   scroll-behavior: smooth;
@@ -38,6 +39,7 @@ body,
     .layout-fixed & .sidebar {
       height: calc(100vh - (#{$main-header-height-inner} + #{$main-header-bottom-border-width}));
     }
+
     .layout-fixed.text-sm & .sidebar {
       height: calc(100vh - (#{$main-header-height-sm-inner} + #{$main-header-bottom-border-width}));
     }
@@ -163,6 +165,7 @@ body,
     .main-header.border-bottom-0 ~ .content-wrapper {
       margin-top: $main-header-height-inner;
     }
+
     .content-wrapper {
       margin-top: $main-header-height;
     }
@@ -207,7 +210,7 @@ body,
     }
   }
 
-  @each $breakpoint in map-keys($grid-breakpoints) {
+  @each $breakpoint in map.keys($grid-breakpoints) {
     @include media-breakpoint-up($breakpoint) {
       $infix: breakpoint-infix($breakpoint, $grid-breakpoints);
 
@@ -372,7 +375,7 @@ body,
     }
   }
 
-  @each $breakpoint in map-keys($grid-breakpoints) {
+  @each $breakpoint in map.keys($grid-breakpoints) {
     @include media-breakpoint-up($breakpoint) {
       $infix: breakpoint-infix($breakpoint, $grid-breakpoints);
       .layout#{$infix}-footer-fixed & {
@@ -426,7 +429,7 @@ body,
 }
 
 
-body.sidebar-collapse:not(.sidebar-mini-xs):not(.sidebar-mini-md):not(.sidebar-mini) {
+body.sidebar-collapse:not(.sidebar-mini-xs, .sidebar-mini-md, .sidebar-mini) {
   .content-wrapper,
   .main-footer,
   .main-header {
@@ -437,7 +440,7 @@ body.sidebar-collapse:not(.sidebar-mini-xs):not(.sidebar-mini-md):not(.sidebar-m
   }
 }
 
-body:not(.sidebar-mini-md):not(.sidebar-mini-xs):not(.layout-top-nav) {
+body:not(.sidebar-mini-md, .sidebar-mini-xs, .layout-top-nav) {
   .content-wrapper,
   .main-footer,
   .main-header {
@@ -470,9 +473,11 @@ body:not(.sidebar-mini-md):not(.sidebar-mini-xs):not(.layout-top-nav) {
         margin-left: $sidebar-mini-width;
       }
     }
+
     @include media-breakpoint-down(md) {
       margin-left: $sidebar-mini-width;
     }
+
     @include media-breakpoint-down(sm) {
       margin-left: 0;
     }
@@ -492,6 +497,7 @@ body:not(.sidebar-mini-md):not(.sidebar-mini-xs):not(.layout-top-nav) {
         margin-left: $sidebar-mini-width;
       }
     }
+
     @include media-breakpoint-down(md) {
       margin-left: $sidebar-mini-width;
     }
@@ -510,11 +516,13 @@ body:not(.sidebar-mini-md):not(.sidebar-mini-xs):not(.layout-top-nav) {
   &,
   &::before {
     $local-sidebar-transition: margin-left $transition-speed $transition-fn, width $transition-speed $transition-fn;
+
     @include transition($local-sidebar-transition);
+
     width: $sidebar-width;
   }
 
-  .sidebar-collapse:not(.sidebar-mini):not(.sidebar-mini-md):not(.sidebar-mini-xs) & {
+  .sidebar-collapse:not(.sidebar-mini, .sidebar-mini-md, .sidebar-mini-xs) & {
     &,
     &::before {
       box-shadow: none !important;
@@ -583,8 +591,9 @@ body:not(.layout-fixed) {
     .control-sidebar-content {
       height: calc(100vh - #{$main-header-height});
       overflow-y: auto;
-      @include scrollbar-width-thin();
-      @include scrollbar-color-gray();
+
+      @include scrollbar-width-thin;
+      @include scrollbar-color-gray;
     }
   }
 }
@@ -600,7 +609,7 @@ body:not(.layout-fixed) {
 .main-footer {
   background-color: $main-footer-bg;
   border-top: $main-footer-border-top;
-  color: lighten($gray-700, 15%);
+  color: color.adjust($gray-700, $lightness: 15%);
   padding: $main-footer-padding;
 
   .text-sm &,
@@ -622,6 +631,13 @@ body:not(.layout-fixed) {
 
     .text-sm & {
       font-size: 1.5rem;
+    }
+
+    small {
+      color: color.adjust($body-color, $lightness: 25%);
+      font-weight: normal;
+      margin-left: .5em;
+      font-size: 1.1rem;
     }
   }
 
@@ -651,7 +667,7 @@ body:not(.layout-fixed) {
   }
 }
 
-@include dark-mode () {
+@include dark-mode {
   background-color: $dark-main-bg;
   color: $white;
 
@@ -668,7 +684,7 @@ body:not(.layout-fixed) {
       }
     }
 
-    @each $breakpoint in map-keys($grid-breakpoints) {
+    @each $breakpoint in map.keys($grid-breakpoints) {
       @include media-breakpoint-up($breakpoint) {
         $infix: breakpoint-infix($breakpoint, $grid-breakpoints);
 
@@ -693,12 +709,14 @@ body:not(.layout-fixed) {
       color: $gray-500;
     }
   }
+
   .main-footer {
     background-color: $dark;
-    border-color: lighten($dark, 10%);
+    border-color: color.adjust($dark, $lightness: 10%);
   }
+
   .content-wrapper {
-    background-color: lighten($dark, 7.5%);
+    background-color: color.adjust($dark, $lightness: 7.5%);
     color: $white;
 
     .content-header {

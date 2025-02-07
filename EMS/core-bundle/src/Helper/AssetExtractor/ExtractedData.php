@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Helper\AssetExtractor;
 
 use EMS\Helpers\Standard\Json;
@@ -7,7 +9,7 @@ use EMS\Helpers\Standard\Text;
 
 class ExtractedData
 {
-    private bool $empty;
+    private readonly bool $empty;
 
     /**
      * @param array<string, mixed> $source
@@ -30,7 +32,7 @@ class ExtractedData
     public function getLocale(): ?string
     {
         if (isset($this->source['language'])) {
-            return \strval($this->source['language']);
+            return (string) $this->source['language'];
         }
 
         return null;
@@ -68,12 +70,12 @@ class ExtractedData
 
     public function getAuthor(): string
     {
-        return \strval($this->source['author'] ?? $this->source['dc:creator'] ?? '');
+        return (string) ($this->source['author'] ?? $this->source['dc:creator'] ?? '');
     }
 
     public function getTitle(): string
     {
-        return \strval($this->source['title'] ?? $this->source['dc:title'] ?? '');
+        return (string) ($this->source['title'] ?? $this->source['dc:title'] ?? '');
     }
 
     public function hasContent(): bool
@@ -83,7 +85,7 @@ class ExtractedData
 
     public function getContent(): string
     {
-        $content = \strval($this->source['content'] ?? '');
+        $content = (string) ($this->source['content'] ?? '');
         $trimContent = Text::superTrim($content);
 
         return \mb_substr($trimContent, 0, $this->maxContentSize, 'UTF-8');

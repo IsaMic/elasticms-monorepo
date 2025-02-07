@@ -9,6 +9,7 @@ use Elastica\Exception\ClientException;
 use Elastica\Exception\ResponseException;
 use Elastica\Request;
 use Elastica\Response;
+use EMS\Helpers\Standard\Json;
 use Symfony\Component\Stopwatch\Stopwatch;
 
 class Client extends BaseClient
@@ -22,6 +23,7 @@ class Client extends BaseClient
      * @param array<mixed>        $query
      * @param string              $contentType
      */
+    #[\Override]
     public function request($path, $method = Request::GET, $data = [], array $query = [], $contentType = Request::DEFAULT_CONTENT_TYPE): Response
     {
         $this->stopwatch?->start('es_request', 'fos_elastica');
@@ -29,7 +31,7 @@ class Client extends BaseClient
         try {
             $response = parent::request($path, $method, $data, $query, $contentType);
         } catch (ResponseException $e) {
-            $this->getLogger()?->logResponse($e->getResponse(), $e->getRequest(), $e);
+            $this->getLogger()?->logResponse($e->getResponse(), $e->getRequest());
             throw $e;
         }
         $responseData = $response->getData();
@@ -43,7 +45,7 @@ class Client extends BaseClient
         $forbiddenHttpCodes = $connection->hasConfig('http_error_codes') ? $connection->getConfig('http_error_codes') : [];
 
         if (isset($transportInfo['http_code']) && \is_array($forbiddenHttpCodes) && \in_array($transportInfo['http_code'], $forbiddenHttpCodes, true)) {
-            $message = \sprintf('Error in transportInfo: response code is %s, response body is %s', $transportInfo['http_code'], \json_encode($responseData, JSON_THROW_ON_ERROR));
+            $message = \sprintf('Error in transportInfo: response code is %s, response body is %s', $transportInfo['http_code'], Json::encode($responseData));
             throw new ClientException($message);
         }
 

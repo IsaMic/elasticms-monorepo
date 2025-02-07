@@ -27,6 +27,7 @@ abstract class AbstractCommand extends Command implements CommandInterface
         parent::__construct();
     }
 
+    #[\Override]
     protected function initialize(InputInterface $input, OutputInterface $output): void
     {
         $this->io = new SymfonyStyle($input, $output);
@@ -37,6 +38,7 @@ abstract class AbstractCommand extends Command implements CommandInterface
         $this->processHelper = $processHelper;
     }
 
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         return self::EXECUTE_SUCCESS;
@@ -64,7 +66,7 @@ abstract class AbstractCommand extends Command implements CommandInterface
             throw new \RuntimeException(\sprintf('Missing argument "%s"', $name));
         }
 
-        return \boolval($arg);
+        return (bool) $arg;
     }
 
     protected function getArgumentString(string $name): string
@@ -73,7 +75,7 @@ abstract class AbstractCommand extends Command implements CommandInterface
             throw new \RuntimeException(\sprintf('Missing argument "%s"', $name));
         }
 
-        return \strval($arg);
+        return (string) $arg;
     }
 
     protected function getArgumentStringNull(string $name): ?string
@@ -82,7 +84,7 @@ abstract class AbstractCommand extends Command implements CommandInterface
             return null;
         }
 
-        return \strval($arg);
+        return (string) $arg;
     }
 
     /**
@@ -149,7 +151,7 @@ abstract class AbstractCommand extends Command implements CommandInterface
             throw new \RuntimeException(\sprintf('Missing argument "%s"', $name));
         }
 
-        return \intval($arg);
+        return (int) $arg;
     }
 
     /**
@@ -168,7 +170,7 @@ abstract class AbstractCommand extends Command implements CommandInterface
     protected function getOptionInt(string $name, ?int $default = null): int
     {
         if (null !== $option = $this->input->getOption($name)) {
-            return \intval($option);
+            return (int) $option;
         }
 
         if (null === $default) {
@@ -181,7 +183,7 @@ abstract class AbstractCommand extends Command implements CommandInterface
     protected function getOptionFloat(string $name, ?float $default = null): float
     {
         if (null !== $option = $this->input->getOption($name)) {
-            return \floatval($option);
+            return (float) $option;
         }
 
         if (null === $default) {
@@ -203,13 +205,13 @@ abstract class AbstractCommand extends Command implements CommandInterface
     {
         $option = $this->input->getOption($name);
 
-        return null === $option ? null : \intval($option);
+        return null === $option ? null : (int) $option;
     }
 
     protected function getOptionString(string $name, ?string $default = null): string
     {
         if (null !== $option = $this->input->getOption($name)) {
-            return \strval($option);
+            return (string) $option;
         }
 
         if (null === $default) {
@@ -236,7 +238,7 @@ abstract class AbstractCommand extends Command implements CommandInterface
     {
         $option = $this->input->getOption($name);
 
-        return null === $option ? null : \strval($option);
+        return null === $option ? null : (string) $option;
     }
 
     /**

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\CLI\Client\Document\Update;
 
 use App\CLI\Client\Data\Column\DataColumn;
+use EMS\Helpers\File\File;
 use EMS\Helpers\Standard\Json;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -31,23 +32,15 @@ final class DocumentUpdateConfig
 
         $this->dataColumns = $config['dataColumns'];
 
-        $this->updateContentType = \strval($config['update']['contentType']);
-        $this->updateIndexEmsId = \intval($config['update']['indexEmsId']);
+        $this->updateContentType = (string) $config['update']['contentType'];
+        $this->updateIndexEmsId = (int) $config['update']['indexEmsId'];
         $this->updateMapping = $config['update']['mapping'];
         $this->collectionField = $config['update']['collectionField'];
     }
 
     public static function fromFile(string $filename): self
     {
-        try {
-            $fileContent = \file_get_contents($filename);
-        } catch (\Throwable) {
-            $fileContent = false;
-        }
-
-        if (false === $fileContent) {
-            throw new \RuntimeException(\sprintf('Could not read config file from %s', $filename));
-        }
+        $fileContent = File::fromFilename($filename)->getContents();
 
         return new self(Json::decode($fileContent));
     }

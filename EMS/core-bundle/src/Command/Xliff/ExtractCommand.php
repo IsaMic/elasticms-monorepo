@@ -23,12 +23,17 @@ use EMS\Helpers\File\TempFile;
 use EMS\Helpers\Html\MimeTypes;
 use EMS\Helpers\Standard\Json;
 use EMS\Xliff\Xliff\Extractor;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
+#[AsCommand(
+    name: Commands::XLIFF_EXTRACT,
+    hidden: false
+)]
 final class ExtractCommand extends AbstractCommand
 {
     private string $sourceLocale;
@@ -43,38 +48,36 @@ final class ExtractCommand extends AbstractCommand
     private array $searchQuery;
     private int $bulkSize;
 
-    public const ARGUMENT_SOURCE_ENVIRONMENT = 'source-environment';
-    public const ARGUMENT_SEARCH_QUERY = 'search-query';
-    public const ARGUMENT_SOURCE_LOCALE = 'source-locale';
-    public const ARGUMENT_TARGET_LOCALE = 'target-locale';
-    public const OPTION_TARGET_ENVIRONMENT = 'target-environment';
-    public const ARGUMENT_FIELDS = 'fields';
-    public const OPTION_BULK_SIZE = 'bulk-size';
-    public const OPTION_XLIFF_VERSION = 'xliff-version';
-    public const OPTION_BASENAME = 'basename';
-    public const OPTION_BASE_URL = 'base-url';
-    public const OPTION_TRANSLATION_FIELD = 'translation-field';
-    public const OPTION_LOCALE_FIELD = 'locale-field';
-    public const OPTION_ENCODING = 'encoding';
-    public const OPTION_WITH_BASELINE = 'with-baseline';
-    public const OPTION_MAIL_SUBJECT = 'mail-subject';
-    public const OPTION_MAIL_TO = 'mail-to';
-    public const OPTION_MAIL_CC = 'mail-cc';
-    public const OPTION_MAIL_REPLY_TO = 'mail-reply-to';
-    private const MAIL_TEMPLATE = '@EMSCore/email/xliff/extract.email.html.twig';
-
-    protected static $defaultName = Commands::XLIFF_EXTRACT;
+    public const string ARGUMENT_SOURCE_ENVIRONMENT = 'source-environment';
+    public const string ARGUMENT_SEARCH_QUERY = 'search-query';
+    public const string ARGUMENT_SOURCE_LOCALE = 'source-locale';
+    public const string ARGUMENT_TARGET_LOCALE = 'target-locale';
+    public const string OPTION_TARGET_ENVIRONMENT = 'target-environment';
+    public const string ARGUMENT_FIELDS = 'fields';
+    public const string OPTION_BULK_SIZE = 'bulk-size';
+    public const string OPTION_XLIFF_VERSION = 'xliff-version';
+    public const string OPTION_BASENAME = 'basename';
+    public const string OPTION_BASE_URL = 'base-url';
+    public const string OPTION_TRANSLATION_FIELD = 'translation-field';
+    public const string OPTION_LOCALE_FIELD = 'locale-field';
+    public const string OPTION_ENCODING = 'encoding';
+    public const string OPTION_WITH_BASELINE = 'with-baseline';
+    public const string OPTION_MAIL_SUBJECT = 'mail-subject';
+    public const string OPTION_MAIL_TO = 'mail-to';
+    public const string OPTION_MAIL_CC = 'mail-cc';
+    public const string OPTION_MAIL_REPLY_TO = 'mail-reply-to';
+    private const string MAIL_TEMPLATE = '@EMSCore/email/xliff/extract.email.html.twig';
     private string $xliffBasename;
     private ?string $baseUrl = null;
     private string $xliffVersion;
-    private ?string $translationField;
-    private ?string $localeField;
+    private ?string $translationField = null;
+    private ?string $localeField = null;
     private string $encoding;
     private bool $withBaseline;
     private string $mailSubject;
-    private ?string $mailTo;
-    private ?string $mailCC;
-    private ?string $mailReplyTo;
+    private ?string $mailTo = null;
+    private ?string $mailCC = null;
+    private ?string $mailReplyTo = null;
 
     public function __construct(
         private readonly ContentTypeService $contentTypeService,
@@ -89,6 +92,7 @@ final class ExtractCommand extends AbstractCommand
         parent::__construct();
     }
 
+    #[\Override]
     protected function configure(): void
     {
         $this
@@ -113,6 +117,7 @@ final class ExtractCommand extends AbstractCommand
         ;
     }
 
+    #[\Override]
     protected function initialize(InputInterface $input, OutputInterface $output): void
     {
         parent::initialize($input, $output);
@@ -143,6 +148,7 @@ final class ExtractCommand extends AbstractCommand
         }
     }
 
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $this->io->text([

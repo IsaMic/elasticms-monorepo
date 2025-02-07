@@ -6,36 +6,36 @@ namespace EMS\CommonBundle\Common\Log;
 
 use EMS\CommonBundle\Repository\LogRepository;
 use Monolog\Handler\AbstractProcessingHandler;
+use Monolog\LogRecord;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Authentication\Token\SwitchUserToken;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 
 class DoctrineHandler extends AbstractProcessingHandler
 {
-    private const SECRET_VALUE = '***';
-    private const SECRET_KEYS = ['api_key'];
+    private const string SECRET_VALUE = '***';
+    private const array SECRET_KEYS = ['api_key'];
 
     public function __construct(private readonly LogRepository $logRepository, private readonly TokenStorageInterface $tokenStorage, private readonly int $minLevel)
     {
         parent::__construct();
     }
 
-    /**
-     * @param array{message: string, level: int, level_name: string, context: array<mixed>, channel: string, formatted: string, datetime: \DateTimeImmutable, extra: array<mixed>} $record
-     */
-    protected function write(array $record): void
+    #[\Override]
+    protected function write(LogRecord $record): void
     {
-        if ($record['level'] < $this->minLevel) {
+        $logArray = $record->toArray();
+        if ($logArray['level'] < $this->minLevel) {
             return;
         }
 
         $token = $this->tokenStorage->getToken();
-        $record['username'] = $token instanceof TokenInterface ? $token->getUserIdentifier() : null;
-        $record['impersonator'] = $token instanceof SwitchUserToken ? $token->getOriginalToken()->getUserIdentifier() : null;
+        $logArray['username'] = $token instanceof TokenInterface ? $token->getUserIdentifier() : null;
+        $logArray['impersonator'] = $token instanceof SwitchUserToken ? $token->getOriginalToken()->getUserIdentifier() : null;
+        $logArray['formatted'] = $record->formatted ?? $record->message;
+        $logArray['context'] = DoctrineHandler::secretContext($logArray['context']);
 
-        $record['context'] = DoctrineHandler::secretContext($record['context']);
-
-        $this->logRepository->insertRecord($record);
+        $this->logRepository->insertRecord($logArray);
     }
 
     /**

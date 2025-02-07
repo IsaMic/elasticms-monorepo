@@ -1,9 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Form\DataField;
 
 use EMS\CoreBundle\Entity\DataField;
 use EMS\CoreBundle\Entity\FieldType;
+use EMS\Helpers\Standard\Json;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\FormBuilderInterface;
 
@@ -17,47 +20,47 @@ class HiddenFieldType extends DataFieldType
 {
     // TODO: deorecated class?
 
+    #[\Override]
     public function getLabel(): string
     {
         throw new \Exception('This Field Type should not be used as field (as service)');
     }
 
     /**
-     * @param FormBuilderInterface<FormBuilderInterface> $builder
-     * @param array<string, mixed>                       $options
+     * @param FormBuilderInterface<mixed> $builder
+     * @param array<string, mixed>        $options
      */
+    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->add('value', HiddenType::class, [
-                    'disabled' => $this->isDisabled($options),
-            ]);
+            'disabled' => $this->isDisabled($options),
+        ]);
     }
 
+    #[\Override]
     public function getBlockPrefix(): string
     {
         return 'empty';
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function viewTransform(DataField $dataField)
     {
         $out = parent::viewTransform($dataField);
 
-        return ['value' => \json_encode($out, JSON_THROW_ON_ERROR)];
+        return ['value' => Json::encode($out)];
     }
 
     /**
-     * {@inheritDoc}
-     *
      * @param array<mixed> $data
      */
+    #[\Override]
     public function reverseViewTransform($data, FieldType $fieldType): DataField
     {
         $dataField = parent::reverseViewTransform($data, $fieldType);
         try {
-            $value = \json_decode((string) $data['value'], null, 512, JSON_THROW_ON_ERROR);
+            $value = Json::mixedDecode((string) $data['value']);
             $dataField->setRawData($value);
         } catch (\Exception) {
             $dataField->setRawData(null);

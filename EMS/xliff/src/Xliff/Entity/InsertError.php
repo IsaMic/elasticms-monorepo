@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\Xliff\Xliff\Entity;
 
 class InsertError
@@ -10,7 +12,7 @@ class InsertError
 
     public function getRevisionIdentifier(): string
     {
-        return \join('_', [
+        return \implode('_', [
             $this->contentType,
             $this->ouuid,
             $this->revisionId,

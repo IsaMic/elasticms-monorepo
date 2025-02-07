@@ -11,6 +11,7 @@ use EMS\CommonBundle\Contracts\File\FileManagerInterface;
 use EMS\CommonBundle\Storage\Archive;
 use EMS\CommonBundle\Storage\StorageManager;
 use EMS\Helpers\Standard\Type;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -18,12 +19,16 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Finder\Finder;
 
+#[AsCommand(
+    name: Commands::FILE_STRUCTURE_PULL,
+    description: 'Pull an EMS archive into a local folder (and overwrite it)',
+    hidden: false
+)]
 class FileStructurePullCommand extends AbstractCommand
 {
-    protected static $defaultName = Commands::FILE_STRUCTURE_PULL;
-    private const ARGUMENT_ARCHIVE_HASH = 'hash';
-    private const ARGUMENT_FOLDER = 'folder';
-    private const OPTION_ADMIN = 'admin';
+    private const string ARGUMENT_ARCHIVE_HASH = 'hash';
+    private const string ARGUMENT_FOLDER = 'folder';
+    private const string OPTION_ADMIN = 'admin';
 
     private string $folderPath;
     private string $archiveHash;
@@ -36,17 +41,18 @@ class FileStructurePullCommand extends AbstractCommand
         parent::__construct();
     }
 
+    #[\Override]
     protected function configure(): void
     {
         parent::configure();
         $this
-            ->setDescription('Pull an EMS archive into a local folder (and overwrite it)')
             ->addArgument(self::ARGUMENT_ARCHIVE_HASH, InputArgument::REQUIRED, 'Hash of the ElasticMS Archive')
             ->addArgument(self::ARGUMENT_FOLDER, InputArgument::REQUIRED, 'Target folder')
             ->addOption(self::OPTION_ADMIN, null, InputOption::VALUE_NONE, 'Pull from admin')
         ;
     }
 
+    #[\Override]
     protected function initialize(InputInterface $input, OutputInterface $output): void
     {
         parent::initialize($input, $output);
@@ -58,6 +64,7 @@ class FileStructurePullCommand extends AbstractCommand
         };
     }
 
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $this->io->title('EMS - File structure - Pull');

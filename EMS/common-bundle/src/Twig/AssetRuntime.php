@@ -55,7 +55,7 @@ class AssetRuntime
 
             return \iterator_to_array(Finder::create()->in($saveDir)->files()->filter($excludeCheckFile)->getIterator());
         } catch (\Exception $e) {
-            $this->logger->error('ems_zip failed : {error}', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            $this->logger->error('ems_zip failed : %error%', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
         }
 
         return [];
@@ -80,7 +80,7 @@ class AssetRuntime
     {
         $config = $assetConfig;
 
-        $hash = Config::extractHash($fileField, $fileHashField, \strval($assetConfig[EmsFields::ASSET_CONFIG_TYPE] ?? 'none'));
+        $hash = Config::extractHash($fileField, $fileHashField, (string) ($assetConfig[EmsFields::ASSET_CONFIG_TYPE] ?? 'none'));
         $filename = Config::extractFilename($fileField, $config, $filenameField, $mimeTypeField);
         $mimeType = Config::extractMimetype($fileField, $config, $filename, $mimeTypeField);
         $referenceType = Config::extractUrlType($fileField, $referenceType);
@@ -94,9 +94,8 @@ class AssetRuntime
         } catch (NotSavedException $e) {
             $hashConfig = $e->getHash();
         }
-
         if (!($config[EmsFields::ASSET_CONFIG_GET_FILE_PATH] ?? false)) {
-            $basename = (new Encoder())->webalizeForUsers(\basename($filename));
+            $basename = (new Encoder())->slug(text: \basename($filename), preserveFileExtension: true);
 
             return $this->urlGenerator->generate($route, [
                 'hash_config' => $hashConfig,
@@ -215,7 +214,7 @@ class AssetRuntime
     /**
      * @param mixed[] $options
      */
-    public function fileFromArchive(string $hash, string $path, array $options = []): null|string|TempFile
+    public function fileFromArchive(string $hash, string $path, array $options = []): string|TempFile|null
     {
         $extract = Type::bool($options['extract'] ?? true);
         $asTempFile = Type::bool($options['asTempFile'] ?? false);

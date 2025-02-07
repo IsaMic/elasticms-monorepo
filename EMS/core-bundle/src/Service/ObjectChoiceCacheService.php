@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Service;
 
 use Elastica\Query\BoolQuery;
@@ -33,7 +35,7 @@ class ObjectChoiceCacheService
         protected AuthorizationCheckerInterface $authorizationChecker,
         protected TokenStorageInterface $tokenStorage,
         private readonly ElasticaService $elasticaService,
-        private readonly QuerySearchService $querySearchName
+        private readonly QuerySearchService $querySearchName,
     ) {
     }
 
@@ -247,7 +249,7 @@ class ObjectChoiceCacheService
         return new ObjectChoiceListItem(
             document: $document,
             contentType: $contentType,
-            displayLabel: $this->revisionService->display($document)
+            title: $this->revisionService->display($document)
         );
     }
 }

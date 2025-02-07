@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Form\DataField;
 
 use EMS\CoreBundle\Entity\DataField;
@@ -7,6 +9,7 @@ use EMS\CoreBundle\Entity\FieldType;
 use EMS\CoreBundle\Form\DataField\Options\SubOptionsType;
 use EMS\CoreBundle\Form\Field\IconPickerType;
 use EMS\CoreBundle\Form\Field\IconTextType;
+use EMS\Helpers\Standard\Json;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
@@ -15,30 +18,30 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class DateRangeFieldType extends DataFieldType
 {
+    #[\Override]
     public function getLabel(): string
     {
         return 'Date range field';
     }
 
+    #[\Override]
     public static function getIcon(): string
     {
         return 'fa fa-calendar-o';
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function viewTransform(DataField $dataField)
     {
         $options = $dataField->giveFieldType()->getOptions();
         $rawData = $dataField->getRawData();
 
         if (\is_array($rawData) && !empty($dataField->getRawData())) {
-            $dateFrom = \DateTime::createFromFormat(\DateTimeInterface::ISO8601, $rawData[$options['mappingOptions']['fromDateMachineName']]);
-            $dateTo = \DateTime::createFromFormat(\DateTimeInterface::ISO8601, $rawData[$options['mappingOptions']['toDateMachineName']]);
+            $dateFrom = \DateTime::createFromFormat(\DateTimeInterface::ATOM, $rawData[$options['mappingOptions']['fromDateMachineName']] ?? null);
+            $dateTo = \DateTime::createFromFormat(\DateTimeInterface::ATOM, $rawData[$options['mappingOptions']['toDateMachineName']] ?? null);
 
             if ($dateFrom && $dateTo) {
-                $displayFormat = DateRangeFieldType::convertJavascriptDateRangeFormat($options['displayOptions']['locale']['format']);
+                $displayFormat = $options['displayOptions']['locale']['parseFormat'] ?? DateRangeFieldType::convertJavascriptDateRangeFormat($options['displayOptions']['locale']['format']);
 
                 return ['value' => $dateFrom->format($displayFormat).' - '.$dateTo->format($displayFormat)];
             }
@@ -47,27 +50,27 @@ class DateRangeFieldType extends DataFieldType
         return ['value' => ''];
     }
 
+    #[\Override]
     public function getBlockPrefix(): string
     {
         return 'bypassdatafield';
     }
 
     /**
-     * {@inheritDoc}
-     *
      * @param array<mixed> $data
      */
+    #[\Override]
     public function reverseViewTransform($data, FieldType $fieldType): DataField
     {
         $dataField = parent::reverseViewTransform($data, $fieldType);
         $input = $data['value'];
         $options = $fieldType->getOptions();
 
-        $format = DateRangeFieldType::convertJavascriptDateRangeFormat($options['displayOptions']['locale']['format']);
+        $format = $options['displayOptions']['locale']['parseFormat'] ?? DateRangeFieldType::convertJavascriptDateRangeFormat($options['displayOptions']['locale']['format']);
 
         $inputs = \explode(' - ', (string) $input);
 
-        if (2 == \count($inputs)) {
+        if (2 === \count($inputs)) {
             $convertedDates = [];
 
             $fromConverted = \DateTime::createFromFormat($format, $inputs[0]);
@@ -75,7 +78,7 @@ class DateRangeFieldType extends DataFieldType
                 if (!$options['displayOptions']['timePicker']) {
                     $fromConverted->setTime(0, 0, 0);
                 }
-                $convertedDates[$options['mappingOptions']['fromDateMachineName']] = $fromConverted->format(\DateTime::ISO8601);
+                $convertedDates[$options['mappingOptions']['fromDateMachineName']] = $fromConverted->format(\DateTime::ATOM);
             }
 
             $toConverted = \DateTime::createFromFormat($format, $inputs[1]);
@@ -83,7 +86,7 @@ class DateRangeFieldType extends DataFieldType
                 if (!$options['displayOptions']['timePicker']) {
                     $toConverted->setTime(23, 59, 59);
                 }
-                $convertedDates[$options['mappingOptions']['toDateMachineName']] = $toConverted->format(\DateTime::ISO8601);
+                $convertedDates[$options['mappingOptions']['toDateMachineName']] = $toConverted->format(\DateTime::ATOM);
             }
 
             $dataField->setRawData($convertedDates);
@@ -94,9 +97,7 @@ class DateRangeFieldType extends DataFieldType
         return $dataField;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public static function filterSubField(array $data, array $option): array
     {
         if (!$option['mappingOptions']['nested']) {
@@ -116,9 +117,7 @@ class DateRangeFieldType extends DataFieldType
         return parent::filterSubField($data, $option);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public static function isVirtual(array $option = []): bool
     {
         if (!isset($option['mappingOptions'])) {
@@ -130,9 +129,7 @@ class DateRangeFieldType extends DataFieldType
         return !$nested;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function importData(DataField $dataField, array|string|int|float|bool|null $sourceArray, bool $isMigration): array
     {
         $migrationOptions = $dataField->giveFieldType()->getMigrationOptions();
@@ -167,6 +164,7 @@ class DateRangeFieldType extends DataFieldType
         return [$dataField->giveFieldType()->getName()];
     }
 
+    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         /* set the default option value for this kind of compound field */
@@ -180,29 +178,28 @@ class DateRangeFieldType extends DataFieldType
     }
 
     /**
-     * @param FormBuilderInterface<FormBuilderInterface> $builder
-     * @param array<string, mixed>                       $options
+     * @param FormBuilderInterface<mixed> $builder
+     * @param array<string, mixed>        $options
      */
+    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         /** @var FieldType $fieldType */
         $fieldType = $builder->getOptions()['metadata'];
 
         $builder->add('value', IconTextType::class, [
-                'label' => (null != $options['label'] ? $options['label'] : $fieldType->getName()),
-                'required' => false,
-                'disabled' => $this->isDisabled($options),
-                'icon' => $options['icon'],
-                'attr' => [
-                    'class' => 'ems_daterangepicker',
-                    'data-display-option' => \json_encode($fieldType->getDisplayOptions(), JSON_THROW_ON_ERROR),
-                ],
+            'label' => (null != $options['label'] ? $options['label'] : $fieldType->getName()),
+            'required' => false,
+            'disabled' => $this->isDisabled($options),
+            'icon' => $options['icon'],
+            'attr' => [
+                'class' => 'ems_daterangepicker',
+                'data-display-option' => Json::encode($fieldType->getDisplayOptions()),
+            ],
         ]);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function getDefaultOptions(string $name): array
     {
         $out = parent::getDefaultOptions($name);
@@ -210,11 +207,10 @@ class DateRangeFieldType extends DataFieldType
         $out['mappingOptions']['toDateMachineName'] = $name.'_to_date';
         $out['mappingOptions']['fromDateMachineName'] = $name.'_from_date';
         $out['mappingOptions']['nested'] = true;
-        $out['mappingOptions']['index'] = null;
         $out['displayOptions']['timePickerIncrement'] = 5;
         $out['displayOptions']['locale'] = [
-                'format' => 'DD/MM/YYYY HH:mm',
-                'firstDay' => 1,
+            'format' => 'DD/MM/YYYY HH:mm',
+            'firstDay' => 1,
         ];
 
         return $out;
@@ -237,9 +233,7 @@ class DateRangeFieldType extends DataFieldType
         return $dateFormat;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function generateMapping(FieldType $current): array
     {
         $out = [
@@ -253,11 +247,6 @@ class DateRangeFieldType extends DataFieldType
             ],
         ];
 
-        if (!empty($current->getMappingOptions()['index'])) {
-            $out[$current->getMappingOptions()['fromDateMachineName']]['index'] = $current->getMappingOptions()['index'];
-            $out[$current->getMappingOptions()['toDateMachineName']]['index'] = $current->getMappingOptions()['index'];
-        }
-
         if ($current->getMappingOptions()['nested']) {
             $out = [
                 $current->getName() => [
@@ -270,9 +259,7 @@ class DateRangeFieldType extends DataFieldType
         return $out;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function buildObjectArray(DataField $data, array &$out): void
     {
         if (!$data->giveFieldType()->getDeleted()) {
@@ -289,9 +276,7 @@ class DateRangeFieldType extends DataFieldType
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function buildOptionsForm(FormBuilderInterface $builder, array $options): void
     {
         parent::buildOptionsForm($builder, $options);
@@ -306,37 +291,41 @@ class DateRangeFieldType extends DataFieldType
         }
 
         $optionsForm->get('displayOptions')->add('locale', SubOptionsType::class, [
-                'required' => false,
-                'label' => false,
+            'required' => false,
+            'label' => false,
         ]);
         $optionsForm->get('displayOptions')->get('locale')->add('format', TextType::class, [
-                'required' => false,
-                'attr' => [
-                    'placeholder' => 'i.e. DD/MM/YYYY HH:mm',
-                ],
+            'required' => false,
+            'attr' => [
+                'placeholder' => 'i.e. dd/MM/yyyy HH:mm',
+            ],
+        ]);
+        $optionsForm->get('displayOptions')->get('locale')->add('parseFormat', TextType::class, [
+            'required' => false,
+            'attr' => ['placeholder' => '(PHP) d/m/Y H:i'],
         ]);
         $optionsForm->get('displayOptions')->get('locale')->add('firstDay', IntegerType::class, [
-                'required' => false,
+            'required' => false,
         ]);
         $optionsForm->get('displayOptions')->add('icon', IconPickerType::class, [
-                'required' => false,
+            'required' => false,
         ]);
         $optionsForm->get('displayOptions')->add('showWeekNumbers', CheckboxType::class, [
-                'required' => false,
+            'required' => false,
         ]);
         $optionsForm->get('displayOptions')->add('timePicker', CheckboxType::class, [
-                'required' => false,
+            'required' => false,
         ]);
         $optionsForm->get('displayOptions')->add('timePicker24Hour', CheckboxType::class, [
-                'required' => false,
+            'required' => false,
         ]);
 
         $optionsForm->get('displayOptions')->add('timePickerIncrement', IntegerType::class, [
-                'required' => false,
-                'empty_data' => 5,
-                'attr' => [
-                    'placeholder' => '5',
-                ],
+            'required' => false,
+            'empty_data' => 5,
+            'attr' => [
+                'placeholder' => '5',
+            ],
         ]);
     }
 }

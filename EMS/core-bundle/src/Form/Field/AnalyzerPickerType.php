@@ -1,18 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Form\Field;
 
 use EMS\CoreBundle\EMSCoreBundle;
 use EMS\CoreBundle\Repository\AnalyzerRepository;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-class AnalyzerPickerType extends SelectPickerType
+class AnalyzerPickerType extends Select2Type
 {
     public function __construct(private readonly AnalyzerRepository $repository)
     {
         parent::__construct();
     }
 
+    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         $built_in = [

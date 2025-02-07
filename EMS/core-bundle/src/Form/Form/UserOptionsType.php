@@ -20,24 +20,28 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints\Callback;
 use Symfony\Component\Validator\Context\ExecutionContextInterface;
 
+/**
+ * @extends AbstractType<mixed>
+ */
 class UserOptionsType extends AbstractType
 {
-    public const CONTEXT_PROFILE = 'user_profile';
-    public const CONTEXT_USER_MANAGEMENT = 'user_management';
+    final public const string CONTEXT_PROFILE = 'user_profile';
+    final public const string CONTEXT_USER_MANAGEMENT = 'user_management';
 
     public function __construct(
         private readonly FormManager $formManager,
         protected FormRegistryInterface $formRegistry,
         protected DataService $dataService,
         protected LoggerInterface $logger,
-        private readonly ?string $customUserOptionsForm)
-    {
+        private readonly ?string $customUserOptionsForm
+    ) {
     }
 
     /**
-     * @param FormBuilderInterface<FormBuilderInterface> $builder
-     * @param array<string, mixed>                       $options
+     * @param FormBuilderInterface<mixed> $builder
+     * @param array<string, mixed>        $options
      */
+    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $context = $options['context'];
@@ -61,7 +65,7 @@ class UserOptionsType extends AbstractType
                     'metadata' => $form->getFieldType(),
                     'label' => false,
                     'constraints' => [
-                        new Callback([$this, 'validate']),
+                        new Callback($this->validate(...)),
                     ],
                 ]);
 
@@ -76,6 +80,7 @@ class UserOptionsType extends AbstractType
         }
     }
 
+    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver

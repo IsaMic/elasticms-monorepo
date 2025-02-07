@@ -13,15 +13,20 @@ use EMS\CoreBundle\Core\Mail\MailerService;
 use EMS\CoreBundle\Service\Form\Submission\FormSubmissionService;
 use EMS\Helpers\File\File;
 use EMS\Helpers\File\TempFile;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
+#[AsCommand(
+    name: Commands::SUBMISSION_EXPORT,
+    description: 'Extract form submissions',
+    hidden: false
+)]
 class ExportCommand extends AbstractCommand
 {
     public const MAIL_TEMPLATE = '@EMSCore/email/submissions-export.html.twig';
-    protected static $defaultName = Commands::SUBMISSION_EXPORT;
     public const ARG_FIELDS = 'fields';
     public const OPTION_FILTER = 'filter';
     public const OPTION_FILENAME = 'filename';
@@ -31,14 +36,14 @@ class ExportCommand extends AbstractCommand
 
     /** @var string[] */
     private array $fields;
-    private ?string $filter;
-    private ?string  $filename;
+    private ?string $filter = null;
+    private ?string $filename = null;
     /**
      * @var string[]
      */
     private array $emailsTo;
     private string $subject;
-    private ?string $format;
+    private ?string $format = null;
 
     public function __construct(
         private readonly FormSubmissionService $formSubmissionService,
@@ -49,10 +54,10 @@ class ExportCommand extends AbstractCommand
         parent::__construct();
     }
 
+    #[\Override]
     protected function configure(): void
     {
         $this
-            ->setDescription('Extract form submissions')
             ->addArgument(
                 self::ARG_FIELDS,
                 InputArgument::IS_ARRAY,
@@ -82,10 +87,11 @@ class ExportCommand extends AbstractCommand
                 self::OPTION_EXPORT_FORMAT,
                 null,
                 InputOption::VALUE_OPTIONAL,
-                \sprintf('Format of the export. Supported formats: %s', \join(', ', SpreadsheetGeneratorServiceInterface::FORMAT_WRITERS)),
+                \sprintf('Format of the export. Supported formats: %s', \implode(', ', SpreadsheetGeneratorServiceInterface::FORMAT_WRITERS)),
             );
     }
 
+    #[\Override]
     protected function initialize(InputInterface $input, OutputInterface $output): void
     {
         parent::initialize($input, $output);
@@ -97,6 +103,7 @@ class ExportCommand extends AbstractCommand
         $this->format = $this->getOptionStringNull(self::OPTION_EXPORT_FORMAT);
     }
 
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $this->io->section('Export the form submissions');

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\FormBundle\Components\Field;
 
 use Symfony\Component\Validator\Constraint;
@@ -8,6 +10,7 @@ use Symfony\Component\Validator\Constraints\Count;
 
 class MultipleFile extends File
 {
+    #[\Override]
     public function getOptions(): array
     {
         $options = parent::getOptions();
@@ -16,6 +19,7 @@ class MultipleFile extends File
         return $options;
     }
 
+    #[\Override]
     protected function getValidationConstraints(): array
     {
         $constraints = parent::getValidationConstraints();

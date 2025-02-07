@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\FormBundle\FormConfig;
 
 class FieldChoicesConfig
@@ -177,11 +179,11 @@ class FieldChoicesConfig
 
         if ('label_alpha' === $this->sort) {
             $collator = new \Collator('en');
-            \uksort($list, fn ($a, $b) => \intval($collator->compare($a, $b)));
+            \uksort($list, fn ($a, $b) => (int) $collator->compare($a, $b));
         }
         if ('value_alpha' === $this->sort) {
             $collator = new \Collator('en');
-            \uasort($list, fn ($a, $b) => \intval($collator->compare($a, $b)));
+            \uasort($list, fn ($a, $b) => (int) $collator->compare($a, $b));
         }
 
         if (null === $firstValue || '' === $firstValue) {

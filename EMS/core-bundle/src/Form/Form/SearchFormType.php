@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Form\Form;
 
 use EMS\CoreBundle\EMSCoreBundle;
@@ -23,6 +25,9 @@ use Symfony\Component\Form\FormView;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 
+/**
+ * @extends AbstractType<mixed>
+ */
 class SearchFormType extends AbstractType
 {
     public function __construct(private readonly AuthorizationCheckerInterface $authorizationChecker, private readonly SortOptionService $sortOptionService, private readonly SearchFieldOptionService $searchFieldOptionService)
@@ -30,9 +35,10 @@ class SearchFormType extends AbstractType
     }
 
     /**
-     * @param FormBuilderInterface<FormBuilderInterface> $builder
-     * @param array<string, mixed>                       $options
+     * @param FormBuilderInterface<mixed> $builder
+     * @param array<string, mixed>        $options
      */
+    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $isSuper = $this->authorizationChecker->isGranted('ROLE_SUPER');
@@ -59,7 +65,7 @@ class SearchFormType extends AbstractType
         if ($options['light']) {
             $builder->add('applyFilters', SubmitEmsType::class, [
                 'attr' => [
-                        'class' => 'btn btn-primary btn-md',
+                    'class' => 'btn btn-primary btn-md',
                 ],
                 'icon' => 'fa fa-check',
             ]);
@@ -81,11 +87,9 @@ class SearchFormType extends AbstractType
                 $builder->add('sortBy', ChoiceType::class, [
                     'required' => false,
                     'choices' => $sortFields,
-                    'choice_attr' => fn ($category, $key, $index) => [
-                        'data-content' => '<span class=""><i class="'.($sortFieldIcons[$index] ?: 'fa fa-square').'"></i>&nbsp;&nbsp;'.$key.'</span>',
-                    ],
+                    'choice_label' => fn ($value, $label) => \sprintf('<span><i class="%s"></i>&nbsp;%s</span>', $sortFieldIcons[$value], $label),
                     'attr' => [
-                        'class' => 'selectpicker',
+                        'class' => 'select2',
                     ],
                 ]);
             }
@@ -95,11 +99,9 @@ class SearchFormType extends AbstractType
                     'Ascending' => 'asc',
                     'Descending' => 'desc',
                 ],
-                'choice_attr' => fn ($category, $key, $index) => [
-                    'data-content' => '<span class=""><i class="fa fa-sort-'.$index.'"></i>&nbsp;&nbsp;'.$key.'</span>',
-                ],
+                'choice_label' => fn ($value, $label) => \sprintf('<span class=""><i class="fa fa-sort-%s"></i>&nbsp;%s</span>', $value, $label),
                 'attr' => [
-                    'class' => 'selectpicker',
+                    'class' => 'select2',
                 ],
                 'required' => false,
             ]);
@@ -113,15 +115,15 @@ class SearchFormType extends AbstractType
             ]);
 
             $builder->add('search', SubmitEmsType::class, [
-                    'attr' => [
-                            'class' => 'btn btn-primary btn-md',
-                    ],
-                    'icon' => 'fa fa-search',
+                'attr' => [
+                    'class' => 'btn btn-primary btn-md',
+                ],
+                'icon' => 'fa fa-search',
             ])->add('exportResults', SubmitEmsType::class, [
-                    'attr' => [
-                            'class' => 'btn btn-primary btn-sm',
-                    ],
-                    'icon' => 'glyphicon glyphicon-export',
+                'attr' => [
+                    'class' => 'btn btn-primary btn-sm',
+                ],
+                'icon' => 'fa fa-archive',
             ])->add('environments', EnvironmentPickerType::class, [
                 'multiple' => true,
                 'required' => false,
@@ -133,15 +135,16 @@ class SearchFormType extends AbstractType
             ]);
             if (!$options['savedSearch']) {
                 $builder->add('save', SubmitEmsType::class, [
-                        'attr' => [
-                                'class' => 'btn btn-primary btn-md',
-                        ],
-                        'icon' => 'fa fa-save',
+                    'attr' => [
+                        'class' => 'btn btn-primary btn-md',
+                    ],
+                    'icon' => 'fa fa-save',
                 ]);
             }
         }
     }
 
+    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
@@ -154,10 +157,11 @@ class SearchFormType extends AbstractType
     }
 
     /**
-     * @param FormView<FormView>           $view
-     * @param FormInterface<FormInterface> $form
-     * @param array<mixed>                 $options
+     * @param FormView<FormView>   $view
+     * @param FormInterface<mixed> $form
+     * @param array<mixed>         $options
      */
+    #[\Override]
     public function buildView(FormView $view, FormInterface $form, array $options): void
     {
         parent::buildView($view, $form, $options);

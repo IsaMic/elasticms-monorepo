@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\FormBundle\FormConfig;
 
 use EMS\FormBundle\Components\Form\SubFormType;
@@ -11,6 +13,7 @@ class SubFormConfig extends AbstractFormConfig implements ElementInterface
         parent::__construct($id, $locale, $translationDomain, $name);
     }
 
+    #[\Override]
     public function getClassName(): string
     {
         return SubFormType::class;

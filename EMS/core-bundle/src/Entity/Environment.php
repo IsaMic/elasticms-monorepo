@@ -1,147 +1,52 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Entity;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
-use Doctrine\ORM\Mapping as ORM;
 use EMS\CommonBundle\Entity\CreatedModifiedTrait;
+use EMS\CommonBundle\Entity\IdentifierIntegerTrait;
 use EMS\CoreBundle\Core\Environment\Index;
 use EMS\CoreBundle\Entity\Helper\JsonClass;
 use EMS\CoreBundle\Entity\Helper\JsonDeserializer;
-use EMS\Helpers\Standard\DateTime;
 
-/**
- * Environment.
- *
- * @ORM\Table(name="environment")
- *
- * @ORM\Entity(repositoryClass="EMS\CoreBundle\Repository\EnvironmentRepository")
- *
- * @ORM\HasLifecycleCallbacks()
- */
 class Environment extends JsonDeserializer implements \JsonSerializable, EntityInterface, \Stringable
 {
     use CreatedModifiedTrait;
-    /**
-     * @var int
-     *
-     * @ORM\Column(name="id", type="integer")
-     *
-     * @ORM\Id
-     *
-     * @ORM\GeneratedValue(strategy="AUTO")
-     */
-    protected $id;
+    use IdentifierIntegerTrait;
 
-    /**
-     * @ORM\Column(name="name", type="string", length=255, unique=true)
-     */
     protected string $name = '';
-
-    /**
-     * @ORM\Column(name="label", type="string", length=255, nullable=true)
-     */
     protected ?string $label = null;
-
-    /**
-     * @ORM\Column(name="alias", type="string", length=255)
-     */
     protected string $alias = '';
-
-    /**
-     * @var array<string, Index>
-     */
+    /** @var array<string, Index> */
     protected array $indexes = [];
-
     protected int $total = 0;
-
-    /**
-     * @var int
-     */
+    /** @var int */
     protected $counter;
-
-    /**
-     * @var int
-     */
+    /** @var int */
     protected $deletedRevision;
-
-    /**
-     * @var string
-     *
-     * @ORM\Column(name="color", type="string", length=50, nullable=true)
-     */
+    /** @var string */
     protected $color;
-
-    /**
-     * @var string
-     *
-     * @ORM\Column(name="baseUrl", type="string", length=1024, nullable=true)
-     */
+    /** @var string */
     protected $baseUrl;
-
-    /**
-     * @var bool
-     *
-     * @ORM\Column(name="managed", type="boolean")
-     */
+    /** @var bool */
     protected $managed;
-
-    /**
-     * @var bool
-     *
-     * @ORM\Column(name="snapshot", type="boolean", options={"default": false})
-     */
+    /** @var bool */
     protected $snapshot = false;
-
-    /**
-     * @var Collection<int, Revision>
-     *
-     * @ORM\ManyToMany(targetEntity="Revision", mappedBy="environments")
-     */
+    /** @var Collection<int, Revision> */
     protected Collection $revisions;
-
-    /**
-     * @var string[]
-     *
-     * @ORM\Column(name="circles", type="json", nullable=true)
-     */
+    /** @var string[] */
     protected ?array $circles = null;
-
-    /**
-     * @var bool
-     *
-     * @ORM\Column(name="in_default_search", type="boolean", nullable=true)
-     */
+    /** @var bool */
     protected $inDefaultSearch;
-
-    /**
-     * @var Collection<int, ContentType>
-     *
-     * @ORM\OneToMany(targetEntity="ContentType", mappedBy="environment", cascade={"remove"})
-     */
+    /** @var Collection<int, ContentType> */
     protected Collection $contentTypesHavingThisAsDefault;
-
-    /**
-     * @var int
-     *
-     * @ORM\Column(name="order_key", type="integer", nullable=true)
-     */
+    /** @var int */
     protected $orderKey;
-
-    /**
-     * @ORM\Column(name="update_referrers", type="boolean", nullable=false, options={"default": false}))
-     */
     protected bool $updateReferrers = false;
-
-    /**
-     * @ORM\Column(name="template_publication", type="text", nullable=true)
-     */
     protected ?string $templatePublication = null;
-
-    /**
-     * @ORM\Column(name="role_publish", type="string", length=100, nullable=true)
-     */
     protected ?string $rolePublish = null;
 
     public function __construct()
@@ -149,23 +54,14 @@ class Environment extends JsonDeserializer implements \JsonSerializable, EntityI
         $this->revisions = new ArrayCollection();
         $this->contentTypesHavingThisAsDefault = new ArrayCollection();
 
-        $this->created = DateTime::create('now');
-        $this->modified = DateTime::create('now');
+        $this->created = new \DateTime();
+        $this->modified = new \DateTime();
     }
 
+    #[\Override]
     public function __toString(): string
     {
         return $this->name;
-    }
-
-    /**
-     * Get id.
-     *
-     * @return int
-     */
-    public function getId()
-    {
-        return $this->id;
     }
 
     /**
@@ -182,6 +78,7 @@ class Environment extends JsonDeserializer implements \JsonSerializable, EntityI
         return $this;
     }
 
+    #[\Override]
     public function getName(): string
     {
         return $this->name;
@@ -366,7 +263,7 @@ class Environment extends JsonDeserializer implements \JsonSerializable, EntityI
 
     public function getNewIndexName(): string
     {
-        return \sprintf('%s_%s', $this->getAlias(), (new \DateTimeImmutable())->format('Ymd_His'));
+        return \sprintf('%s_%s', $this->getAlias(), new \DateTime()->format('Ymd_His'));
     }
 
     public function getBuildDate(): ?\DateTimeInterface
@@ -491,6 +388,7 @@ class Environment extends JsonDeserializer implements \JsonSerializable, EntityI
         $this->updateReferrers = $updateReferrers;
     }
 
+    #[\Override]
     public function jsonSerialize(): JsonClass
     {
         $json = new JsonClass(\get_object_vars($this), self::class);

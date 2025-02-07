@@ -8,6 +8,7 @@ use EMS\CommonBundle\Controller\FileController;
 use EMS\CommonBundle\Storage\Processor\Processor;
 use EMS\CommonBundle\Twig\RequestRuntime;
 use GuzzleHttp\Psr7\Stream;
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -16,11 +17,12 @@ use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
 class FileControllerAiTest extends TestCase
 {
-    private const TEST_IMAGE_PATH = __DIR__.'/fixtures/image.png';
+    private const string TEST_IMAGE_PATH = __DIR__.'/fixtures/image.png';
     private FileController $controller;
     private Processor $processor;
     private RequestRuntime $requestRuntime;
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->processor = $this->createMock(Processor::class);
@@ -48,6 +50,7 @@ class FileControllerAiTest extends TestCase
         $this->assertInstanceOf(Response::class, $response);
     }
 
+    #[IgnoreDeprecations]
     public function testView(): void
     {
         $this->requestRuntime->expects($this->once())
@@ -58,6 +61,7 @@ class FileControllerAiTest extends TestCase
         $this->assertInstanceOf(Response::class, $response);
     }
 
+    #[IgnoreDeprecations]
     public function testDownload(): void
     {
         $this->requestRuntime->expects($this->once())
@@ -99,6 +103,7 @@ class FileControllerAiTest extends TestCase
         $this->assertTrue($request->hasSession());
     }
 
+    #[IgnoreDeprecations]
     public function testGetFile(): void
     {
         $this->requestRuntime->expects($this->once())
@@ -112,7 +117,7 @@ class FileControllerAiTest extends TestCase
 
     private function invokeMethod(object $object, string $methodName, array $parameters = []): mixed
     {
-        $reflection = new \ReflectionClass(\get_class($object));
+        $reflection = new \ReflectionClass($object::class);
         $method = $reflection->getMethod($methodName);
 
         return $method->invokeArgs($object, $parameters);

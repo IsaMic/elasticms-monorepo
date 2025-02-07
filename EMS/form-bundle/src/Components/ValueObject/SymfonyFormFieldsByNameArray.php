@@ -1,6 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\FormBundle\Components\ValueObject;
+
+use EMS\Helpers\Standard\Json;
 
 class SymfonyFormFieldsByNameArray
 {
@@ -17,7 +21,7 @@ class SymfonyFormFieldsByNameArray
         }
 
         try {
-            return \json_encode(\array_diff(\array_keys($this->flattenWithKeys($this->fields)), $exclude), JSON_THROW_ON_ERROR);
+            return Json::encode(\array_diff(\array_keys($this->flattenWithKeys($this->fields)), $exclude));
         } catch (\Throwable) {
             return '';
         }

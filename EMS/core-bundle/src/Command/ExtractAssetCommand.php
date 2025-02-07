@@ -1,11 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Command;
 
 use EMS\CommonBundle\Common\Command\AbstractCommand;
 use EMS\CommonBundle\Storage\StorageManager;
+use EMS\CoreBundle\Commands;
 use EMS\CoreBundle\Service\AssetExtractorService;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -13,23 +17,27 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\Finder\SplFileInfo;
 
+#[AsCommand(
+    name: Commands::ASSET_EXTRACT,
+    description: 'Will extract data from all files found and load it in cache of the asset extractor service.',
+    hidden: false,
+    aliases: ['ems:asset:extract']
+)]
 class ExtractAssetCommand extends AbstractCommand
 {
-    protected static $defaultName = 'ems:asset:extract';
-
     public function __construct(protected LoggerInterface $logger, protected AssetExtractorService $extractorService, protected StorageManager $storageManager)
     {
         parent::__construct();
     }
 
+    #[\Override]
     protected function configure(): void
     {
-        $this->setDescription('Will extract data from all files found and load it in cache of the asset extractor service')
-            ->addArgument(
-                'path',
-                InputArgument::REQUIRED,
-                'Path to the files to extract data from'
-            )
+        $this->addArgument(
+            'path',
+            InputArgument::REQUIRED,
+            'Path to the files to extract data from'
+        )
             ->addArgument(
                 'name',
                 InputArgument::OPTIONAL,
@@ -38,6 +46,7 @@ class ExtractAssetCommand extends AbstractCommand
             );
     }
 
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $name = $input->getArgument('name');

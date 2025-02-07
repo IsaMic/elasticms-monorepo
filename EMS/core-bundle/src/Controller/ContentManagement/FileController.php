@@ -1,9 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Controller\ContentManagement;
 
 use EMS\CommonBundle\Helper\EmsFields;
 use EMS\CommonBundle\Storage\NotFoundException;
+use EMS\CommonBundle\Storage\Processor\Config;
+use EMS\CommonBundle\Twig\AssetRuntime;
+use EMS\CoreBundle\Core\UI\FlashMessageLogger;
+use EMS\CoreBundle\Entity\UploadedAsset;
 use EMS\CoreBundle\Entity\UserInterface;
 use EMS\CoreBundle\Service\AssetExtractorService;
 use EMS\CoreBundle\Service\FileService;
@@ -22,14 +28,20 @@ use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 class FileController extends AbstractController
 {
+    /**
+     * @param array<string, mixed> $assetConfig
+     */
     public function __construct(
         private readonly FileService $fileService,
         private readonly AssetExtractorService $assetExtractorService,
         private readonly LoggerInterface $logger,
-        private readonly string $templateNamespace,
+        private readonly FlashMessageLogger $flashMessageLogger,
+        private readonly AssetRuntime $assetRuntime,
+        protected array $assetConfig,
         private readonly string $themeColor,
     ) {
     }
@@ -48,12 +60,12 @@ class FileController extends AbstractController
         return new JsonResponse($heads);
     }
 
-    public function viewFileAction(string $sha1, Request $request): Response
+    public function viewFile(string $sha1, Request $request): Response
     {
         return $this->fileService->getStreamResponse($sha1, ResponseHeaderBag::DISPOSITION_INLINE, $request);
     }
 
-    public function downloadFileAction(string $sha1, Request $request): Response
+    public function downloadFile(string $sha1, Request $request): Response
     {
         return $this->fileService->getStreamResponse($sha1, ResponseHeaderBag::DISPOSITION_ATTACHMENT, $request);
     }
@@ -74,9 +86,13 @@ class FileController extends AbstractController
             throw new NotFoundHttpException(\sprintf('Asset %s not found', $sha1));
         }
 
-        $response = $this->render("@$this->templateNamespace/ajax/extract-data-file.json.twig", [
+        $response = $this->flashMessageLogger->buildJsonResponse([
             'success' => !$data->isEmpty(),
-            'data' => $data,
+            'content' => $data->getContent(),
+            'author' => $data->getAuthor(),
+            'date' => $data->getDate(),
+            'language' => $data->getLocale(),
+            'title' => $data->getTitle(),
         ]);
         $response->headers->set('Content-Type', 'application/json');
 
@@ -88,7 +104,7 @@ class FileController extends AbstractController
      *
      * @deprecated
      */
-    public function initUploadFileAction(?string $sha1, $size, bool $apiRoute, Request $request): Response
+    public function initUploadFile(?string $sha1, $size, bool $apiRoute, Request $request): Response
     {
         if ($sha1 || $size) {
             @\trigger_error('You should use the routes emsco_file_data_init_upload or emsco_file_api_init_upload which doesn\'t require url parameters', E_USER_DEPRECATED);
@@ -99,7 +115,7 @@ class FileController extends AbstractController
             throw new \RuntimeException('Unexpected body content');
         }
 
-        $params = \json_decode($requestContent, true, 512, JSON_THROW_ON_ERROR);
+        $params = Json::decode($requestContent);
         $name = $params['name'] ?? 'upload.bin';
         $type = $params['type'] ?? 'application/bin';
         $hash = $params['hash'] ?? $sha1;
@@ -120,20 +136,16 @@ class FileController extends AbstractController
                 EmsFields::LOG_ERROR_MESSAGE_FIELD => $e->getMessage(),
             ]);
 
-            return $this->render("@$this->templateNamespace/ajax/notification.json.twig", [
+            return $this->flashMessageLogger->buildJsonResponse([
                 'success' => false,
             ]);
         }
 
-        return $this->render("@$this->templateNamespace/ajax/file.json.twig", [
-            'success' => true,
-            'asset' => $uploadedAsset,
-            'apiRoute' => $apiRoute,
-        ]);
+        return $this->jsonResponse($uploadedAsset, $apiRoute);
     }
 
     /** @deprecated */
-    public function uploadChunkAction(?string $sha1, ?string $hash, bool $apiRoute, Request $request): Response
+    public function uploadChunk(?string $sha1, ?string $hash, bool $apiRoute, Request $request): Response
     {
         if (null !== $sha1) {
             $hash = $sha1;
@@ -159,28 +171,35 @@ class FileController extends AbstractController
                 EmsFields::LOG_ERROR_MESSAGE_FIELD => $e->getMessage(),
             ]);
 
-            return $this->render("@$this->templateNamespace/ajax/notification.json.twig", [
+            return $this->flashMessageLogger->buildJsonResponse([
                 'success' => false,
             ]);
         }
 
-        return $this->render("@$this->templateNamespace/ajax/file.json.twig", [
-            'success' => true,
-            'asset' => $uploadedAsset,
-            'apiRoute' => $apiRoute,
-        ]);
+        return $this->jsonResponse($uploadedAsset, $apiRoute);
     }
 
-    public function indexImagesAction(): Response
+    public function indexImages(): Response
     {
         $images = $this->fileService->getImages();
+        $response = [];
+        foreach ($images as $image) {
+            $url = $this->generateUrl('ems_file_view', [
+                'sha1' => $image->getSha1(),
+                'name' => $image->getName(),
+                'type' => $image->getType(),
+            ]);
+            $response[] = [
+                'image' => $url,
+                'thumb' => $url,
+                'folder' => $image->getUser(),
+            ];
+        }
 
-        return $this->render("@$this->templateNamespace/ajax/images.json.twig", [
-            'images' => $images,
-        ]);
+        return new JsonResponse($response);
     }
 
-    public function icon(Request $request, int $width, int $height, string $background = null): Response
+    public function icon(Request $request, int $width, int $height, ?string $background = null): Response
     {
         if ($width !== $height) {
             throw new NotFoundHttpException('File not found');
@@ -204,7 +223,7 @@ class FileController extends AbstractController
                 EmsFields::ASSET_CONFIG_COLOR => "ems-$this->themeColor",
             ];
         }
-        $image = $this->fileService->generateImage('@EMSCommonBundle/Resources/public/images/ems-logo.png', $config);
+        $image = $this->fileService->generateImage('@EMSCommonBundle/public/images/ems-logo.png', $config);
 
         $response = new StreamedResponse(function () use ($image) {
             if ($image->isSeekable() && $image->tell() > 0) {
@@ -216,7 +235,7 @@ class FileController extends AbstractController
             }
             $image->close();
         });
-        $configObject = $this->fileService->localFileConfig('@EMSCommonBundle/Resources/public/images/ems-logo.png', $config);
+        $configObject = $this->fileService->localFileConfig('@EMSCommonBundle/public/images/ems-logo.png', $config);
         $response->headers->add([
             Headers::CONTENT_DISPOSITION => $configObject->getDisposition().'; '.HeaderUtils::toString(['filename' => 'ems-logo.png'], ';'),
             Headers::CONTENT_TYPE => $configObject->getMimeType(),
@@ -232,7 +251,7 @@ class FileController extends AbstractController
         return $response;
     }
 
-    public function uploadFileAction(Request $request): Response
+    public function uploadFile(Request $request): Response
     {
         /** @var UploadedFile $file */
         $file = $request->files->get('upload');
@@ -244,7 +263,7 @@ class FileController extends AbstractController
             if (false === $type) {
                 try {
                     $type = $file->getMimeType();
-                } catch (\Exception $e) {
+                } catch (\Exception) {
                     $type = 'application/bin';
                 }
             }
@@ -259,7 +278,7 @@ class FileController extends AbstractController
                     EmsFields::LOG_ERROR_MESSAGE_FIELD => $e->getMessage(),
                 ]);
 
-                return $this->render("@$this->templateNamespace/ajax/notification.json.twig", [
+                return $this->flashMessageLogger->buildJsonResponse([
                     'success' => false,
                 ]);
             }
@@ -283,12 +302,12 @@ class FileController extends AbstractController
             $this->logger->warning('log.file.upload_error', [
                 EmsFields::LOG_ERROR_MESSAGE_FIELD => $file->getError(),
             ]);
-            $this->render("@$this->templateNamespace/ajax/notification.json.twig", [
+            $this->flashMessageLogger->buildJsonResponse([
                 'success' => false,
             ]);
         }
 
-        return $this->render("@$this->templateNamespace/ajax/notification.json.twig", [
+        return $this->flashMessageLogger->buildJsonResponse([
             'success' => false,
         ]);
     }
@@ -344,5 +363,32 @@ class FileController extends AbstractController
         if ($session->isStarted()) {
             $session->save();
         }
+    }
+
+    private function jsonResponse(UploadedAsset $asset, bool $apiRoute): JsonResponse
+    {
+        $config = ['_config_type' => 'image'];
+        if (isset($this->assetConfig['preview'])) {
+            $config = \array_merge($this->assetConfig['preview'], $config);
+        }
+        $config = \array_intersect_key($config, Config::getDefaults());
+        unset($config['_published_datetime']);
+
+        return $this->flashMessageLogger->buildJsonResponse([
+            'success' => true,
+            'sha1' => $asset->getSha1(),
+            'hash' => $asset->getSha1(),
+            'type' => $asset->getType(),
+            'available' => $asset->getAvailable(),
+            'name' => $asset->getName(),
+            'size' => $asset->getSize(),
+            'status' => $asset->getStatus(),
+            'uploaded' => $asset->getUploaded(),
+            'user' => $asset->getUser(),
+            'fileName' => $asset->getName(),
+            'previewUrl' => $this->assetRuntime->assetPath($asset->getData(), $config, 'ems_asset', EmsFields::CONTENT_FILE_HASH_FIELD, EmsFields::CONTENT_FILE_NAME_FIELD, EmsFields::CONTENT_MIME_TYPE_FIELD, UrlGeneratorInterface::ABSOLUTE_PATH),
+            'chunkUrl' => $this->generateUrl($apiRoute ? 'emsco_file_api_chunk_upload' : 'emsco_file_data_chunk_upload', ['hash' => $asset->getSha1()]),
+            'url' => $this->assetRuntime->assetPath($asset->getData(), [], 'ems_asset', EmsFields::CONTENT_FILE_HASH_FIELD, EmsFields::CONTENT_FILE_NAME_FIELD, EmsFields::CONTENT_MIME_TYPE_FIELD, UrlGeneratorInterface::ABSOLUTE_PATH),
+        ]);
     }
 }

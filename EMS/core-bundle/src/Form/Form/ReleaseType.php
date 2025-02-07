@@ -16,15 +16,19 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 use function Symfony\Component\Translation\t;
 
+/**
+ * @extends AbstractType<mixed>
+ */
 final class ReleaseType extends AbstractType
 {
-    public const BTN_SAVE = 'save';
-    public const BTN_SAVE_CLOSE = 'saveAndClose';
+    public const string BTN_SAVE = 'save';
+    public const string BTN_SAVE_CLOSE = 'saveAndClose';
 
     /**
-     * @param FormBuilderInterface<FormBuilderInterface> $builder
-     * @param array<string, mixed>                       $options
+     * @param FormBuilderInterface<mixed> $builder
+     * @param array<string, mixed>        $options
      */
+    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
@@ -63,7 +67,9 @@ final class ReleaseType extends AbstractType
 
         if ($options['add'] ?? false) {
             $builder->add('create', SubmitEmsType::class, [
-                'attr' => ['class' => 'btn btn-primary btn-sm'],
+                'attr' => [
+                    'class' => 'btn btn-primary btn-sm',
+                ],
                 'icon' => 'fa fa-plus',
                 'label' => t('action.create', [], 'emsco-core'),
             ]);
@@ -81,6 +87,7 @@ final class ReleaseType extends AbstractType
         }
     }
 
+    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([

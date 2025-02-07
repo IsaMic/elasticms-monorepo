@@ -11,24 +11,29 @@ use EMS\CoreBundle\Service\ContentTypeService;
 use EMS\CoreBundle\Service\PublishService;
 use EMS\CoreBundle\Service\Revision\RevisionService;
 use EMS\Helpers\Standard\Json;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
+#[AsCommand(
+    name: Commands::REVISION_DELETE,
+    description: 'Delete all/oldest revisions for content type(s).',
+    hidden: false
+)]
 class DeleteCommand extends AbstractCommand
 {
-    protected static $defaultName = Commands::REVISION_DELETE;
-    private const ARGUMENT_CONTENT_TYPES = 'content-types';
-    private const OPTION_MODE = 'mode';
-    private const OPTION_QUERY = 'query';
-    private const OPTION_OUUID = 'ouuid';
+    private const string ARGUMENT_CONTENT_TYPES = 'content-types';
+    private const string OPTION_MODE = 'mode';
+    private const string OPTION_QUERY = 'query';
+    private const string OPTION_OUUID = 'ouuid';
 
-    private const MODE_ALL = 'all';
-    private const MODE_BY_QUERY = 'by-query';
-    private const MODE_OLDEST = 'oldest';
+    private const string MODE_ALL = 'all';
+    private const string MODE_BY_QUERY = 'by-query';
+    private const string MODE_OLDEST = 'oldest';
 
-    private const MODES = [self::MODE_ALL, self::MODE_OLDEST, self::MODE_BY_QUERY];
+    private const array MODES = [self::MODE_ALL, self::MODE_OLDEST, self::MODE_BY_QUERY];
 
     /** @var string[] */
     private array $contentTypeNames = [];
@@ -38,15 +43,15 @@ class DeleteCommand extends AbstractCommand
         private readonly RevisionService $revisionService,
         private readonly ContentTypeService $contentTypeService,
         private readonly PublishService $publishService,
-        private readonly ElasticaService $elasticaService
+        private readonly ElasticaService $elasticaService,
     ) {
         parent::__construct();
     }
 
+    #[\Override]
     protected function configure(): void
     {
         $this
-            ->setDescription('Delete all/oldest revisions for content type(s)')
             ->addArgument(self::ARGUMENT_CONTENT_TYPES, InputArgument::IS_ARRAY, 'contentType names or "all"')
             ->addOption(self::OPTION_MODE, null, InputOption::VALUE_REQUIRED, 'mode for deletion [all,oldest,by-query]', 'all')
             ->addOption(self::OPTION_QUERY, null, InputOption::VALUE_OPTIONAL, 'query to use in by-query mode')
@@ -54,6 +59,7 @@ class DeleteCommand extends AbstractCommand
         ;
     }
 
+    #[\Override]
     protected function interact(InputInterface $input, OutputInterface $output): void
     {
         $this->mode = $this->getOptionString(self::OPTION_MODE);
@@ -72,6 +78,7 @@ class DeleteCommand extends AbstractCommand
         }
     }
 
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $this->io->title('EMSCO - Revision - Delete');

@@ -75,13 +75,22 @@ class SmartCrop
         if ($this->prescale) {
             $preScale = 1 / $scale / $this->minScale;
             if ($preScale < 1) {
-                $this->canvasImageResample((int) \ceil($imageOriginalWidth * $preScale), (int) \ceil($imageOriginalHeight * $preScale));
+                /** @var int<1, max> $resampleWidth */
+                $resampleWidth = (int) \ceil($imageOriginalWidth * $preScale);
+                /** @var int<1, max> $resampleHeight */
+                $resampleHeight = (int) \ceil($imageOriginalHeight * $preScale);
+
+                $this->canvasImageResample($resampleWidth, $resampleHeight);
                 $this->cropWidth = (int) \ceil($this->cropWidth * $preScale);
                 $this->cropHeight = (int) \ceil($this->cropHeight * $preScale);
             }
         }
     }
 
+    /**
+     * @param int<1, max> $width
+     * @param int<1, max> $height
+     */
     private function canvasImageResample(int $width, int $height): void
     {
         $canvas = Type::gdImage(\imagecreatetruecolor($width, $height));
@@ -176,10 +185,10 @@ class SmartCrop
                 }
 
                 $p = $y * $width * 4 + $x * 4;
-                $data[$p] = \round($r * $ifactor2 * 0.5 + $mr * 0.5, 0, PHP_ROUND_HALF_EVEN);
-                $data[$p + 1] = \round($g * $ifactor2 * 0.7 + $mg * 0.3, 0, PHP_ROUND_HALF_EVEN);
-                $data[$p + 2] = \round($b * $ifactor2, 0, PHP_ROUND_HALF_EVEN);
-                $data[$p + 3] = \round($a * $ifactor2, 0, PHP_ROUND_HALF_EVEN);
+                $data[$p] = \round($r * $ifactor2 * 0.5 + $mr * 0.5, 0, \RoundingMode::HalfEven);
+                $data[$p + 1] = \round($g * $ifactor2 * 0.7 + $mg * 0.3, 0, \RoundingMode::HalfEven);
+                $data[$p + 2] = \round($b * $ifactor2, 0, \RoundingMode::HalfEven);
+                $data[$p + 3] = \round($a * $ifactor2, 0, \RoundingMode::HalfEven);
             }
         }
 
@@ -199,7 +208,7 @@ class SmartCrop
             $lightness = $centerLightness * 4 - $leftLightness - $rightLightness - $topLightness - $bottomLightness;
         }
 
-        return (int) \round($lightness, 0, PHP_ROUND_HALF_EVEN);
+        return (int) \round($lightness, 0, \RoundingMode::HalfEven);
     }
 
     private function skinDetect(int $r, int $g, int $b, float $lightness): int
@@ -209,7 +218,7 @@ class SmartCrop
         $isSkinColor = $skin > $this->skinThreshold;
         $isSkinBrightness = $lightness > $this->skinBrightnessMin && $lightness <= $this->skinBrightnessMax;
         if ($isSkinColor && $isSkinBrightness) {
-            return (int) \round(($skin - $this->skinThreshold) * (255 / (1 - $this->skinThreshold)), 0, PHP_ROUND_HALF_EVEN);
+            return (int) \round(($skin - $this->skinThreshold) * (255 / (1 - $this->skinThreshold)), 0, \RoundingMode::HalfEven);
         } else {
             return 0;
         }
@@ -222,7 +231,7 @@ class SmartCrop
         $acceptableSaturation = $sat > $this->saturationThreshold;
         $acceptableLightness = $lightness >= $this->saturationBrightnessMin && $lightness <= $this->saturationBrightnessMax;
         if ($acceptableLightness && $acceptableSaturation) {
-            return (int) \round(($sat - $this->saturationThreshold) * (255 / (1 - $this->saturationThreshold)), 0, PHP_ROUND_HALF_EVEN);
+            return (int) \round(($sat - $this->saturationThreshold) * (255 / (1 - $this->saturationThreshold)), 0, \RoundingMode::HalfEven);
         } else {
             return 0;
         }
@@ -390,6 +399,10 @@ class SmartCrop
         return $l > 0.5 ? $d / (2 - $maximum - $minimum) : $d / ($maximum + $minimum);
     }
 
+    /**
+     * @param int<1, max> $width
+     * @param int<1, max> $height
+     */
     public function crop(int $x, int $y, int $width, int $height): self
     {
         $canvas = Type::gdImage(\imagecreatetruecolor($width, $height));

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Controller\ContentManagement;
 
 use Doctrine\ORM\NonUniqueResultException;
@@ -38,11 +40,11 @@ class PublishController extends AbstractController
         private readonly ContentTypeService $contentTypeService,
         private readonly SearchService $searchService,
         private readonly ElasticaService $elasticaService,
-        private readonly string $templateNamespace)
-    {
+        private readonly string $templateNamespace
+    ) {
     }
 
-    public function publishToAction(Revision $revisionId, Environment $envId): Response
+    public function publishTo(Revision $revisionId, Environment $envId): Response
     {
         $revision = $revisionId;
         $environment = $envId;
@@ -65,7 +67,7 @@ class PublishController extends AbstractController
         ]);
     }
 
-    public function unPublishAction(Revision $revisionId, Environment $envId): RedirectResponse
+    public function unPublish(Revision $revisionId, Environment $envId): RedirectResponse
     {
         $contentType = $revisionId->getContentType();
         if (null === $contentType) {

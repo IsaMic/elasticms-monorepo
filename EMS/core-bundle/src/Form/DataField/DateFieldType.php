@@ -1,10 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Form\DataField;
 
 use EMS\CoreBundle\Entity\DataField;
 use EMS\CoreBundle\Entity\FieldType;
 use EMS\Helpers\Standard\DateTime;
+use EMS\Helpers\Standard\Json;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
@@ -13,19 +16,19 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class DateFieldType extends DataFieldType
 {
+    #[\Override]
     public function getLabel(): string
     {
         return 'Date field';
     }
 
+    #[\Override]
     public static function getIcon(): string
     {
         return 'fa fa-calendar';
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function modelTransform($data, FieldType $fieldType): DataField
     {
         if (empty($data)) {
@@ -36,7 +39,7 @@ class DateFieldType extends DataFieldType
         if (false !== $format) {
             $format = static::convertJavaDateFormat($format);
         } else {
-            $format = \DateTimeInterface::ISO8601;
+            $format = \DateTimeInterface::ATOM;
         }
         if (\is_string($data)) {
             $dates[] = \DateTime::createFromFormat($format, $data);
@@ -51,7 +54,7 @@ class DateFieldType extends DataFieldType
             return parent::modelTransform($dates, $fieldType);
         }
         $out = parent::modelTransform(null, $fieldType);
-        $out->addMessage('Was not able to import:'.\json_encode($data, JSON_THROW_ON_ERROR));
+        $out->addMessage('Was not able to import:'.Json::encode($data));
 
         return $out;
     }
@@ -59,6 +62,7 @@ class DateFieldType extends DataFieldType
     /**
      * @return string[]|string|null
      */
+    #[\Override]
     public function reverseModelTransform(DataField $dataField)
     {
         $data = parent::reverseModelTransform($dataField);
@@ -66,7 +70,7 @@ class DateFieldType extends DataFieldType
         if (false !== $format) {
             $format = static::convertJavaDateFormat($format);
         } else {
-            $format = \DateTime::ISO8601;
+            $format = \DateTimeInterface::ATOM;
         }
         $out = [];
         if (\is_iterable($data) && !empty($data)) {
@@ -87,9 +91,7 @@ class DateFieldType extends DataFieldType
         return $out;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function viewTransform(DataField $dataField)
     {
         $data = parent::viewTransform($dataField);
@@ -108,10 +110,9 @@ class DateFieldType extends DataFieldType
     }
 
     /**
-     * {@inheritDoc}
-     *
      * @param array<mixed> $data
      */
+    #[\Override]
     public function reverseViewTransform($data, FieldType $fieldType): DataField
     {
         $dates = [];
@@ -126,14 +127,13 @@ class DateFieldType extends DataFieldType
         return $dataField;
     }
 
+    #[\Override]
     public function getBlockPrefix(): string
     {
         return 'datefieldtype';
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function importData(DataField $dataField, array|string|int|float|bool|null $sourceArray, bool $isMigration): array
     {
         $migrationOptions = $dataField->giveFieldType()->getMigrationOptions();
@@ -154,7 +154,7 @@ class DateFieldType extends DataFieldType
             foreach ($sourceArray as $idx => $child) {
                 $dateObject = \DateTime::createFromFormat($format, $child);
                 if ($dateObject) {
-                    $data[] = $dateObject->format(\DateTime::ISO8601);
+                    $data[] = $dateObject->format(\DateTimeInterface::ATOM);
                 } else {
                     $dataField->addMessage('Bad date format:'.$child);
                 }
@@ -165,6 +165,7 @@ class DateFieldType extends DataFieldType
         return [$dataField->giveFieldType()->getName()];
     }
 
+    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         /* set the default option value for this kind of compound field */
@@ -178,43 +179,43 @@ class DateFieldType extends DataFieldType
     }
 
     /**
-     * @param FormBuilderInterface<FormBuilderInterface> $builder
-     * @param array<string, mixed>                       $options
+     * @param FormBuilderInterface<mixed> $builder
+     * @param array<string, mixed>        $options
      */
+    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         /** @var FieldType $fieldType */
         $fieldType = $builder->getOptions()['metadata'];
 
         $builder->add('value', TextType::class, [
-                'label' => ($options['label'] ?? $fieldType->getName()),
-                'required' => false,
-                'disabled' => $this->isDisabled($options),
-                'attr' => [
-                    'class' => 'datepicker',
-                    'data-date-format' => $fieldType->getDisplayOptions()['displayFormat'],
-                    'data-today-highlight' => $fieldType->getDisplayOptions()['todayHighlight'],
-                    'data-week-start' => $fieldType->getDisplayOptions()['weekStart'],
-                    'data-days-of-week-highlighted' => $fieldType->getDisplayOptions()['daysOfWeekHighlighted'],
-                    'data-days-of-week-disabled' => $fieldType->getDisplayOptions()['daysOfWeekDisabled'],
-                    'data-multidate' => $fieldType->getDisplayOptions()['multidate'] ? 'true' : 'false',
-                ],
+            'label' => ($options['label'] ?? $fieldType->getName()),
+            'required' => false,
+            'disabled' => $this->isDisabled($options),
+            'attr' => [
+                'class' => 'datepicker',
+                'data-date-format' => $fieldType->getDisplayOptions()['displayFormat'],
+                'data-today-highlight' => $fieldType->getDisplayOptions()['todayHighlight'],
+                'data-week-start' => $fieldType->getDisplayOptions()['weekStart'],
+                'data-days-of-week-highlighted' => $fieldType->getDisplayOptions()['daysOfWeekHighlighted'],
+                'data-days-of-week-disabled' => $fieldType->getDisplayOptions()['daysOfWeekDisabled'],
+                'data-multidate' => $fieldType->getDisplayOptions()['multidate'] ? 'true' : 'false',
+            ],
         ]);
     }
 
+    #[\Override]
     public function generateMapping(FieldType $current): array
     {
         return [
-                $current->getName() => \array_merge([
-                        'type' => 'date',
-                        'format' => 'date_time_no_millis',
-                ], \array_filter($current->getMappingOptions())),
+            $current->getName() => \array_merge([
+                'type' => 'date',
+                'format' => 'date_time_no_millis',
+            ], \array_filter($current->getMappingOptions())),
         ];
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function buildObjectArray(DataField $data, array &$out): void
     {
         if (!$data->giveFieldType()->getDeleted()) {
@@ -228,14 +229,14 @@ class DateFieldType extends DataFieldType
                 $dates = [];
                 if (\is_array($dataRawData)) {
                     foreach ($dataRawData as $dataValue) {
-                        $dateTime = DateTime::createFromFormat($dataValue, \DateTimeInterface::ISO8601);
+                        $dateTime = DateTime::createFromFormat($dataValue);
                         $dates[] = $dateTime->format($format);
                     }
                 }
             } else {
                 $dates = null;
                 if (\is_array($dataRawData) && (\count($dataRawData) >= 1)) {
-                    $dateTime = \DateTime::createFromFormat(\DateTimeInterface::ISO8601, $dataRawData[0]);
+                    $dateTime = \DateTime::createFromFormat(\DateTimeInterface::ATOM, $dataRawData[0]);
                     if ($dateTime) {
                         $dates = $dateTime->format($format);
                     } else {
@@ -283,9 +284,7 @@ class DateFieldType extends DataFieldType
         return $dateFormat;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function buildOptionsForm(FormBuilderInterface $builder, array $options): void
     {
         parent::buildOptionsForm($builder, $options);
@@ -304,36 +303,38 @@ class DateFieldType extends DataFieldType
 
         // String specific display options
         $optionsForm->get('displayOptions')->add('displayFormat', TextType::class, [
-                'required' => false,
-                'empty_data' => 'dd/mm/yyyy',
-                'attr' => [
-                    'placeholder' => 'i.e. dd/mm/yyyy',
-                ],
+            'required' => false,
+            'empty_data' => 'dd/MM/yyyy',
+            'attr' => [
+                'placeholder' => 'e.g. dd/MM/yyyy',
+            ],
         ]);
         $optionsForm->get('displayOptions')->add('weekStart', IntegerType::class, [
-                'required' => false,
-                'empty_data' => 0,
-                'attr' => [
-                    'placeholder' => '0',
-                ],
+            'required' => false,
+            'empty_data' => 0,
+            'attr' => [
+                'placeholder' => '0',
+            ],
         ]);
         $optionsForm->get('displayOptions')->add('todayHighlight', CheckboxType::class, [
-                'required' => false,
+            'required' => false,
+            'label' => 'Today highlight (deprecated)',
         ]);
         $optionsForm->get('displayOptions')->add('multidate', CheckboxType::class, [
-                'required' => false,
+            'required' => false,
         ]);
         $optionsForm->get('displayOptions')->add('daysOfWeekDisabled', TextType::class, [
-                'required' => false,
-                'attr' => [
-                    'placeholder' => 'i.e. 0,6',
-                ],
+            'required' => false,
+            'attr' => [
+                'placeholder' => 'e.g. [0,6]',
+            ],
         ]);
         $optionsForm->get('displayOptions')->add('daysOfWeekHighlighted', TextType::class, [
-                'required' => false,
-                'attr' => [
-                    'placeholder' => 'i.e. 0,6',
-                ],
+            'required' => false,
+            'label' => 'Days of week highlighted (deprecated)',
+            'attr' => [
+                'placeholder' => 'i.e. 0,6',
+            ],
         ]);
     }
 }

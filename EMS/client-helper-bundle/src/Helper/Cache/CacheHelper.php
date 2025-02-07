@@ -5,15 +5,14 @@ declare(strict_types=1);
 namespace EMS\ClientHelperBundle\Helper\Cache;
 
 use EMS\ClientHelperBundle\Helper\ContentType\ContentType;
-use Psr\Cache\CacheItemInterface;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-final class CacheHelper
+final readonly class CacheHelper
 {
-    public function __construct(private readonly CacheItemPoolInterface $cache, private readonly LoggerInterface $logger, private readonly string $hashAlgo)
+    public function __construct(private CacheItemPoolInterface $cache, private LoggerInterface $logger, private string $hashAlgo)
     {
     }
 
@@ -70,12 +69,6 @@ final class CacheHelper
     public function saveContentType(ContentType $contentType): void
     {
         $item = $this->cache->getItem($contentType->getCacheKey());
-
-        if (!$item instanceof CacheItemInterface) {
-            $this->logger->warning('Unexpected non-CacheItem cache item');
-
-            return;
-        }
 
         $item->set($contentType);
         $this->cache->save($item);

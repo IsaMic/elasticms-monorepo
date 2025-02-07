@@ -21,11 +21,12 @@ class JobDataTableType extends AbstractEntityTableType
 
     public function __construct(
         JobService $jobService,
-        private readonly string $templateNamespace
+        private readonly string $templateNamespace,
     ) {
         parent::__construct($jobService);
     }
 
+    #[\Override]
     public function build(EntityTable $table): void
     {
         $table
@@ -70,6 +71,7 @@ class JobDataTableType extends AbstractEntityTableType
         );
     }
 
+    #[\Override]
     public function getRoles(): array
     {
         return [Roles::ROLE_ADMIN];

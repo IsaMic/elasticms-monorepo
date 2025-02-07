@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Service;
 
 use Doctrine\Bundle\DoctrineBundle\Registry;
@@ -24,8 +26,8 @@ class SearchService
         private readonly ElasticaService $elasticaService,
         private readonly EnvironmentService $environmentService,
         private readonly ContentTypeService $contentTypeService,
-        private readonly SearchRepository $searchRepository)
-    {
+        private readonly SearchRepository $searchRepository
+    ) {
     }
 
     /**
@@ -204,7 +206,7 @@ class SearchService
         $searchRepository = $this->doctrine->getRepository(Search::class);
 
         $search = null;
-        if (1 === \sizeof($contentTypes)) {
+        if (1 === \count($contentTypes)) {
             $contentTypeName = \array_values($contentTypes)[0];
             $contentType = $this->contentTypeService->giveByName($contentTypeName);
             $search = $searchRepository->findOneBy(['contentType' => $contentType]);

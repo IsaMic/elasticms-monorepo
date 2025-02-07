@@ -13,13 +13,13 @@ use Symfony\Component\Ldap\Ldap;
 use Symfony\Component\Ldap\Security\LdapBadge;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
-use Symfony\Component\Security\Core\Security;
 use Symfony\Component\Security\Http\Authenticator\AbstractLoginFormAuthenticator;
 use Symfony\Component\Security\Http\Authenticator\Passport\Badge\CsrfTokenBadge;
 use Symfony\Component\Security\Http\Authenticator\Passport\Badge\RememberMeBadge;
 use Symfony\Component\Security\Http\Authenticator\Passport\Badge\UserBadge;
 use Symfony\Component\Security\Http\Authenticator\Passport\Credentials\PasswordCredentials;
 use Symfony\Component\Security\Http\Authenticator\Passport\Passport;
+use Symfony\Component\Security\Http\SecurityRequestAttributes;
 use Symfony\Component\Security\Http\Util\TargetPathTrait;
 
 class LdapFormLoginAuthenticator extends AbstractLoginFormAuthenticator
@@ -29,32 +29,33 @@ class LdapFormLoginAuthenticator extends AbstractLoginFormAuthenticator
     public function __construct(
         private readonly LdapConfig $ldapConfig,
         private readonly LdapUserProvider $ldapUserProvider,
-        private readonly UrlGeneratorInterface $urlGenerator
+        private readonly UrlGeneratorInterface $urlGenerator,
     ) {
     }
 
+    #[\Override]
     public function supports(Request $request): bool
     {
         return Routes::USER_LOGIN === $request->attributes->get('_route') && $request->isMethod('POST');
     }
 
+    #[\Override]
     protected function getLoginUrl(Request $request): string
     {
         return $this->urlGenerator->generate(Routes::USER_LOGIN);
     }
 
+    #[\Override]
     public function authenticate(Request $request): Passport
     {
         $username = Type::string($request->request->get('_username', ''));
         $password = Type::string($request->request->get('_password', ''));
         $csrfToken = Type::string($request->request->get('_csrf_token', ''));
 
-        $request->getSession()->set(Security::LAST_USERNAME, $username);
+        $request->getSession()->set(SecurityRequestAttributes::LAST_USERNAME, $username);
 
         return new Passport(
-            new UserBadge($username, function ($userIdentifier) {
-                return $this->ldapUserProvider->loadUserByIdentifier($userIdentifier);
-            }),
+            new UserBadge($username, fn ($userIdentifier) => $this->ldapUserProvider->loadUserByIdentifier($userIdentifier)),
             new PasswordCredentials($password),
             [
                 new CsrfTokenBadge('authenticate', $csrfToken),
@@ -69,6 +70,7 @@ class LdapFormLoginAuthenticator extends AbstractLoginFormAuthenticator
         );
     }
 
+    #[\Override]
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response
     {
         if ($targetPath = $this->getTargetPath($request->getSession(), $firewallName)) {

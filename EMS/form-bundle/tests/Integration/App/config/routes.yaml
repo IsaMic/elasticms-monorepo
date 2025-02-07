@@ -1,0 +1,2 @@
+forms:
+    resource: '@EMSFormBundle/config/routing/form.xml'

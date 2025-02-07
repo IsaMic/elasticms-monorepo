@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\FormBundle\Components\ValueObject;
 
 class BisNumber extends RrNumber
@@ -23,6 +25,7 @@ class BisNumber extends RrNumber
         }
     }
 
+    #[\Override]
     protected function validate(): bool
     {
         $baseInt = (int) $this->base;

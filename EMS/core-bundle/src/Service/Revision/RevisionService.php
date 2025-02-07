@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace EMS\CoreBundle\Service\Revision;
 
 use EMS\CommonBundle\Common\EMSLink;
+use EMS\CommonBundle\Common\EMSLinkCollection;
 use EMS\CommonBundle\Contracts\ExpressionServiceInterface;
 use EMS\CommonBundle\Elasticsearch\Document\DocumentInterface;
 use EMS\CommonBundle\Elasticsearch\Exception\NotFoundException as CommonNotFoundException;
@@ -14,6 +15,7 @@ use EMS\CoreBundle\Common\DocumentInfo;
 use EMS\CoreBundle\Contracts\Revision\RevisionServiceInterface;
 use EMS\CoreBundle\Core\ContentType\ContentTypeFields;
 use EMS\CoreBundle\Core\Log\LogRevisionContext;
+use EMS\CoreBundle\Core\Revision\RawDataTransformer;
 use EMS\CoreBundle\Core\Revision\Revisions;
 use EMS\CoreBundle\Core\User\UserManager;
 use EMS\CoreBundle\Entity\ContentType;
@@ -24,6 +26,7 @@ use EMS\CoreBundle\Form\Form\RevisionType;
 use EMS\CoreBundle\Repository\RevisionRepository;
 use EMS\CoreBundle\Service\ContentTypeService;
 use EMS\CoreBundle\Service\DataService;
+use EMS\CoreBundle\Service\EnvironmentService;
 use EMS\CoreBundle\Service\PublishService;
 use Psr\Log\LoggerInterface;
 use Ramsey\Uuid\UuidInterface;
@@ -44,6 +47,7 @@ class RevisionService implements RevisionServiceInterface
         private readonly RevisionRepository $revisionRepository,
         private readonly PublishService $publishService,
         private readonly ContentTypeService $contentTypeService,
+        private readonly EnvironmentService $environmentService,
         private readonly UserManager $userManager,
         private readonly ExpressionServiceInterface $expressionService,
         private readonly ElasticaService $elasticaService,
@@ -104,6 +108,9 @@ class RevisionService implements RevisionServiceInterface
         return $compareRevision->getRawData();
     }
 
+    /**
+     * @return FormInterface<mixed>
+     */
     public function createRevisionForm(Revision $revision, bool $ignoreNotConsumed = false): FormInterface
     {
         if (null == $revision->getDatafield()) {
@@ -145,15 +152,15 @@ class RevisionService implements RevisionServiceInterface
 
         $contentType = match (true) {
             ($object instanceof Revision) => $object->giveContentType(),
-            ($object instanceof DocumentInterface) => $this->contentTypeService->giveByName($object->getContentType())
+            ($object instanceof DocumentInterface) => $this->contentTypeService->giveByName($object->getContentType()),
         };
 
         $rawData = match (true) {
             ($object instanceof Revision) => $object->getRawData(),
-            ($object instanceof DocumentInterface) => $object->getSource()
+            ($object instanceof DocumentInterface) => $object->getSource(),
         };
 
-        $expression = $expression ?? $contentType->getFields()[ContentTypeFields::DISPLAY];
+        $expression ??= $contentType->getFields()[ContentTypeFields::DISPLAY];
         $evaluateDisplay = $expression ? $this->expressionService->evaluateToString($expression, [
             'rawData' => $rawData,
             'userLocale' => $this->userManager->getUserLanguage(),
@@ -164,7 +171,7 @@ class RevisionService implements RevisionServiceInterface
         }
 
         if ($contentType->hasLabelField() && isset($rawData[$contentType->giveLabelField()])) {
-            return $rawData[$contentType->giveLabelField()];
+            return (string) $rawData[$contentType->giveLabelField()];
         }
 
         return match (true) {
@@ -174,7 +181,7 @@ class RevisionService implements RevisionServiceInterface
                 domain: 'emsco-core'
             )->trans($this->translator),
             ($object instanceof Revision) => $object->giveOuuid(),
-            ($object instanceof DocumentInterface) => $object->getId()
+            ($object instanceof DocumentInterface) => $object->getId(),
         };
     }
 
@@ -237,7 +244,7 @@ class RevisionService implements RevisionServiceInterface
         return $this->get($emsLink->getOuuid(), $emsLink->getContentType(), $dateTime);
     }
 
-    private function resolveEmsLink(EMSLink $emsLink): null|Revision|DocumentInterface
+    private function resolveEmsLink(EMSLink $emsLink): Revision|DocumentInterface|null
     {
         if (!$emsLink->isValid()) {
             return null;
@@ -290,6 +297,7 @@ class RevisionService implements RevisionServiceInterface
     /**
      * @param array<mixed> $search
      */
+    #[\Override]
     public function search(array $search): Revisions
     {
         return new Revisions($this->revisionRepository->search($search));
@@ -316,6 +324,32 @@ class RevisionService implements RevisionServiceInterface
         $this->logger->debug('Revision after persist flush');
     }
 
+    /** @param array<string, mixed> $autoSave */
+    public function autoSave(Revision $revision, array $autoSave): void
+    {
+        if (!$revision->isDraft()) {
+            throw new \RuntimeException('Revision is not draft');
+        }
+
+        $user = $this->userManager->getAuthenticatedUser();
+        $this->lock($revision, $user);
+
+        $rootFieldType = $revision->giveContentType()->getFieldType();
+        $data = [...$revision->getRawData(), ...$autoSave];
+
+        $form = $this->createRevisionForm($revision);
+        $form->submit(['data' => RawDataTransformer::transform($rootFieldType, $data)]);
+
+        $now = new \DateTime();
+        $revision
+            ->setDraftSaveDate($now)
+            ->setAutoSaveAt($now)
+            ->setAutoSaveBy($user->getUsername())
+            ->setAutoSave(RawDataTransformer::reverseTransform($rootFieldType, $form->get('data')->getData()));
+
+        $this->revisionRepository->save($revision);
+    }
+
     public function getDocumentInfo(EMSLink $documentLink): DocumentInfo
     {
         $publishedRevisions = $this->revisionRepository->findAllPublishedRevision($documentLink);
@@ -340,11 +374,74 @@ class RevisionService implements RevisionServiceInterface
     }
 
     /**
+     * @param list<string> $environmentNames
+     *
+     * @return array<string, array{
+     *     'id': int,
+     *     'draft': bool,
+     *     'revisions': array<string, ?int>,
+     *     'status': array<string, 'not_published'|'outdated'|'published'>
+     * }>
+     */
+    public function getInfos(array $environmentNames, EMSLinkCollection $emsLinks): array
+    {
+        $environments = $this->environmentService->getByNames(...$environmentNames);
+        $contentTypes = $this->contentTypeService->getByNames(...$emsLinks->getContentTypes());
+
+        $infos = [];
+
+        foreach ($contentTypes as $contentType) {
+            $ouuids = $emsLinks->getOuuids($contentType->getName());
+            $revisions = $this->revisionRepository->findAllByContentTypeAndUuids($contentType, ...$ouuids);
+            $defaultEnv = $contentType->giveEnvironment();
+
+            $allRevisionIds = [];
+            $infoEnvironments = \array_unique([$defaultEnv, ...$environments]);
+            foreach ($infoEnvironments as $env) {
+                $envRevisionIds = $this->environmentService->getAllRevisionIdsByEnvironmentAndOuuids($env, ...$ouuids);
+                $allRevisionIds[$env->getName()] = $envRevisionIds;
+            }
+
+            foreach ($revisions as $revision) {
+                $ouuid = $revision->giveOuuid();
+                $defaultRevisionId = $revision->getId();
+                if ($revision->isDraft()) {
+                    $defaultRevisionId = $allRevisionIds[$defaultEnv->getName()][$ouuid] ?? null;
+                }
+
+                $infos[$ouuid] = [
+                    'id' => $revision->getId(),
+                    'draft' => $revision->isDraft(),
+                    'revisions' => [$defaultEnv->getName() => $defaultRevisionId],
+                ];
+
+                foreach ($infoEnvironments as $env) {
+                    /** @var ?int $envRevisionId */
+                    $envRevisionId = $allRevisionIds[$env->getName()][$ouuid] ?? null;
+
+                    if ($envRevisionId) {
+                        $infos[$ouuid]['revisions'][$env->getName()] = $envRevisionId;
+                    }
+
+                    $infos[$ouuid]['status'][$env->getName()] = match (true) {
+                        null === $envRevisionId => 'not_published',
+                        $envRevisionId === $defaultRevisionId => 'published',
+                        $envRevisionId !== $defaultRevisionId => 'outdated',
+                        default => throw new \RuntimeException('invalid status')
+                    };
+                }
+            }
+        }
+
+        return $infos;
+    }
+
+    /**
      * @param array<mixed> $rawData
      */
     public function create(ContentType $contentType, ?UuidInterface $uuid = null, array $rawData = [], ?string $username = null): Revision
     {
-        return $this->dataService->newDocument($contentType, null === $uuid ? null : $uuid->toString(), $rawData, $username);
+        return $this->dataService->newDocument($contentType->validate(), $uuid?->toString(), $rawData, $username);
     }
 
     /**
@@ -366,6 +463,7 @@ class RevisionService implements RevisionServiceInterface
     /**
      * @param array<mixed> $rawData
      */
+    #[\Override]
     public function updateRawData(Revision $revision, array $rawData, ?string $username = null, bool $merge = true): Revision
     {
         $contentTypeName = $revision->giveContentType()->getName();

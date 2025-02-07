@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Form\Field;
 
 use Symfony\Component\Form\ChoiceList\ChoiceListInterface;
@@ -18,10 +20,9 @@ class ContentTypeFieldChoiceList implements ChoiceListInterface
     }
 
     /**
-     * {@inheritDoc}
-     *
      * @return array<mixed>
      */
+    #[\Override]
     public function getChoices(): array
     {
         $this->loadAll();
@@ -30,10 +31,9 @@ class ContentTypeFieldChoiceList implements ChoiceListInterface
     }
 
     /**
-     * {@inheritDoc}
-     *
      * @return array<mixed>
      */
+    #[\Override]
     public function getValues(): array
     {
         return \array_keys($this->choices);
@@ -42,6 +42,7 @@ class ContentTypeFieldChoiceList implements ChoiceListInterface
     /**
      * @return array<mixed>
      */
+    #[\Override]
     public function getStructuredValues(): array
     {
         $values = [];
@@ -53,10 +54,9 @@ class ContentTypeFieldChoiceList implements ChoiceListInterface
     }
 
     /**
-     * {@inheritDoc}
-     *
      * @return array<mixed>
      */
+    #[\Override]
     public function getOriginalKeys(): array
     {
         $values = [];
@@ -68,24 +68,22 @@ class ContentTypeFieldChoiceList implements ChoiceListInterface
     }
 
     /**
-     * {@inheritDoc}
-     *
      * @param array<mixed> $choices
      *
      * @return array<mixed>
      */
+    #[\Override]
     public function getChoicesForValues(array $choices): array
     {
         return \array_values($choices);
     }
 
     /**
-     * {@inheritDoc}
-     *
      * @param array<mixed> $choices
      *
      * @return array<mixed>
      */
+    #[\Override]
     public function getValuesForChoices(array $choices): array
     {
         return \array_values($choices);
@@ -94,7 +92,7 @@ class ContentTypeFieldChoiceList implements ChoiceListInterface
     /**
      * @param array<mixed> $mapping
      */
-    private function recursiveLoad(array $mapping, string $path = null): void
+    private function recursiveLoad(array $mapping, ?string $path = null): void
     {
         foreach ($mapping as $key => $field) {
             $newPath = (null === $path ? '' : $path.'.').$key;

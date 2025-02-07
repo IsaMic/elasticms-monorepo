@@ -6,6 +6,7 @@ namespace EMS\CoreBundle\Repository;
 
 use Doctrine\Bundle\DoctrineBundle\Registry;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\ORM\QueryBuilder;
 use EMS\CoreBundle\Entity\Channel;
@@ -15,8 +16,8 @@ use EMS\CoreBundle\Exception\NotFoundException;
  * @extends ServiceEntityRepository<Channel>
  *
  * @method Channel|null find($id, $lockMode = null, $lockVersion = null)
- * @method Channel|null findOneBy(array $criteria, array $orderBy = null)
- * @method Channel[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+ * @method Channel|null findOneBy(mixed[] $criteria, mixed[] $orderBy = null)
+ * @method Channel[]    findBy(mixed[] $criteria, mixed[] $orderBy = null, $limit = null, $offset = null)
  */
 final class ChannelRepository extends ServiceEntityRepository
 {
@@ -55,7 +56,7 @@ final class ChannelRepository extends ServiceEntityRepository
         $this->addSearchFilters($qb, $searchValue);
 
         try {
-            return \intval($qb->getQuery()->getSingleScalarResult());
+            return (int) $qb->getQuery()->getSingleScalarResult();
         } catch (NonUniqueResultException) {
             return 0;
         }
@@ -82,7 +83,7 @@ final class ChannelRepository extends ServiceEntityRepository
     {
         $queryBuilder = $this->createQueryBuilder('channel');
         $queryBuilder->where('channel.id IN (:ids)')
-            ->setParameter('ids', $ids);
+            ->setParameter('ids', $ids, ArrayParameterType::STRING);
 
         return $queryBuilder->getQuery()->getResult();
     }

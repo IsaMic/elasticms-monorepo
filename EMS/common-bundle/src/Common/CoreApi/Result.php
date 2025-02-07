@@ -17,12 +17,12 @@ class Result
 
     public function __construct(
         public readonly ResponseInterface $response,
-        LoggerInterface $logger
+        LoggerInterface $logger,
     ) {
         $data = Json::decode($response->getContent());
         $this->data = $data;
-        $this->acknowledged = isset($data['acknowledged']) ? \boolval($data['acknowledged']) : null;
-        $this->success = isset($data['success']) ? \boolval($data['success']) : null;
+        $this->acknowledged = isset($data['acknowledged']) ? (bool) ($data['acknowledged']) : null;
+        $this->success = isset($data['success']) ? (bool) ($data['success']) : null;
 
         foreach (['error', 'warning', 'notice'] as $logLevel) {
             foreach ($data[$logLevel] ?? [] as $message) {
@@ -39,7 +39,7 @@ class Result
         return match (true) {
             (\count($errors) > 0) => \array_shift($errors),
             (\count($warnings) > 0) => \array_shift($warnings),
-            default => null
+            default => null,
         };
     }
 

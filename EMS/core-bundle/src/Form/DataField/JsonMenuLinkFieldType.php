@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Form\DataField;
 
 use EMS\CommonBundle\Json\Decoder;
@@ -11,6 +13,7 @@ use EMS\CoreBundle\Form\Field\CodeEditorType;
 use EMS\CoreBundle\Form\Field\ContentTypePickerType;
 use EMS\CoreBundle\Service\ContentTypeService;
 use EMS\CoreBundle\Service\ElasticsearchService;
+use EMS\Helpers\Standard\Json;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
@@ -28,19 +31,19 @@ class JsonMenuLinkFieldType extends DataFieldType
         parent::__construct($authorizationChecker, $formRegistry, $elasticsearchService);
     }
 
+    #[\Override]
     public function getLabel(): string
     {
         return 'JSON menu link field';
     }
 
+    #[\Override]
     public static function getIcon(): string
     {
         return 'fa fa-link';
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function buildObjectArray(DataField $data, array &$out): void
     {
         if (!$data->giveFieldType()->getDeleted()) {
@@ -49,9 +52,10 @@ class JsonMenuLinkFieldType extends DataFieldType
     }
 
     /**
-     * @param FormBuilderInterface<FormBuilderInterface> $builder
-     * @param array<string, mixed>                       $options
+     * @param FormBuilderInterface<mixed> $builder
+     * @param array<string, mixed>        $options
      */
+    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         /** @var FieldType $fieldType */
@@ -97,20 +101,21 @@ class JsonMenuLinkFieldType extends DataFieldType
         }
 
         $builder->add('value', ChoiceType::class, [
-                'label' => ($options['label'] ?? $fieldType->getName()),
-                'required' => false,
-                'disabled' => $this->isDisabled($options),
-                'choices' => $choices,
-                'empty_data' => [],
-                'multiple' => true,
-                'expanded' => $options['expanded'],
+            'label' => ($options['label'] ?? $fieldType->getName()),
+            'required' => false,
+            'disabled' => $this->isDisabled($options),
+            'choices' => $choices,
+            'empty_data' => [],
+            'multiple' => true,
+            'expanded' => $options['expanded'],
         ]);
     }
 
     /**
-     * @param FormInterface<FormInterface> $form
-     * @param array<string, mixed>         $options
+     * @param FormInterface<mixed> $form
+     * @param array<string, mixed> $options
      */
+    #[\Override]
     public function buildView(FormView $view, FormInterface $form, array $options): void
     {
         parent::buildView($view, $form, $options);
@@ -121,6 +126,7 @@ class JsonMenuLinkFieldType extends DataFieldType
         ];
     }
 
+    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         /* set the default option value for this kind of compound field */
@@ -132,9 +138,7 @@ class JsonMenuLinkFieldType extends DataFieldType
         $resolver->setDefault('query', false);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function buildOptionsForm(FormBuilderInterface $builder, array $options): void
     {
         parent::buildOptionsForm($builder, $options);
@@ -162,27 +166,16 @@ class JsonMenuLinkFieldType extends DataFieldType
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public function getDefaultOptions(string $name): array
-    {
-        $out = parent::getDefaultOptions($name);
-        $out['mappingOptions']['index'] = 'not_analyzed';
-
-        return $out;
-    }
-
+    #[\Override]
     public function getBlockPrefix(): string
     {
         return 'ems_choice';
     }
 
     /**
-     * {@inheritDoc}
-     *
      * @param array<mixed> $data
      */
+    #[\Override]
     public function reverseViewTransform($data, FieldType $fieldType): DataField
     {
         $value = null;
@@ -193,9 +186,7 @@ class JsonMenuLinkFieldType extends DataFieldType
         return parent::reverseViewTransform($value, $fieldType);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function viewTransform(DataField $dataField)
     {
         $temp = parent::viewTransform($dataField);
@@ -208,14 +199,14 @@ class JsonMenuLinkFieldType extends DataFieldType
         } elseif (\is_array($temp)) {
             $out = [];
             foreach ($temp as $item) {
-                if (\is_string($item) || \is_integer($item)) {
+                if (\is_string($item) || \is_int($item)) {
                     $out[] = $item;
                 } else {
-                    $dataField->addMessage('Was not able to import the data : '.\json_encode($item, JSON_THROW_ON_ERROR));
+                    $dataField->addMessage('Was not able to import the data : '.Json::encode($item));
                 }
             }
         } else {
-            $dataField->addMessage('Was not able to import the data : '.\json_encode($out));
+            $dataField->addMessage('Was not able to import the data : '.Json::encode($out));
             $out = [];
         }
 

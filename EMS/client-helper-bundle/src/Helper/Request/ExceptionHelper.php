@@ -11,10 +11,16 @@ use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Twig\Environment;
 
-final class ExceptionHelper
+final readonly class ExceptionHelper
 {
-    public function __construct(private readonly Environment $twig, private readonly ClientRequestManager $manager, private readonly RequestStack $requestStack, private readonly bool $enabled, private readonly bool $debug, private readonly string $template = '')
-    {
+    public function __construct(
+        private Environment $twig,
+        private ClientRequestManager $manager,
+        private RequestStack $requestStack,
+        private bool $enabled,
+        private bool $debug,
+        private string $template = ''
+    ) {
     }
 
     public function isEnabled(): bool
@@ -55,7 +61,7 @@ final class ExceptionHelper
             '{code}',
             '{_format}',
         ], [
-            \strval($code),
+            (string) $code,
             $format,
         ], $this->template);
 

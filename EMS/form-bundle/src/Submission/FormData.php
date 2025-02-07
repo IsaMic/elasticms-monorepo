@@ -21,7 +21,7 @@ final class FormData
     private array $allFiles = [];
 
     /**
-     * @param FormInterface<FormInterface> $form
+     * @param FormInterface<mixed> $form
      */
     public function __construct(private readonly FormConfig $formConfig, FormInterface $form)
     {
@@ -86,7 +86,7 @@ final class FormData
      */
     private function recursiveFilesAsUuid(array &$raw): void
     {
-        foreach ($raw  as $key => &$data) {
+        foreach ($raw as $key => &$data) {
             if (\is_array($data)) {
                 $this->recursiveFilesAsUuid($data);
                 continue;

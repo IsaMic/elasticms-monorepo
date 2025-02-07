@@ -1,9 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Controller\ContentManagement;
 
+use Doctrine\ORM\Exception\ORMException;
 use Doctrine\ORM\OptimisticLockException;
-use Doctrine\ORM\ORMException;
 use EMS\CommonBundle\Contracts\Log\LocalizedLoggerInterface;
 use EMS\CommonBundle\Helper\EmsFields;
 use EMS\CoreBundle\Controller\CoreControllerTrait;
@@ -64,8 +66,8 @@ class ContentTypeController extends AbstractController
         private readonly ContentTypeRepository $contentTypeRepository,
         private readonly EnvironmentRepository $environmentRepository,
         private readonly FieldTypeRepository $fieldTypeRepository,
-        private readonly string $templateNamespace)
-    {
+        private readonly string $templateNamespace
+    ) {
     }
 
     /**
@@ -78,7 +80,7 @@ class ContentTypeController extends AbstractController
         return FieldTypeManager::isValidName($name);
     }
 
-    public function updateFromJsonAction(ContentType $contentType, Request $request): Response
+    public function updateFromJson(ContentType $contentType, Request $request): Response
     {
         $jsonUpdate = new ContentTypeJsonUpdate();
         $form = $this->createForm(ContentTypeUpdateType::class, $jsonUpdate);
@@ -104,14 +106,14 @@ class ContentTypeController extends AbstractController
         ]);
     }
 
-    public function removeAction(ContentType $contentType): RedirectResponse
+    public function remove(ContentType $contentType): RedirectResponse
     {
         $this->contentTypeService->softDelete($contentType);
 
         return $this->redirectToRoute(Routes::ADMIN_CONTENT_TYPE_INDEX);
     }
 
-    public function activateAction(ContentType $contentType): Response
+    public function activate(ContentType $contentType): Response
     {
         if ($contentType->getDirty()) {
             $this->logger->error('log.contenttype.dirty', [
@@ -128,7 +130,7 @@ class ContentTypeController extends AbstractController
         return $this->redirectToRoute(Routes::ADMIN_CONTENT_TYPE_INDEX);
     }
 
-    public function disableAction(ContentType $contentType): Response
+    public function disable(ContentType $contentType): Response
     {
         $contentType->setActive(false);
         $this->contentTypeRepository->save($contentType);
@@ -136,14 +138,14 @@ class ContentTypeController extends AbstractController
         return $this->redirectToRoute(Routes::ADMIN_CONTENT_TYPE_INDEX);
     }
 
-    public function refreshMappingAction(ContentType $contentType): Response
+    public function refreshMapping(ContentType $contentType): Response
     {
         $this->contentTypeService->updateMapping($contentType);
 
         return $this->redirectToRoute(Routes::ADMIN_CONTENT_TYPE_INDEX);
     }
 
-    public function addAction(Request $request): Response
+    public function add(Request $request): Response
     {
         $environments = $this->environmentRepository->findBy([
             'managed' => true,
@@ -233,7 +235,7 @@ class ContentTypeController extends AbstractController
         ]);
     }
 
-    public function indexAction(Request $request): Response
+    public function index(Request $request): Response
     {
         $table = $this->dataTableFactory->create(ContentTypeDataTableType::class);
 
@@ -251,7 +253,7 @@ class ContentTypeController extends AbstractController
                 TableType::REORDER_ACTION => $this->contentTypeService->reorderByIds(
                     ...TableType::getReorderedKeys($form->getName(), $request)
                 ),
-                default => $this->logger->messageError(t('log.error.invalid_table_action', [], 'emsco-core'))
+                default => $this->logger->messageError(t('log.error.invalid_table_action', [], 'emsco-core')),
             };
 
             return $this->redirectToRoute(Routes::ADMIN_CONTENT_TYPE_INDEX);
@@ -305,13 +307,11 @@ class ContentTypeController extends AbstractController
         ]);
     }
 
-    public function editFieldAction(ContentType $contentType, FieldType $field, Request $request): Response
+    public function editField(ContentType $contentType, FieldType $field, Request $request): Response
     {
         $editFieldType = new EditFieldType($field);
 
-        /** @var Form $form */
         $form = $this->createForm(EditFieldTypeType::class, $editFieldType);
-
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
@@ -320,10 +320,10 @@ class ContentTypeController extends AbstractController
                 $subFieldName = $form->get('fieldType')->get('ems:internal:add:subfield:name')->getData();
             }
 
-            /** @var Button $clickable */
-            $clickable = $form->getClickedButton();
+            $clickedButton = $form instanceof Form ? $form->getClickedButton() : null;
+            $action = $clickedButton instanceof Button ? $clickedButton->getName() : 'unknown';
 
-            return $this->treatFieldSubmit($contentType, $field, $clickable->getName(), $subFieldName);
+            return $this->treatFieldSubmit($contentType, $field, $action, $subFieldName);
         }
 
         return $this->render("@$this->templateNamespace/contenttype/field.html.twig", [
@@ -333,7 +333,7 @@ class ContentTypeController extends AbstractController
         ]);
     }
 
-    public function reorderAction(ContentType $contentType, Request $request): Response
+    public function reorder(ContentType $contentType, Request $request): Response
     {
         $data = [];
         $form = $this->createForm(ReorderType::class, $data, [
@@ -343,7 +343,7 @@ class ContentTypeController extends AbstractController
 
         if ($form->isSubmitted()) {
             $data = $form->getData();
-            $structure = \json_decode((string) $data['items'], true, 512, JSON_THROW_ON_ERROR);
+            $structure = Json::decode((string) $data['items']);
             $this->contentTypeService->reorderFields($contentType, $structure);
 
             return $this->redirectToRoute(Routes::ADMIN_CONTENT_TYPE_EDIT, ['contentType' => $contentType->getId()]);
@@ -355,7 +355,7 @@ class ContentTypeController extends AbstractController
         ]);
     }
 
-    public function editAction(ContentType $contentType, Request $request): Response
+    public function edit(ContentType $contentType, Request $request): Response
     {
         $environment = $contentType->giveEnvironment();
 
@@ -422,7 +422,7 @@ class ContentTypeController extends AbstractController
         ]);
     }
 
-    public function editStructureAction(int $id, Request $request): Response
+    public function editStructure(int $id, Request $request): Response
     {
         $contentType = $this->contentTypeRepository->findById($id);
 
@@ -572,7 +572,7 @@ class ContentTypeController extends AbstractController
         ]);
     }
 
-    public function exportAction(ContentType $contentType): Response
+    public function export(ContentType $contentType): Response
     {
         $jsonContent = Json::encode($contentType, true);
 

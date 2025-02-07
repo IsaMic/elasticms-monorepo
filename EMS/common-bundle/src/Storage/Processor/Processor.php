@@ -40,7 +40,7 @@ class Processor
      */
     public function resolveAndGetResponse(Request $request, array $fileField, array $configArray = [], bool $immutableRoute = false): Response
     {
-        $hash = Config::extractHash($fileField, EmsFields::CONTENT_FILE_HASH_FIELD, \strval($configArray[EmsFields::ASSET_CONFIG_TYPE] ?? 'none'));
+        $hash = Config::extractHash($fileField, EmsFields::CONTENT_FILE_HASH_FIELD, (string) ($configArray[EmsFields::ASSET_CONFIG_TYPE] ?? 'none'));
         $filename = Config::extractFilename($fileField, $configArray);
         $mimetype = Config::extractMimetype($fileField, $configArray, $filename);
         $mimeType = $this->overwriteMimeType($mimetype, $configArray);
@@ -65,7 +65,7 @@ class Processor
             throw new AccessDeniedHttpException();
         }
 
-        $authorization = \strval($request->headers->get(Headers::AUTHORIZATION));
+        $authorization = (string) $request->headers->get(Headers::AUTHORIZATION);
         if (!$config->isAuthorized($authorization)) {
             $response = new Response('Unauthorized access', Response::HTTP_UNAUTHORIZED);
             $response->headers->set(Headers::WWW_AUTHENTICATE, 'basic realm="Access to resource"');
@@ -77,9 +77,9 @@ class Processor
 
         $cacheResponse = new Response();
         $this->cacheHelper->makeResponseCacheable($request, $cacheResponse, $cacheKey, $config->getLastUpdateDate(), $immutableRoute);
-        if ($cacheResponse->isNotModified($request)) {
-            return $cacheResponse;
-        }
+        //        if ($cacheResponse->isNotModified($request)) {
+        //            return $cacheResponse;
+        //        }
 
         try {
             $stream = $this->getStream($config, $filename);
@@ -145,7 +145,7 @@ class Processor
         throw new \Exception(\sprintf('not able to generate file for the config %s', $config->getConfigHash()));
     }
 
-    private function generateImage(Config $config, string $filename = null): FileInterface
+    private function generateImage(Config $config, ?string $filename = null): FileInterface
     {
         $image = new Image($config, $this->logger);
 
@@ -207,11 +207,8 @@ class Processor
         if (!$noCache) {
             $cache = $this->storageManager->readCache($config);
         }
-        if (isset($cache)) {
-            return $cache;
-        }
 
-        return $this->generateStream($config);
+        return $cache ?? $this->generateStream($config);
     }
 
     private function getResponseFromStreamInterface(StreamInterface $stream, Request $request): StreamedResponse
@@ -230,7 +227,7 @@ class Processor
         if (null === $fileSize = $stream->getSize()) {
             return $response;
         }
-        $response->headers->set('Content-Length', \strval($fileSize));
+        $response->headers->set('Content-Length', (string) $fileSize);
 
         if ($stream->isSeekable()) {
             $response->headers->set('Accept-Ranges', $request->isMethodSafe() ? 'bytes' : 'none');

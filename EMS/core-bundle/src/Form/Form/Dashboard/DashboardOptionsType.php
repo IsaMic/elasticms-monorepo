@@ -17,12 +17,16 @@ use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
+/**
+ * @extends AbstractType<mixed>
+ */
 class DashboardOptionsType extends AbstractType
 {
     /**
-     * @param FormBuilderInterface<FormBuilderInterface> $builder
-     * @param array<string, mixed>                       $options
+     * @param FormBuilderInterface<mixed> $builder
+     * @param array<string, mixed>        $options
      */
+    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $dashboard = $options['dashboard'];
@@ -40,12 +44,12 @@ class DashboardOptionsType extends AbstractType
         match ($dashboard::class) {
             Export::class => $this->buildForExport($builder) ,
             Template::class => $this->buildForTemplate($builder),
-            default => null
+            default => null,
         };
     }
 
     /**
-     * @param FormBuilderInterface<FormBuilderInterface> $builder
+     * @param FormBuilderInterface<mixed> $builder
      */
     private function buildForTemplate(FormBuilderInterface $builder): void
     {
@@ -63,7 +67,7 @@ class DashboardOptionsType extends AbstractType
     }
 
     /**
-     * @param FormBuilderInterface<FormBuilderInterface> $builder
+     * @param FormBuilderInterface<mixed> $builder
      */
     private function buildForExport(FormBuilderInterface $builder): void
     {
@@ -89,6 +93,7 @@ class DashboardOptionsType extends AbstractType
             ]);
     }
 
+    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver
@@ -96,7 +101,9 @@ class DashboardOptionsType extends AbstractType
                 'label' => false,
                 'translation_domain' => EMSCoreBundle::TRANS_FORM_DOMAIN,
             ])
-            ->setNormalizer('label_format', fn (Options $options) => 'dashboard.'.\strtolower((new \ReflectionClass($options['dashboard']))->getShortName()).'.%name%'
+            ->setNormalizer(
+                'label_format',
+                fn (Options $options) => 'dashboard.'.\strtolower((new \ReflectionClass($options['dashboard']))->getShortName()).'.%name%'
             )
             ->setRequired(['dashboard'])
             ->setAllowedTypes('dashboard', DashboardInterface::class)

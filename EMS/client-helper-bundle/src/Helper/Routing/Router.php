@@ -11,10 +11,11 @@ final class Router extends BaseRouter
 {
     public function __construct(
         private readonly EnvironmentHelper $environmentHelper,
-        private readonly RoutingBuilder $builder
+        private readonly RoutingBuilder $builder,
     ) {
     }
 
+    #[\Override]
     public function getRouteCollection(): RouteCollection
     {
         $environment = $this->environmentHelper->getCurrentEnvironment();

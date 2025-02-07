@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Controller\ContentManagement;
 
 use EMS\CommonBundle\Elasticsearch\Exception\NotFoundException;
@@ -33,11 +35,11 @@ class EnvironmentController extends AbstractController
         private readonly PublishService $publishService,
         private readonly RevisionRepository $revisionRepository,
         private readonly int $pagingSize,
-        private readonly string $templateNamespace
+        private readonly string $templateNamespace,
     ) {
     }
 
-    public function alignAction(Request $request): Response
+    public function align(Request $request): Response
     {
         if (!$this->isGranted('ROLE_PUBLISHER')) {
             throw new AccessDeniedHttpException();
@@ -64,7 +66,7 @@ class EnvironmentController extends AbstractController
                     $revid = $request->request->all('compare_environment_form')['alignWith'];
                     /** @var Revision $revision */
                     $revision = $this->revisionRepository->findOneBy([
-                            'id' => $revid,
+                        'id' => $revid,
                     ]);
 
                     foreach ($revision->getEnvironments() as $item) {
@@ -192,8 +194,8 @@ class EnvironmentController extends AbstractController
                 );
                 for ($index = 0; $index < \count($results); ++$index) {
                     $results[$index]['contentType'] = $this->contentTypeService->getByName($results[$index]['content_type_name']);
-//                     $results[$index]['revisionEnvironment'] = $repository->findOneById($results[$index]['rId']);
-// TODO: is it the better options? to concatenate and split things?
+                    //                     $results[$index]['revisionEnvironment'] = $repository->findOneById($results[$index]['rId']);
+                    // TODO: is it the better options? to concatenate and split things?
                     $minrevid = \explode('/', (string) $results[$index]['minrevid']); // 1/81522/2017-03-08 14:32:52 => e.id/r.id/r.created
                     $maxrevid = \explode('/', (string) $results[$index]['maxrevid']);
 
@@ -252,6 +254,6 @@ class EnvironmentController extends AbstractController
             'orderField' => $orderField,
             'orderDirection' => $orderDirection,
             'contentTypes' => $this->contentTypeService->getAll(),
-         ]);
+        ]);
     }
 }

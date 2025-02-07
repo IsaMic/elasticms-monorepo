@@ -1,13 +1,21 @@
 parameters:
     env(DEFAULT_LOCAL): 'en'
+    env(HTTP_CLIENT_MAX_CONNECTIONS): 4
     env(ELASTICMS_PATH): '%kernel.project_dir%/vendor/elasticms'
 
 framework:
-    secret: '%env(APP_SECRET)%'
     default_locale: '%env(DEFAULT_LOCAL)%'
+    http_method_override: false
+    handle_all_throwables: true
+    secret: '%env(APP_SECRET)%'
+
+    http_client:
+        max_host_connections: '%env(int:HTTP_CLIENT_MAX_CONNECTIONS)%'
 
     session:
         handler_id: ~
+        cookie_secure: auto
+        cookie_samesite: strict
         storage_factory_id: session.storage.factory.native
 
     esi: true
@@ -37,4 +45,4 @@ when@test:
     framework:
         test: true
         session:
-            storage_id: session.storage.mock_file
+            storage_factory_id: session.storage.factory.mock_file

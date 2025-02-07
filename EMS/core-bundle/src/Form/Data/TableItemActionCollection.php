@@ -16,16 +16,18 @@ final class TableItemActionCollection implements \IteratorAggregate, \Countable
     private array $itemActions = [];
 
     public function __construct(
-        public null|string|TranslatableMessage $label = null,
-        public ?string $icon = null
+        public string|TranslatableMessage|null $label = null,
+        public ?string $icon = null,
     ) {
     }
 
+    #[\Override]
     public function getIterator(): \Traversable
     {
         return new \ArrayIterator($this->itemActions);
     }
 
+    #[\Override]
     public function count(): int
     {
         return \count($this->itemActions);
@@ -50,7 +52,7 @@ final class TableItemActionCollection implements \IteratorAggregate, \Countable
     /**
      * @param array<string, mixed> $routeParameters
      */
-    public function addItemPostAction(string $route, string|TranslatableMessage $labelKey, string $icon, null|string|TranslatableMessage $messageKey = null, array $routeParameters = []): TableItemAction
+    public function addItemPostAction(string $route, string|TranslatableMessage $labelKey, string $icon, string|TranslatableMessage|null $messageKey = null, array $routeParameters = []): TableItemAction
     {
         $action = TableItemAction::postAction($route, $labelKey, $icon, $messageKey, $routeParameters);
         $this->itemActions[] = $action;
@@ -61,7 +63,7 @@ final class TableItemActionCollection implements \IteratorAggregate, \Countable
     /**
      * @param array<string, string|int> $routeParameters
      */
-    public function addDynamicItemPostAction(string $route, string|TranslatableMessage $labelKey, string $icon, null|string|TranslatableMessage $messageKey = null, array $routeParameters = []): TableItemAction
+    public function addDynamicItemPostAction(string $route, string|TranslatableMessage $labelKey, string $icon, string|TranslatableMessage|null $messageKey = null, array $routeParameters = []): TableItemAction
     {
         $action = TableItemAction::postDynamicAction($route, $labelKey, $icon, $messageKey, $routeParameters);
         $this->itemActions[] = $action;

@@ -1,17 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Repository;
 
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\NonUniqueResultException;
+use Doctrine\ORM\Query\Parameter;
 use Doctrine\ORM\QueryBuilder;
 use EMS\CoreBundle\Entity\ContentType;
 
 /**
  * @extends EntityRepository<ContentType>
  *
- * @method ContentType|null findOneBy(array $criteria, array $orderBy = null)
- * @method ContentType[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+ * @method ContentType|null findOneBy(mixed[] $criteria, mixed[] $orderBy = null)
+ * @method ContentType[]    findBy(mixed[] $criteria, mixed[] $orderBy = null, $limit = null, $offset = null)
  */
 class ContentTypeRepository extends EntityRepository
 {
@@ -22,9 +27,9 @@ class ContentTypeRepository extends EntityRepository
     {
         $qb = $this->createQueryBuilder('ct');
         $qb->where($qb->expr()->eq('ct.deleted', ':false'));
-        $qb->setParameters([
-            'false' => false,
-        ]);
+        $qb->setParameters(new ArrayCollection([
+            new Parameter('false', false),
+        ]));
 
         $out = [];
         $result = $qb->getQuery()->getResult();
@@ -39,7 +44,8 @@ class ContentTypeRepository extends EntityRepository
     /**
      * @return ContentType[]
      */
-    public function findAll()
+    #[\Override]
+    public function findAll(): array
     {
         return parent::findBy(['deleted' => false], ['orderKey' => 'ASC']);
     }
@@ -82,7 +88,7 @@ class ContentTypeRepository extends EntityRepository
         $qb = $this->createQueryBuilder('c');
         $qb
             ->andWhere($qb->expr()->in('c.id', ':ids'))
-            ->setParameter('ids', $ids);
+            ->setParameter('ids', $ids, ArrayParameterType::INTEGER);
 
         return $qb->getQuery()->getResult();
     }
@@ -91,7 +97,7 @@ class ContentTypeRepository extends EntityRepository
         ?bool $isActive = null,
         ?bool $isDirty = null,
         ?bool $isDeleted = false,
-        string $searchValue = ''
+        string $searchValue = '',
     ): QueryBuilder {
         $qb = $this->createQueryBuilder('c');
         $qb->join('c.environment', 'e');
@@ -195,7 +201,7 @@ class ContentTypeRepository extends EntityRepository
 
     public function save(ContentType $contentType): void
     {
-        $this->_em->persist($contentType);
-        $this->_em->flush();
+        $this->getEntityManager()->persist($contentType);
+        $this->getEntityManager()->flush();
     }
 }

@@ -1,86 +1,34 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Entity;
 
-use Doctrine\ORM\Mapping as ORM;
 use EMS\CommonBundle\Entity\CreatedModifiedTrait;
 use EMS\CommonBundle\Entity\EntityInterface;
+use EMS\CommonBundle\Entity\IdentifierIntegerTrait;
 use EMS\CoreBundle\Entity\Helper\JsonClass;
 use EMS\CoreBundle\Entity\Helper\JsonDeserializer;
-use EMS\Helpers\Standard\DateTime;
 
-/**
- * DataField.
- *
- * @ORM\Table(name="job")
- *
- * @ORM\Entity(repositoryClass="EMS\CoreBundle\Repository\JobRepository")
- *
- * @ORM\HasLifecycleCallbacks()
- */
 class Job extends JsonDeserializer implements \JsonSerializable, EntityInterface
 {
     use CreatedModifiedTrait;
-    /**
-     * @ORM\Column(name="id", type="integer")
-     *
-     * @ORM\Id
-     *
-     * @ORM\GeneratedValue(strategy="AUTO")
-     */
-    private int $id;
+    use IdentifierIntegerTrait;
 
-    /**
-     * @ORM\Column(name="status", type="text", nullable=true)
-     */
     private string $status = '';
-
-    /**
-     * @ORM\Column(name="output", type="text", nullable=true)
-     */
     private ?string $output = null;
-
-    /**
-     * @ORM\Column(name="done", type="boolean")
-     */
     private bool $done = false;
-
-    /**
-     * @ORM\Column(name="started", type="boolean")
-     */
     private bool $started = false;
-
-    /**
-     * @ORM\Column(name="progress", type="integer")
-     */
     private int $progress = 0;
-
-    /**
-     * @ORM\Column(name="username", type="string", length=255, nullable=true)
-     */
     private ?string $user = null;
-
-    /**
-     * @var string|null
-     *
-     * @ORM\Column(name="command", type="string", length=2000, nullable=true)
-     */
+    /** @var string|null */
     protected $command;
-
-    /**
-     * @ORM\Column(name="tag", type="string", length=255, nullable=true)
-     */
     protected ?string $tag = null;
 
     public function __construct()
     {
-        $this->created = DateTime::create('now');
-        $this->modified = DateTime::create('now');
-    }
-
-    public function getId(): int
-    {
-        return $this->id;
+        $this->created = new \DateTime();
+        $this->modified = new \DateTime();
     }
 
     public function getStarted(): bool
@@ -171,6 +119,7 @@ class Job extends JsonDeserializer implements \JsonSerializable, EntityInterface
         return $this->command;
     }
 
+    #[\Override]
     public function jsonSerialize(): JsonClass
     {
         $json = new JsonClass(\get_object_vars($this), self::class);

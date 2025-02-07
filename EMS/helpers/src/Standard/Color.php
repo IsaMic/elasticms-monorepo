@@ -6,7 +6,7 @@ namespace EMS\Helpers\Standard;
 
 class Color
 {
-    public const EMS_COLORS = [
+    final public const array EMS_COLORS = [
         'ems-black' => '000000',
         'ems-black-light' => '000000',
         'ems-blue' => '3C8DBC',
@@ -21,7 +21,7 @@ class Color
         'ems-yellow-light' => 'E08E0B',
         'ems-white' => 'FFFFFF',
     ];
-    public const STANDARD_HTML_COLORS = [
+    final public const array STANDARD_HTML_COLORS = [
         'aliceblue' => 'F0F8FF',
         'antiquewhite' => 'FAEBD7',
         'aqua' => '00FFFF',
@@ -170,9 +170,13 @@ class Color
         'yellow' => 'FFFF00',
         'yellowgreen' => '9ACD32'];
 
+    /** @var int<0,255> */
     private int $red;
+    /** @var int<0,255> */
     private int $green;
+    /** @var int<0,255> */
     private int $blue;
+    /** @var int<0,255> */
     private int $alpha;
 
     public function __construct(string $color)
@@ -190,60 +194,42 @@ class Color
                 $color = $color[0].$color[0].$color[1].$color[1].$color[2].$color[2].$color[3].$color[3];
             }
         }
-        $this->red = (int) \hexdec(\substr($color, 0, 2));
-        $this->green = (int) \hexdec(\substr($color, 2, 2));
-        $this->blue = (int) \hexdec(\substr($color, 4, 2));
-        $this->alpha = \intval(\hexdec(\substr($color, 6, 2)) / 2);
-    }
-
-    public function getRed(): int
-    {
-        return $this->red;
-    }
-
-    public function setRed(int $red): void
-    {
+        /** @var int<0,255> $red */
+        $red = (int) \hexdec(\substr($color, 0, 2));
+        /** @var int<0,255> $green */
+        $green = (int) \hexdec(\substr($color, 2, 2));
+        /** @var int<0,255> $blue */
+        $blue = (int) \hexdec(\substr($color, 4, 2));
         $this->red = $red;
-    }
-
-    public function getGreen(): int
-    {
-        return $this->green;
-    }
-
-    public function setGreen(int $green): void
-    {
         $this->green = $green;
-    }
-
-    public function getBlue(): int
-    {
-        return $this->blue;
-    }
-
-    public function setBlue(int $blue): void
-    {
         $this->blue = $blue;
-    }
 
-    public function getAlpha(): int
-    {
-        return $this->alpha;
-    }
+        $alphaStr = \substr($color, 6, 2);
+        if ('' === $alphaStr) {
+            $this->alpha = 255;
 
-    public function setAlpha(int $alpha): void
-    {
+            return;
+        }
+        /** @var int<0,255> $alpha */
+        $alpha = \hexdec($alphaStr);
         $this->alpha = $alpha;
+    }
+
+    public static function fromString(string $string): self
+    {
+        return new self($string);
     }
 
     public function getColorId(\GdImage $image): int
     {
+        /** @var int<0,127> $alpha */
+        $alpha = (int) ($this->alpha / 2);
         $identifier = \imagecolorallocatealpha(
             $image,
-            $this->getRed(),
-            $this->getGreen(),
-            $this->getBlue(),
-            $this->getAlpha(),
+            $this->red,
+            $this->green,
+            $this->blue,
+            $alpha,
         );
         if (false === $identifier) {
             throw new \RuntimeException('Unexpected false image color identifier');
@@ -255,9 +241,9 @@ class Color
     public function relativeLuminance(): float
     {
         $components = [
-            'r' => $this->getRed() / 255.0,
-            'g' => $this->getGreen() / 255.0,
-            'b' => $this->getBlue() / 255.0,
+            'r' => $this->red / 255.0,
+            'g' => $this->green / 255.0,
+            'b' => $this->blue / 255.0,
         ];
         foreach ($components as $c => $v) {
             if ($v <= 0.03928) {
@@ -281,12 +267,12 @@ class Color
         return ($y1 + 0.05) / ($y2 + 0.05);
     }
 
-    public function getComplementary(): Color
+    public function getComplementary(): self
     {
         $complementary = clone $this;
-        $complementary->setRed(255 - $this->red);
-        $complementary->setGreen(255 - $this->green);
-        $complementary->setBlue(255 - $this->blue);
+        $complementary->red = 255 - $this->red;
+        $complementary->green = 255 - $this->green;
+        $complementary->blue = 255 - $this->blue;
 
         return $complementary;
     }
@@ -299,5 +285,79 @@ class Color
     public function getRGBA(): string
     {
         return \sprintf('#%\'.02X%\'.02X%\'.02X%\'.02X', $this->red, $this->green, $this->blue, $this->alpha);
+    }
+
+    public function bestContrast(string|Color ...$colors): self
+    {
+        if (empty($colors)) {
+            throw new \InvalidArgumentException('Empty color list');
+        }
+
+        $colors = \array_map(fn ($color) => \is_string($color) ? new Color($color) : $color, $colors);
+        $bestColor = \array_shift($colors);
+        if (empty($colors)) {
+            $colors[] = $bestColor->getComplementary();
+        }
+
+        foreach ($colors as $color) {
+            $bestColor = $this->contrastRatio($bestColor) >= $this->contrastRatio($color) ? $bestColor : $color;
+        }
+
+        return $bestColor;
+    }
+
+    public function html(): string
+    {
+        if (255 !== $this->alpha) {
+            return $this->getRGBA();
+        }
+        $rgb = $this->getRGB();
+        foreach (self::STANDARD_HTML_COLORS as $name => $color) {
+            if (\implode('', ['#', $color]) === $rgb) {
+                return $name;
+            }
+        }
+
+        return $rgb;
+    }
+
+    /**
+     * @param int<0, 127> $i
+     */
+    public function setAlphaGdValue(int $i): void
+    {
+        $this->alpha = 2 * $i + (127 === $i ? 1 : 0);
+    }
+
+    /**
+     * @return int<0, 255>
+     */
+    public function getRed(): int
+    {
+        return $this->red;
+    }
+
+    /**
+     * @return int<0, 255>
+     */
+    public function getGreen(): int
+    {
+        return $this->green;
+    }
+
+    /**
+     * @return int<0, 255>
+     */
+    public function getBlue(): int
+    {
+        return $this->blue;
+    }
+
+    /**
+     * @return int<0, 255>
+     */
+    public function getAlpha(): int
+    {
+        return $this->alpha;
     }
 }

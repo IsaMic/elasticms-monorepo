@@ -20,6 +20,9 @@ use Symfony\Component\Form\FormEvents;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
+/**
+ * @extends AbstractType<mixed>
+ */
 final class RevisionTaskType extends AbstractType
 {
     public function __construct(private readonly string $coreDatepickerFormat)
@@ -27,9 +30,10 @@ final class RevisionTaskType extends AbstractType
     }
 
     /**
-     * @param FormBuilderInterface<FormBuilderInterface>                                     $builder
+     * @param FormBuilderInterface<mixed>                                                    $builder
      * @param array{'data': TaskDTO, 'task_status': TaskStatus, 'content_type': ContentType} $options
      */
+    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $taskDto = $options['data'];
@@ -69,6 +73,7 @@ final class RevisionTaskType extends AbstractType
         }
     }
 
+    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver
@@ -81,6 +86,9 @@ final class RevisionTaskType extends AbstractType
             ]);
     }
 
+    /**
+     * @param FormBuilderInterface<mixed> $builder
+     */
     private function addTitle(FormBuilderInterface $builder, ContentType $contentType): void
     {
         $tasksTitles = $contentType->getSettings()->getSettingArrayString(ContentTypeSettings::TASKS_TITLES);

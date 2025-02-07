@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\CLI\Client\Audit;
 
 use EMS\CommonBundle\Helper\Url;
+use EMS\Helpers\File\File;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\PropertyInfo\Extractor\PhpDocExtractor;
 use Symfony\Component\PropertyInfo\Extractor\ReflectionExtractor;
@@ -18,7 +19,7 @@ use Symfony\Component\Serializer\Serializer;
 
 class Cache
 {
-    private const HASH_SEED = 'AuditHashSeed';
+    private const string HASH_SEED = 'AuditHashSeed';
     /** @var array<string, Url> */
     private array $urls = [];
     /** @var string[] */
@@ -71,13 +72,13 @@ class Cache
         ]);
     }
 
-    public function save(string $jsonPath, bool $finish = false): bool
+    public function save(string $jsonPath, bool $finish = false): void
     {
         if ($finish) {
             $this->lastUpdated = null;
         }
 
-        return false !== \file_put_contents($jsonPath, $this->serialize());
+        File::putContents($jsonPath, $this->serialize());
     }
 
     /**
@@ -150,7 +151,7 @@ class Cache
 
     public function getUrlHash(Url $url, bool $withQuery = false): string
     {
-        return \sha1(\join('$', [self::HASH_SEED, $url->getUrl(null, false, false, $withQuery)]));
+        return \sha1(\implode('$', [self::HASH_SEED, $url->getUrl(null, false, false, $withQuery)]));
     }
 
     public function progress(OutputInterface $output): void
@@ -159,8 +160,8 @@ class Cache
         $treated = $this->currentPos() + 1;
         $total = \count($this->urls);
         $now = new \DateTimeImmutable();
-        $counter = \doubleval($treated - $this->startedAt);
-        $duration = \doubleval($now->getTimestamp() - $this->startedDatetime->getTimestamp());
+        $counter = (float) ($treated - $this->startedAt);
+        $duration = (float) ($now->getTimestamp() - $this->startedDatetime->getTimestamp());
         if ($counter < 1 || $duration < 1) {
             $output->write('Starting...');
 

@@ -13,6 +13,7 @@ final class EmsHtml extends Markup implements \Stringable
         parent::__construct($html, 'UTF-8');
     }
 
+    #[\Override]
     public function __toString(): string
     {
         return $this->html;
@@ -43,7 +44,7 @@ final class EmsHtml extends Markup implements \Stringable
     }
 
     /**
-     * @param array<array<string, string>> $replacements
+     * @param array<string, string> $replacements
      */
     public function replace(array $replacements): self
     {

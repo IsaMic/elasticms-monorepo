@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\FormBundle\Components\Constraint;
 
 use Symfony\Component\Validator\Constraint;
@@ -13,6 +15,7 @@ class IsExpression extends Constraint
     public string $message = 'This value is not valid.';
 
     /** @return string[] */
+    #[\Override]
     public function getRequiredOptions(): array
     {
         return ['expression'];

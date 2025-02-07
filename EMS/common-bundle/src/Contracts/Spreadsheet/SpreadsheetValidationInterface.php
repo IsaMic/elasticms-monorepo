@@ -15,5 +15,5 @@ interface SpreadsheetValidationInterface
     public const SHOW_ERROR = 'show_error';
 
     public const ERROR_TEXT = "This value doesn't match the data validation restrictions defined for this cell";
-    public const PROMPT_TEXT = "Chose a value from the list";
+    public const PROMPT_TEXT = 'Chose a value from the list';
 }

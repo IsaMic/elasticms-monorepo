@@ -8,28 +8,32 @@ use EMS\FormBundle\Contracts\Confirmation\VerificationCodeGeneratorInterface;
 use EMS\FormBundle\FormConfig\FormConfig;
 use EMS\FormBundle\Service\Endpoint\EndpointInterface;
 use EMS\FormBundle\Service\Endpoint\EndpointTypeInterface;
+use EMS\Helpers\Standard\Json;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 final class HttpEndpointType extends ConfirmationEndpointType implements EndpointTypeInterface
 {
-    public const NAME = 'http';
+    public const string NAME = 'http';
 
     public function __construct(private readonly HttpClientInterface $httpClient, private readonly TranslatorInterface $translator, private readonly VerificationCodeGeneratorInterface $verificationCodeGenerator)
     {
     }
 
+    #[\Override]
     public function canExecute(EndpointInterface $endpoint): bool
     {
         return self::NAME === $endpoint->getType();
     }
 
+    #[\Override]
     public function getVerificationCode(EndpointInterface $endpoint, string $confirmValue): ?string
     {
         return $this->verificationCodeGenerator->getVerificationCode($endpoint, $confirmValue);
     }
 
+    #[\Override]
     public function confirm(EndpointInterface $endpoint, FormConfig $formConfig, string $confirmValue): bool
     {
         $verificationCode = $this->verificationCodeGenerator->generate($endpoint, $confirmValue);
@@ -47,9 +51,9 @@ final class HttpEndpointType extends ConfirmationEndpointType implements Endpoin
 
         $response = $this->request($endpoint, $replaceBody);
 
-        $result = \json_decode($response->getContent(), true, 512, JSON_THROW_ON_ERROR);
+        $result = Json::decode($response->getContent());
 
-        if (!\is_array($result) || !isset($result['ResultCode']) || 0 !== $result['ResultCode']) {
+        if (!isset($result['ResultCode']) || 0 !== $result['ResultCode']) {
             throw new \Exception(\sprintf('Invalid endpoint response %s', $response->getContent()));
         }
 

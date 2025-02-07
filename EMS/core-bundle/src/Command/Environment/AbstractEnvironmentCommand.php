@@ -33,7 +33,7 @@ abstract class AbstractEnvironmentCommand extends AbstractCommand
     public function __construct(
         protected RevisionSearcher $revisionSearcher,
         protected EnvironmentService $environmentService,
-        protected PublishService $publishService
+        protected PublishService $publishService,
     ) {
         parent::__construct();
     }
@@ -54,6 +54,7 @@ abstract class AbstractEnvironmentCommand extends AbstractCommand
         ;
     }
 
+    #[\Override]
     protected function initialize(InputInterface $input, OutputInterface $output): void
     {
         parent::initialize($input, $output);

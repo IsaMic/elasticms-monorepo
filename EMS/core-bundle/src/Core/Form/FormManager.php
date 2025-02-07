@@ -18,12 +18,14 @@ class FormManager implements EntityServiceInterface
     {
     }
 
+    #[\Override]
     public function isSortable(): bool
     {
         return true;
     }
 
-    public function get(int $from, int $size, ?string $orderField, string $orderDirection, string $searchValue, $context = null): array
+    #[\Override]
+    public function get(int $from, int $size, ?string $orderField, string $orderDirection, string $searchValue, mixed $context = null): array
     {
         if (null !== $context) {
             throw new \RuntimeException('Unexpected not null context');
@@ -32,6 +34,7 @@ class FormManager implements EntityServiceInterface
         return $this->formRepository->get($from, $size, $orderField, $orderDirection, $searchValue);
     }
 
+    #[\Override]
     public function getEntityName(): string
     {
         return 'form';
@@ -40,6 +43,7 @@ class FormManager implements EntityServiceInterface
     /**
      * @return string[]
      */
+    #[\Override]
     public function getAliasesName(): array
     {
         return [
@@ -49,7 +53,8 @@ class FormManager implements EntityServiceInterface
         ];
     }
 
-    public function count(string $searchValue = '', $context = null): int
+    #[\Override]
+    public function count(string $searchValue = '', mixed $context = null): int
     {
         if (null !== $context) {
             throw new \RuntimeException('Unexpected not null context');
@@ -63,10 +68,7 @@ class FormManager implements EntityServiceInterface
         if (0 === $form->getOrderKey()) {
             $form->setOrderKey($this->formRepository->counter() + 1);
         }
-        $encoder = new Encoder();
-        $name = $form->getName();
-        $webalized = $encoder->webalize($name);
-        $form->setName($webalized);
+        $form->setName(new Encoder()->slug(text: $form->getName(), separator: '_')->toString());
         $this->formRepository->create($form);
     }
 
@@ -112,11 +114,13 @@ class FormManager implements EntityServiceInterface
         return $form;
     }
 
+    #[\Override]
     public function getByItemName(string $name): ?EntityInterface
     {
         return $this->formRepository->getByName($name);
     }
 
+    #[\Override]
     public function updateEntityFromJson(EntityInterface $entity, string $json): EntityInterface
     {
         if (!$entity instanceof Form) {
@@ -128,6 +132,7 @@ class FormManager implements EntityServiceInterface
         return $form;
     }
 
+    #[\Override]
     public function createEntityFromJson(string $json, ?string $name = null): EntityInterface
     {
         $form = Form::fromJson($json);
@@ -139,6 +144,7 @@ class FormManager implements EntityServiceInterface
         return $form;
     }
 
+    #[\Override]
     public function deleteByItemName(string $name): string
     {
         $form = $this->formRepository->getByName($name);

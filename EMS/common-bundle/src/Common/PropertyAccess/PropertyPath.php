@@ -11,7 +11,7 @@ class PropertyPath implements \Iterator, \Countable
 {
     /** @var PropertyPathElement[] */
     private array $elements = [];
-    private int $length;
+    private readonly int $length;
     private int $index = 0;
 
     public function __construct(private readonly string $pathAsString)
@@ -46,6 +46,7 @@ class PropertyPath implements \Iterator, \Countable
         return $this->pathAsString;
     }
 
+    #[\Override]
     public function next(): void
     {
         ++$this->index;
@@ -61,6 +62,7 @@ class PropertyPath implements \Iterator, \Countable
         return $this->index;
     }
 
+    #[\Override]
     public function current(): PropertyPathElement
     {
         if (!isset($this->elements[$this->index])) {
@@ -70,24 +72,28 @@ class PropertyPath implements \Iterator, \Countable
         return $this->elements[$this->index];
     }
 
+    #[\Override]
     public function key(): int
     {
         return $this->index;
     }
 
+    #[\Override]
     public function valid(): bool
     {
         return isset($this->elements[$this->index]);
     }
 
+    #[\Override]
     public function rewind(): void
     {
         $this->index = 0;
     }
 
+    #[\Override]
     public function count(): int
     {
-        return $this->length;
+        return \max($this->length, 0);
     }
 
     public function last(): bool

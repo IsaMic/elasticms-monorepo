@@ -41,8 +41,8 @@ class ActionController
         int $templateId,
         string $ouuid,
         bool $_download,
-        bool $public): Response
-    {
+        bool $public
+    ): Response {
         $action = $this->templateRepository->getById($templateId);
         if ($public && !$action->isPublic()) {
             throw new NotFoundHttpException('Template type not found');
@@ -53,8 +53,8 @@ class ActionController
 
         $body = $this->twig->createTemplate($action->getBody());
 
-        if ($_download || !$action->getPreview()
-            && \in_array($action->getRenderOption(), [RenderOptionType::PDF, RenderOptionType::EXPORT])) {
+        if ($_download || (!$action->getPreview()
+                && \in_array($action->getRenderOption(), [RenderOptionType::PDF, RenderOptionType::EXPORT], true))) {
             try {
                 $content = $body->render([
                     'environment' => $environment,
@@ -72,7 +72,7 @@ class ActionController
             return match ($action->getRenderOption()) {
                 RenderOptionType::PDF => $this->generatePdfResponse($action, $filename, $content),
                 RenderOptionType::EXPORT => $this->generateExportResponse($action, $filename, $content),
-                default => throw new \Exception('Render options not supported')
+                default => throw new \Exception('Render options not supported'),
             };
         }
 

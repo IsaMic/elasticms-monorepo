@@ -13,25 +13,29 @@ use App\CLI\Commands;
 use EMS\CommonBundle\Common\Admin\AdminHelper;
 use EMS\CommonBundle\Common\Command\AbstractCommand;
 use EMS\Helpers\Standard\Json;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Logger\ConsoleLogger;
 use Symfony\Component\Console\Output\OutputInterface;
 
+#[AsCommand(
+    name: Commands::WEB_MIGRATION,
+    description: 'Migration web resources to elaticms documents.',
+    hidden: false
+)]
 class MigrationCommand extends AbstractCommand
 {
-    protected static $defaultName = Commands::WEB_MIGRATION;
-
-    private const ARG_CONFIG_FILE_PATH = 'json-path';
-    private const OPTION_CONTINUE = 'continue';
-    private const ARG_OUUID = 'OUUID';
-    final public const OPTION_CACHE_FOLDER = 'cache-folder';
-    final public const OPTION_MAX_UPDATES = 'max-updates';
-    final public const OPTION_FORCE = 'force';
-    final public const OPTION_DRY_RUN = 'dry-run';
-    final public const OPTION_DUMP = 'dump';
-    final public const OPTION_RAPPORTS_FOLDER = 'rapports-folder';
+    private const string ARG_CONFIG_FILE_PATH = 'json-path';
+    private const string OPTION_CONTINUE = 'continue';
+    private const string ARG_OUUID = 'OUUID';
+    final public const string OPTION_CACHE_FOLDER = 'cache-folder';
+    final public const string OPTION_MAX_UPDATES = 'max-updates';
+    final public const string OPTION_FORCE = 'force';
+    final public const string OPTION_DRY_RUN = 'dry-run';
+    final public const string OPTION_DUMP = 'dump';
+    final public const string OPTION_RAPPORTS_FOLDER = 'rapports-folder';
     private ConsoleLogger $logger;
     private string $jsonPath;
     private string $cacheFolder;
@@ -48,10 +52,10 @@ class MigrationCommand extends AbstractCommand
         parent::__construct();
     }
 
+    #[\Override]
     protected function configure(): void
     {
         $this
-            ->setDescription('Migration web resources to elaticms documents')
             ->addArgument(
                 self::ARG_CONFIG_FILE_PATH,
                 InputArgument::REQUIRED,
@@ -72,6 +76,7 @@ class MigrationCommand extends AbstractCommand
             ->addOption(self::OPTION_MAX_UPDATES, null, InputOption::VALUE_OPTIONAL, 'Maximum number of document that can be updated in 1 batch (if the continue option is activated)', 1000);
     }
 
+    #[\Override]
     protected function initialize(InputInterface $input, OutputInterface $output): void
     {
         parent::initialize($input, $output);
@@ -79,7 +84,7 @@ class MigrationCommand extends AbstractCommand
         $this->jsonPath = $this->getArgumentString(self::ARG_CONFIG_FILE_PATH);
         $ouuid = $input->getArgument(self::ARG_OUUID);
         if (null !== $ouuid) {
-            $ouuid = \strval($ouuid);
+            $ouuid = (string) $ouuid;
         }
         $this->ouuid = $ouuid;
         $this->force = $this->getOptionBool(self::OPTION_FORCE);
@@ -91,6 +96,7 @@ class MigrationCommand extends AbstractCommand
         $this->maxUpdate = $this->getOptionInt(self::OPTION_MAX_UPDATES);
     }
 
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         if (!$this->adminHelper->getCoreApi()->isAuthenticated()) {

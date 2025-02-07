@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Form\View;
 
 use EMS\CommonBundle\Service\ElasticaService;
@@ -22,45 +24,47 @@ class GalleryViewType extends ViewType
         parent::__construct($formFactory, $twig, $logger, $templateNamespace);
     }
 
+    #[\Override]
     public function getLabel(): string
     {
         return 'Gallery: a view where you can browse images';
     }
 
+    #[\Override]
     public function getName(): string
     {
         return 'Gallery';
     }
 
     /**
-     * @param FormBuilderInterface<FormBuilderInterface> $builder
-     * @param array<string, mixed>                       $options
+     * @param FormBuilderInterface<mixed> $builder
+     * @param array<string, mixed>        $options
      */
+    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         parent::buildForm($builder, $options);
         $builder->add('imageField', TextType::class, [
         ])->add('sourceFields', TextType::class, [
-                'required' => false,
+            'required' => false,
         ])->add('imageAltFields', TextType::class, [
-                'required' => false,
+            'required' => false,
         ])->add('missingImageHash', TextType::class, [
-                'required' => false,
+            'required' => false,
         ])->add('thumbnailAssetConfigIdentifier', TextType::class, [
-                'required' => false,
+            'required' => false,
         ])->add('imageAssetConfigIdentifier', TextType::class, [
-                'required' => false,
+            'required' => false,
         ]);
     }
 
+    #[\Override]
     public function getBlockPrefix(): string
     {
         return 'gallery_view';
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function getParameters(View $view, FormFactoryInterface $formFactory, Request $request): array
     {
         $search = new Search();
@@ -76,8 +80,8 @@ class GalleryViewType extends ViewType
         $search->setEnvironments([$environment->getName()]);
 
         $form = $formFactory->create(SearchFormType::class, $search, [
-                'method' => 'GET',
-                'light' => true,
+            'method' => 'GET',
+            'light' => true,
         ]);
 
         $form->handleRequest($request);
@@ -99,8 +103,8 @@ class GalleryViewType extends ViewType
 
         return [
             'view' => $view,
-            'field' => $view->getContentType()->getFieldType()->__get('ems_'.$view->getOptions()['imageField']),
-            'imageAssetConfigIdentifier' => $view->getContentType()->getFieldType()->__get('ems_'.$view->getOptions()['imageAssetConfigIdentifier']),
+            'field' => $view->getContentType()->getFieldType()->get('ems_'.$view->getOptions()['imageField']),
+            'imageAssetConfigIdentifier' => $view->getContentType()->getFieldType()->get('ems_'.$view->getOptions()['imageAssetConfigIdentifier']),
             'contentType' => $view->getContentType(),
             'environment' => $view->getContentType()->getEnvironment(),
             'form' => $form->createView(),

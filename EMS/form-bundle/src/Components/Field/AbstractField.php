@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\FormBundle\Components\Field;
 
 use EMS\FormBundle\Components\Validation\ValidationInterface;
@@ -21,6 +23,7 @@ abstract class AbstractField implements FieldInterface
     }
 
     /** @return mixed[] */
+    #[\Override]
     public function getOptions(): array
     {
         return [

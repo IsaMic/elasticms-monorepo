@@ -1,0 +1,50 @@
+{% trans_default_domain 'EMSCoreBundle' %}
+
+{% block task_event_mail_subject %}
+    {{ "task.mail.#{type}.subject"|trans({
+        '%title%': task.title,
+        '%document%': revision|emsco_display
+    })|raw }}
+{% endblock task_event_mail_subject %}
+
+{% block task_event_mail_body %}
+    <p>From « {{ senderUsername|emsco_display_name }} » ,</p>
+    <p>Greetings {{ receiver.displayname }},</p>
+    <p>This task has been: {{ action }} {{ senderRole ? "by #{senderRole}" }}</p>
+    <p>
+        {% if task.hasDeadline %}<strong>deadline:</strong>{{ task.deadline.format(date_format) }}<br/>{% endif %}
+        <strong>title:</strong> {{ task.title }}<br/>
+        <strong>assignee:&nbsp;</strong>{{ task.assignee|emsco_display_name }}<br/>
+        <strong>creator:&nbsp;</strong>{{ task.createdBy|emsco_display_name }}<br/>
+        {% if task.hasDescription %}<strong>description:</strong><br/>{{ task.description|nl2br }}{% endif %}
+    </p>
+    {% if comment %}<p><strong>comment:</strong><br/>{{ comment|nl2br }}</p>{% endif %}
+    <p>Link to document: <a href="{{ documentUrl }}" target="_blank"><strong>{{ revision|emsco_display }}</strong></a></p>
+    <p>Kind regards</p>
+{% endblock task_event_mail_body  %}
+
+{% block task_notification_mail_subject %}
+    {{ subject|raw }}
+{% endblock task_notification_mail_subject %}
+
+{% block task_notification_mail_body  %}
+    <p>Greetings {{ receiver.displayname }},</p>
+
+    <p>Below, you'll find the list of task that are overdue or active</p>
+
+    <ul>
+        {% for revision in revisions[0:limit] %}
+            {% set task = revision.taskCurrent %}
+            <li>
+                <p>
+                    {{ "task.status.#{task.status}"|trans }}: {{ task.title }} (deadline: {{ task.deadline.format(date_format) }})<br/>
+                    Link to document: <a href="{{ attribute(documentUrls, revision.ouuid) }}" target="_blank"><strong>{{ revision|emsco_display }}</strong></a>
+                </p>
+            </li>
+        {% endfor %}
+    </ul>
+
+    <p>Please process them urgently within two days</p>
+
+    <p>Kind regards</p>
+{% endblock task_notification_mail_body  %}

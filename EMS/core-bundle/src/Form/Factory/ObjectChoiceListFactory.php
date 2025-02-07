@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Form\Factory;
 
 use EMS\CoreBundle\Exception\PerformanceException;
@@ -28,7 +30,8 @@ class ObjectChoiceListFactory extends DefaultChoiceListFactory
         return new ObjectChoiceLoader($this->objectChoiceCacheService, $types, $loadAll, $circleOnly, $withWarning, $querySearchName);
     }
 
-    public function createListFromLoader(ChoiceLoaderInterface $loader, callable $value = null, callable $filter = null): ChoiceListInterface
+    #[\Override]
+    public function createListFromLoader(ChoiceLoaderInterface $loader, ?callable $value = null, ?callable $filter = null): ChoiceListInterface
     {
         return $loader->loadChoiceList($value);
     }
@@ -36,7 +39,8 @@ class ObjectChoiceListFactory extends DefaultChoiceListFactory
     /**
      * @param iterable<mixed> $choices
      */
-    public function createListFromChoices(iterable $choices, callable $value = null, callable $filter = null): ChoiceListInterface
+    #[\Override]
+    public function createListFromChoices(iterable $choices, ?callable $value = null, ?callable $filter = null): ChoiceListInterface
     {
         return parent::createListFromChoices($choices, $value, $filter);
     }

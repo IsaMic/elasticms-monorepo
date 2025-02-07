@@ -8,6 +8,7 @@ use Doctrine\Bundle\DoctrineBundle\Registry;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\ORM\QueryBuilder;
 use EMS\CoreBundle\Entity\Dashboard;
 
@@ -15,8 +16,8 @@ use EMS\CoreBundle\Entity\Dashboard;
  * @extends ServiceEntityRepository<Dashboard>
  *
  * @method Dashboard|null find($id, $lockMode = null, $lockVersion = null)
- * @method Dashboard|null findOneBy(array $criteria, array $orderBy = null)
- * @method Dashboard[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+ * @method Dashboard|null findOneBy(mixed[] $criteria, mixed[] $orderBy = null)
+ * @method Dashboard[]    findBy(mixed[] $criteria, mixed[] $orderBy = null, $limit = null, $offset = null)
  */
 final class DashboardRepository extends ServiceEntityRepository
 {
@@ -63,7 +64,7 @@ final class DashboardRepository extends ServiceEntityRepository
         $qb->select('count(c.id)');
         $this->addSearchFilters($qb, $searchValue);
 
-        return \intval($qb->getQuery()->getSingleScalarResult());
+        return (int) $qb->getQuery()->getSingleScalarResult();
     }
 
     public function create(Dashboard $dashboard): void
@@ -87,7 +88,7 @@ final class DashboardRepository extends ServiceEntityRepository
     {
         $queryBuilder = $this->createQueryBuilder('dashboard');
         $queryBuilder->where('dashboard.id IN (:ids)')
-            ->setParameter('ids', $ids);
+            ->setParameter('ids', $ids, ArrayParameterType::STRING);
 
         return $queryBuilder->getQuery()->getResult();
     }

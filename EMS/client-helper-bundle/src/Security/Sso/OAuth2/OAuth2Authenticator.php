@@ -10,12 +10,12 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
-use Symfony\Component\Security\Core\Security;
 use Symfony\Component\Security\Http\Authenticator\AbstractAuthenticator;
 use Symfony\Component\Security\Http\Authenticator\Passport\Badge\UserBadge;
 use Symfony\Component\Security\Http\Authenticator\Passport\Passport;
 use Symfony\Component\Security\Http\Authenticator\Passport\SelfValidatingPassport;
 use Symfony\Component\Security\Http\HttpUtils;
+use Symfony\Component\Security\Http\SecurityRequestAttributes;
 use Symfony\Component\Security\Http\Util\TargetPathTrait;
 
 class OAuth2Authenticator extends AbstractAuthenticator
@@ -28,6 +28,7 @@ class OAuth2Authenticator extends AbstractAuthenticator
     ) {
     }
 
+    #[\Override]
     public function supports(Request $request): ?bool
     {
         return $this->oAuth2Service->isEnabled()
@@ -35,6 +36,7 @@ class OAuth2Authenticator extends AbstractAuthenticator
             && $this->httpUtils->checkRequestPath($request, OAuth2Service::ROUTE_REDIRECT);
     }
 
+    #[\Override]
     public function authenticate(Request $request): Passport
     {
         $accessToken = $this->oAuth2Service->getProvider()->getAccessToken($request);
@@ -50,6 +52,7 @@ class OAuth2Authenticator extends AbstractAuthenticator
         return $passport;
     }
 
+    #[\Override]
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response
     {
         $loginPath = $this->httpUtils->generateUri($request, OAuth2Service::ROUTE_LOGIN);
@@ -60,13 +63,15 @@ class OAuth2Authenticator extends AbstractAuthenticator
         return $this->httpUtils->createRedirectResponse($request, $path);
     }
 
+    #[\Override]
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception): ?Response
     {
-        $request->getSession()->set(Security::AUTHENTICATION_ERROR, $exception);
+        $request->getSession()->set(SecurityRequestAttributes::AUTHENTICATION_ERROR, $exception);
 
         return $this->httpUtils->createRedirectResponse($request, OAuth2Service::ROUTE_LOGIN);
     }
 
+    #[\Override]
     public function createToken(Passport $passport, string $firewallName): TokenInterface
     {
         /** @var AccessTokenInterface $accessToken */

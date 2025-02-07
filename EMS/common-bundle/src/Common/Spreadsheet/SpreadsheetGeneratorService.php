@@ -25,6 +25,7 @@ final class SpreadsheetGeneratorService implements SpreadsheetGeneratorServiceIn
     /**
      * @param array{writer: string, filename: string, disposition: string, sheets: array<mixed>} $config
      */
+    #[\Override]
     public function generateSpreadsheetFile(array $config, string $filename): void
     {
         $config = $this->resolveOptions($config);
@@ -39,6 +40,7 @@ final class SpreadsheetGeneratorService implements SpreadsheetGeneratorServiceIn
     /**
      * @param array<mixed> $config
      */
+    #[\Override]
     public function generateSpreadsheet(array $config): StreamedResponse
     {
         $config = $this->resolveOptions($config);
@@ -57,6 +59,7 @@ final class SpreadsheetGeneratorService implements SpreadsheetGeneratorServiceIn
     /**
      * @param array<mixed> $config
      */
+    #[\Override]
     public function generateSpreadsheetCacheableResponse(array $config): Response
     {
         $config = $this->resolveOptions($config);

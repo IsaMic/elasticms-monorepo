@@ -9,14 +9,14 @@ use PHPUnit\Framework\TestCase;
 
 class ImageAiTest extends TestCase
 {
-    private const TEST_IMAGE_PATH = __DIR__.'/fixtures/image.png';
+    private const string TEST_IMAGE_PATH = __DIR__.'/fixtures/image.png';
 
     public function testImageCreateFromString(): void
     {
         $imageContent = \file_get_contents(self::TEST_IMAGE_PATH);
         $image = Image::imageCreateFromString($imageContent);
 
-        $this->assertTrue('object' == \gettype($image) && 'GdImage' == \get_class($image));
+        $this->assertTrue('object' == \gettype($image) && 'GdImage' == $image::class);
     }
 
     public function testImageResolution(): void
@@ -43,6 +43,6 @@ class ImageAiTest extends TestCase
     {
         $image = Image::imageCreateFromFilename(self::TEST_IMAGE_PATH);
 
-        $this->assertTrue('object' == \gettype($image) && 'GdImage' == \get_class($image));
+        $this->assertTrue('object' == \gettype($image) && 'GdImage' == $image::class);
     }
 }

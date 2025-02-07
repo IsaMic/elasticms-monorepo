@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Form\Field;
 
 use EMS\CoreBundle\Entity\QuerySearch;
@@ -14,11 +16,12 @@ class ObjectPickerType extends Select2Type
 {
     public function __construct(
         private readonly ObjectChoiceListFactory $choiceListFactory,
-        private readonly QuerySearchService $querySearchService
+        private readonly QuerySearchService $querySearchService,
     ) {
         parent::__construct($choiceListFactory);
     }
 
+    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         /* set the default option value for this kind of compound field */
@@ -68,9 +71,10 @@ class ObjectPickerType extends Select2Type
     }
 
     /**
-     * @param FormInterface<FormInterface> $form
-     * @param array<string, mixed>         $options
+     * @param FormInterface<mixed> $form
+     * @param array<string, mixed> $options
      */
+    #[\Override]
     public function buildView(FormView $view, FormInterface $form, array $options): void
     {
         $querySearch = $options['querySearch'];
@@ -85,6 +89,7 @@ class ObjectPickerType extends Select2Type
         $view->vars['attr']['data-referrer-ems-id'] = $options['referrer-ems-id'] ?? false;
     }
 
+    #[\Override]
     public function getBlockPrefix(): string
     {
         return 'objectpicker';

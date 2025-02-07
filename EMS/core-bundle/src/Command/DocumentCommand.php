@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Command;
 
+use EMS\CoreBundle\Commands;
 use EMS\CoreBundle\Entity\ContentType;
 use EMS\CoreBundle\Exception\CantBeFinalizedException;
 use EMS\CoreBundle\Exception\NotLockedException;
@@ -9,6 +12,8 @@ use EMS\CoreBundle\Service\ContentTypeService;
 use EMS\CoreBundle\Service\DataService;
 use EMS\CoreBundle\Service\DocumentService;
 use EMS\Helpers\File\TempDirectory;
+use EMS\Helpers\Standard\Json;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -17,21 +22,24 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Finder\Finder;
 
+#[AsCommand(
+    name: Commands::CONTENT_TYPE_IMPORT,
+    description: 'Import json files from a zip file as content type\'s documents.',
+    hidden: false,
+    aliases: ['ems:contenttype:import']
+)]
 class DocumentCommand extends Command
 {
-    final public const COMMAND = 'ems:contenttype:import';
+    final public const string COMMAND = 'ems:contenttype:import';
 
-    private const ARGUMENT_CONTENT_TYPE = 'content-type-name';
-    private const ARGUMENT_ARCHIVE = 'archive';
-    private const OPTION_BULK_SIZE = 'bulk-size';
-    private const OPTION_RAW = 'raw';
-    private const OPTION_DONT_SIGN_DATA = 'dont-sign-data';
-    private const OPTION_FORCE = 'force';
-    private const OPTION_DONT_FINALIZE = 'dont-finalize';
-    private const OPTION_BUSINESS_KEY = 'business-key';
-
-    /** @var string */
-    protected static $defaultName = self::COMMAND;
+    private const string ARGUMENT_CONTENT_TYPE = 'content-type-name';
+    private const string ARGUMENT_ARCHIVE = 'archive';
+    private const string OPTION_BULK_SIZE = 'bulk-size';
+    private const string OPTION_RAW = 'raw';
+    private const string OPTION_DONT_SIGN_DATA = 'dont-sign-data';
+    private const string OPTION_FORCE = 'force';
+    private const string OPTION_DONT_FINALIZE = 'dont-finalize';
+    private const string OPTION_BUSINESS_KEY = 'business-key';
     private ?SymfonyStyle $io = null;
     private ?ContentType $contentType = null;
     private ?string $archiveFilename = null;
@@ -41,10 +49,10 @@ class DocumentCommand extends Command
         parent::__construct();
     }
 
+    #[\Override]
     protected function configure(): void
     {
         $this
-            ->setDescription('Import json files from a zip file as content type\'s documents')
             ->addArgument(
                 self::ARGUMENT_CONTENT_TYPE,
                 InputArgument::REQUIRED,
@@ -94,11 +102,13 @@ class DocumentCommand extends Command
             );
     }
 
+    #[\Override]
     protected function initialize(InputInterface $input, OutputInterface $output): void
     {
         $this->io = new SymfonyStyle($input, $output);
     }
 
+    #[\Override]
     protected function interact(InputInterface $input, OutputInterface $output): void
     {
         if (null === $this->io) {
@@ -132,6 +142,7 @@ class DocumentCommand extends Command
         $this->archiveFilename = $archiveFilename;
     }
 
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         if (null === $this->io) {
@@ -143,7 +154,7 @@ class DocumentCommand extends Command
         if (null === $this->archiveFilename) {
             throw new \RuntimeException('Unexpected null archiveFilename');
         }
-        $bulkSize = \intval($input->getOption(self::OPTION_BULK_SIZE));
+        $bulkSize = (int) $input->getOption(self::OPTION_BULK_SIZE);
         if ($bulkSize <= 0) {
             throw new \RuntimeException('Invalid bulk size');
         }
@@ -182,12 +193,8 @@ class DocumentCommand extends Command
 
         $loopIndex = 0;
         foreach ($finder as $file) {
-            $content = \file_get_contents($file);
-            if (false === $content) {
-                $progress->advance();
-                continue;
-            }
-            $rawData = \json_decode($content, true, 512, JSON_THROW_ON_ERROR);
+            $content = $file->getContents();
+            $rawData = Json::decode($content);
             $ouuid = \basename($file->getFilename(), '.json');
             if ($replaceBusinessKey) {
                 $dataLink = $this->dataService->getDataLink($this->contentType->getName(), $ouuid);
@@ -207,7 +214,7 @@ class DocumentCommand extends Command
             try {
                 $this->documentService->importDocument($importerContext, $document->getOuuid(), $document->getSource());
             } catch (NotLockedException|CantBeFinalizedException $e) {
-                $this->io->error($e);
+                $this->io->error($e->getMessage());
             }
 
             ++$loopIndex;

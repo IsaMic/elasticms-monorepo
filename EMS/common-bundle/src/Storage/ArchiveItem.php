@@ -15,13 +15,14 @@ class ArchiveItem implements \JsonSerializable
         public readonly string $filename,
         public readonly string $type,
         public readonly int $size,
-        public readonly string $hash
+        public readonly string $hash,
     ) {
     }
 
     /**
      * @return array{filename: string, hash: string, type: string, size: int}
      */
+    #[\Override]
     public function jsonSerialize(): array
     {
         return [

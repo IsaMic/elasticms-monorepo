@@ -1,50 +1,37 @@
 <?php
 
-namespace EMS\CommonBundle\Entity;
+declare(strict_types=1);
 
-use Doctrine\ORM\Mapping as ORM;
-use EMS\Helpers\Standard\DateTime;
+namespace EMS\CommonBundle\Entity;
 
 trait CreatedModifiedTrait
 {
-    /**
-     * @ORM\Column(name="created", type="datetime")
-     */
-    private \DateTimeInterface $created;
+    private \DateTime $created;
+    private \DateTime $modified;
 
-    /**
-     * @ORM\Column(name="modified", type="datetime")
-     */
-    private \DateTimeInterface $modified;
-
-    /**
-     * @ORM\PrePersist
-     *
-     * @ORM\PreUpdate
-     */
     public function updateModified(): void
     {
-        $this->modified = DateTime::create('now');
+        $this->modified = new \DateTime('now');
     }
 
-    public function getCreated(): \DateTimeInterface
+    public function getCreated(): \DateTime
     {
         return $this->created;
     }
 
-    public function getModified(): \DateTimeInterface
+    public function getModified(): \DateTime
     {
         return $this->modified;
     }
 
-    public function setCreated(\DateTimeInterface $created): self
+    public function setCreated(\DateTime $created): self
     {
         $this->created = $created;
 
         return $this;
     }
 
-    public function setModified(\DateTimeInterface $modified): self
+    public function setModified(\DateTime $modified): self
     {
         $this->modified = $modified;
 

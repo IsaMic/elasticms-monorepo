@@ -6,7 +6,6 @@ namespace EMS\CoreBundle\Command\Revision\Task;
 
 use Elastica\Document;
 use EMS\CommonBundle\Common\Command\AbstractCommand;
-use EMS\CommonBundle\Common\Standard\DateTime;
 use EMS\CoreBundle\Commands;
 use EMS\CoreBundle\Core\Revision\Search\RevisionSearcher;
 use EMS\CoreBundle\Core\Revision\Task\TaskDTO;
@@ -15,12 +14,18 @@ use EMS\CoreBundle\Entity\Environment;
 use EMS\CoreBundle\Entity\Revision;
 use EMS\CoreBundle\Service\EnvironmentService;
 use EMS\CoreBundle\Service\UserService;
+use EMS\Helpers\Standard\DateTime;
 use EMS\Helpers\Standard\Json;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
+#[AsCommand(
+    name: Commands::REVISION_TASK_CREATE,
+    hidden: false
+)]
 final class TaskCreateCommand extends AbstractCommand
 {
     private Environment $environment;
@@ -33,30 +38,29 @@ final class TaskCreateCommand extends AbstractCommand
     private ?string $fieldDeadline = null;
     private ?string $notPublished = null;
 
-    private const DEFAULT_REQUESTER = 'SYSTEM_TASK_MANAGER';
+    private const string DEFAULT_REQUESTER = 'SYSTEM_TASK_MANAGER';
 
-    public const ARGUMENT_ENVIRONMENT = 'environment';
-    public const OPTION_TASK = 'task';
-    public const OPTION_REQUESTER = 'requester';
-    public const OPTION_FIELD_ASSIGNEE = 'field-assignee';
-    public const OPTION_FIELD_DEADLINE = 'field-deadline';
-    public const OPTION_NOT_PUBLISHED = 'not-published';
-    public const OPTION_SCROLL_SIZE = 'scroll-size';
-    public const OPTION_SCROLL_TIMEOUT = 'scroll-timeout';
-    public const OPTION_SEARCH_QUERY = 'search-query';
-
-    protected static $defaultName = Commands::REVISION_TASK_CREATE;
+    public const string ARGUMENT_ENVIRONMENT = 'environment';
+    public const string OPTION_TASK = 'task';
+    public const string OPTION_REQUESTER = 'requester';
+    public const string OPTION_FIELD_ASSIGNEE = 'field-assignee';
+    public const string OPTION_FIELD_DEADLINE = 'field-deadline';
+    public const string OPTION_NOT_PUBLISHED = 'not-published';
+    public const string OPTION_SCROLL_SIZE = 'scroll-size';
+    public const string OPTION_SCROLL_TIMEOUT = 'scroll-timeout';
+    public const string OPTION_SEARCH_QUERY = 'search-query';
 
     public function __construct(
         private readonly RevisionSearcher $revisionSearcher,
         private readonly EnvironmentService $environmentService,
         private readonly UserService $userService,
         private readonly TaskManager $taskManager,
-        private readonly string $coreDateFormat
+        private readonly string $coreDateFormat,
     ) {
         parent::__construct();
     }
 
+    #[\Override]
     protected function configure(): void
     {
         $this
@@ -72,6 +76,7 @@ final class TaskCreateCommand extends AbstractCommand
         ;
     }
 
+    #[\Override]
     protected function initialize(InputInterface $input, OutputInterface $output): void
     {
         parent::initialize($input, $output);
@@ -97,6 +102,7 @@ final class TaskCreateCommand extends AbstractCommand
         $this->searchQuery = $this->getOptionString(self::OPTION_SEARCH_QUERY);
     }
 
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $search = $this->revisionSearcher->create($this->environment, $this->searchQuery, [], true);

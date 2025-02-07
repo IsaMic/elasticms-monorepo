@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace EMS\CoreBundle\Command;
 
+use EMS\CoreBundle\Commands;
 use EMS\CoreBundle\Entity\ContentType;
 use EMS\CoreBundle\Service\ContentTypeService;
 use EMS\CoreBundle\Service\DataService;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -15,6 +17,12 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+#[AsCommand(
+    name: Commands::REVISIONS_UNLOCK,
+    description: 'Unlock all content-types revisions.',
+    hidden: false,
+    aliases: ['ems:revisions:unlock']
+)]
 final class UnlockRevisionsCommand extends Command
 {
     private ?SymfonyStyle $io = null;
@@ -22,23 +30,20 @@ final class UnlockRevisionsCommand extends Command
     private ?ContentType $contentType = null;
     private ?bool $all = null;
 
-    public const name = 'ems:revisions:unlock';
-    protected static $defaultName = self::name;
-
-    private const ARGUMENT_USER = 'user';
-    private const ARGUMENT_CONTENT_TYPE = 'contentType';
-    private const OPTION_ALL = 'all';
-    private const OPTION_STRICT = 'strict';
+    private const string ARGUMENT_USER = 'user';
+    private const string ARGUMENT_CONTENT_TYPE = 'contentType';
+    private const string OPTION_ALL = 'all';
+    private const string OPTION_STRICT = 'strict';
 
     public function __construct(private readonly LoggerInterface $logger, private readonly DataService $dataService, private readonly ContentTypeService $contentTypeService)
     {
         parent::__construct();
     }
 
+    #[\Override]
     protected function configure(): void
     {
         $this
-            ->setDescription('Unlock all content-types revisions.')
             ->addArgument(
                 self::ARGUMENT_USER,
                 InputArgument::REQUIRED,
@@ -64,6 +69,7 @@ final class UnlockRevisionsCommand extends Command
         ;
     }
 
+    #[\Override]
     protected function initialize(InputInterface $input, OutputInterface $output): void
     {
         $this->io = new SymfonyStyle($input, $output);
@@ -71,6 +77,7 @@ final class UnlockRevisionsCommand extends Command
         $this->all = (true === $input->getOption(self::OPTION_ALL));
     }
 
+    #[\Override]
     protected function interact(InputInterface $input, OutputInterface $output): void
     {
         if (null === $this->io) {
@@ -99,6 +106,7 @@ final class UnlockRevisionsCommand extends Command
         }
     }
 
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         if (null === $this->io) {

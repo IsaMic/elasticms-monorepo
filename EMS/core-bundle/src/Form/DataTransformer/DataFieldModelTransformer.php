@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Form\DataTransformer;
 
 use EMS\CoreBundle\Core\ContentType\DataFieldFormOptions;
@@ -33,6 +35,7 @@ class DataFieldModelTransformer implements DataTransformerInterface
      *
      * @param array<mixed>|float|int|string|bool|null $data
      */
+    #[\Override]
     public function transform($data): DataField
     {
         /** @var DataFieldType $dataFieldType */
@@ -49,6 +52,7 @@ class DataFieldModelTransformer implements DataTransformerInterface
      *
      * @return array<mixed>|float|int|string|bool|null
      */
+    #[\Override]
     public function reverseTransform($data)
     {
         /** @var DataFieldType $dataFieldType */

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Controller\ContentManagement;
 
 use Doctrine\ORM\NoResultException;
@@ -8,6 +10,7 @@ use EMS\CommonBundle\Helper\MimeTypeHelper;
 use EMS\CoreBundle\Core\ContentType\ContentTypeRoles;
 use EMS\CoreBundle\Core\ContentType\ViewTypes;
 use EMS\CoreBundle\Core\Log\LogRevisionContext;
+use EMS\CoreBundle\Core\UI\FlashMessageLogger;
 use EMS\CoreBundle\EMSCoreBundle;
 use EMS\CoreBundle\Entity\ContentType;
 use EMS\CoreBundle\Entity\Environment;
@@ -35,6 +38,8 @@ use EMS\CoreBundle\Service\IndexService;
 use EMS\CoreBundle\Service\JobService;
 use EMS\CoreBundle\Service\PublishService;
 use EMS\CoreBundle\Service\SearchService;
+use EMS\CoreBundle\Twig\AppExtension;
+use EMS\Helpers\Standard\Json;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
@@ -68,11 +73,12 @@ class DataController extends AbstractController
         private readonly RevisionRepository $revisionRepository,
         private readonly TemplateRepository $templateRepository,
         private readonly EnvironmentRepository $environmentRepository,
-        private readonly string $templateNamespace
+        private readonly FlashMessageLogger $flashMessageLogger,
+        private readonly string $templateNamespace,
     ) {
     }
 
-    public function rootAction(string $name): Response
+    public function root(string $name): Response
     {
         $contentType = $this->contentTypeRepository->findOneBy([
             'name' => $name,
@@ -87,7 +93,7 @@ class DataController extends AbstractController
             'contentType' => $contentType->getId(),
         ]);
         foreach ($searches as $search) {
-            return $this->forward('EMS\CoreBundle\Controller\ElasticsearchController::searchAction', [
+            return $this->forward('EMS\CoreBundle\Controller\ElasticsearchController::search', [
                 'query' => null,
             ], [
                 'search_form' => $search->jsonSerialize(),
@@ -106,14 +112,14 @@ class DataController extends AbstractController
             $searchForm->setSortOrder($contentType->getSortOrder());
         }
 
-        return $this->forward('EMS\CoreBundle\Controller\ElasticsearchController::searchAction', [
+        return $this->forward('EMS\CoreBundle\Controller\ElasticsearchController::search', [
             'query' => null,
         ], [
             'search_form' => $searchForm->jsonSerialize(),
         ]);
     }
 
-    public function inMyCirclesAction(string $name): Response
+    public function inMyCircles(string $name): Response
     {
         $contentType = $this->contentTypeRepository->findOneBy([
             'name' => $name,
@@ -154,16 +160,16 @@ class DataController extends AbstractController
             $searchForm->addFilter($filter);
         }
 
-        $formEncoded = \json_encode($searchForm, JSON_THROW_ON_ERROR);
+        $formEncoded = Json::encode($searchForm);
 
-        return $this->forward('EMS\CoreBundle\Controller\ElasticsearchController::searchAction', [
+        return $this->forward('EMS\CoreBundle\Controller\ElasticsearchController::search', [
             'query' => null,
         ], [
-            'search_form' => \json_decode($formEncoded, true, 512, JSON_THROW_ON_ERROR),
+            'search_form' => Json::decode($formEncoded),
         ]);
     }
 
-    public function viewDataAction(string $environmentName, string $type, string $ouuid): Response
+    public function viewData(string $environmentName, string $type, string $ouuid): Response
     {
         $environment = $this->environmentService->getByName($environmentName);
         if (false === $environment) {
@@ -189,7 +195,7 @@ class DataController extends AbstractController
         ]);
     }
 
-    public function revisionInEnvironmentDataAction(string $type, string $ouuid, string $environment): RedirectResponse
+    public function revisionInEnvironmentData(string $type, string $ouuid, string $environment): RedirectResponse
     {
         $contentType = $this->contentTypeService->getByName($type);
         if (!$contentType instanceof ContentType || $contentType->getDeleted()) {
@@ -229,7 +235,7 @@ class DataController extends AbstractController
         return $response;
     }
 
-    public function duplicateAction(string $environment, string $type, string $ouuid): RedirectResponse
+    public function duplicate(string $environment, string $type, string $ouuid): RedirectResponse
     {
         $contentType = $this->contentTypeService->getByName($type);
         if (false === $contentType) {
@@ -271,7 +277,7 @@ class DataController extends AbstractController
         ]);
     }
 
-    public function copyAction(string $environment, string $type, string $ouuid, Request $request): RedirectResponse
+    public function copy(string $environment, string $type, string $ouuid, Request $request): RedirectResponse
     {
         $contentType = $this->contentTypeService->getByName($type);
         if (!$contentType) {
@@ -302,7 +308,7 @@ class DataController extends AbstractController
         ]);
     }
 
-    public function newDraftAction(Request $request, string $type, string $ouuid): RedirectResponse
+    public function newDraft(Request $request, string $type, string $ouuid): RedirectResponse
     {
         $contentType = $this->contentTypeService->giveByName($type);
         if (!$this->isGranted($contentType->role(ContentTypeRoles::EDIT))) {
@@ -315,7 +321,7 @@ class DataController extends AbstractController
         ]);
     }
 
-    public function deleteAction(string $type, string $ouuid): RedirectResponse
+    public function delete(string $type, string $ouuid): RedirectResponse
     {
         $revision = $this->dataService->getNewestRevision($type, $ouuid);
         $contentType = $revision->giveContentType();
@@ -357,7 +363,7 @@ class DataController extends AbstractController
         return $this->dataService->discardDraft($revision);
     }
 
-    public function discardRevisionAction(int $revisionId): RedirectResponse
+    public function discardRevision(int $revisionId): RedirectResponse
     {
         /** @var Revision|null $revision */
         $revision = $this->revisionRepository->find($revisionId);
@@ -378,7 +384,7 @@ class DataController extends AbstractController
 
         if (null != $ouuid && null !== $previousRevisionId && $previousRevisionId > 0) {
             if ($autoPublish) {
-                return $this->reindexRevisionAction($previousRevisionId, true);
+                return $this->reindexRevision($previousRevisionId, true);
             }
 
             return $this->redirectToRoute(Routes::VIEW_REVISIONS, [
@@ -392,14 +398,14 @@ class DataController extends AbstractController
         ]);
     }
 
-    public function cancelModificationsAction(Revision $revision, PublishService $publishService): RedirectResponse
+    public function cancelModifications(Revision $revision, PublishService $publishService): RedirectResponse
     {
         $contentTypeId = $revision->giveContentType()->getId();
         $type = $revision->giveContentType()->getName();
         $ouuid = $revision->getOuuid();
 
         $this->dataService->lockRevision($revision);
-        $revision->setAutoSave(null);
+        $revision->autoSaveClear();
         $this->revisionRepository->save($revision);
 
         if (null != $ouuid) {
@@ -425,7 +431,7 @@ class DataController extends AbstractController
         ]);
     }
 
-    public function reindexRevisionAction(int $revisionId, bool $defaultOnly = false): RedirectResponse
+    public function reindexRevision(int $revisionId, bool $defaultOnly = false): RedirectResponse
     {
         /** @var Revision|null $revision */
         $revision = $this->revisionRepository->find($revisionId);
@@ -461,7 +467,7 @@ class DataController extends AbstractController
         ]);
     }
 
-    public function customIndexViewAction(View $viewId, bool $public, Request $request): Response
+    public function customIndexView(View $viewId, bool $public, Request $request): Response
     {
         $view = $viewId;
         if ($public && !$view->isPublic()) {
@@ -472,14 +478,14 @@ class DataController extends AbstractController
         return $viewType->generateResponse($view, $request);
     }
 
-    public function customViewJobAction(string $environmentName, int $templateId, string $ouuid, Request $request): Response
+    public function customViewJob(string $environmentName, int $templateId, string $ouuid, Request $request): Response
     {
         /** @var Template|null $template * */
         $template = $this->templateRepository->find($templateId);
         /** @var Environment|null $env */
         $env = $this->environmentRepository->findOneByName($environmentName);
 
-        if (null === $template || null === $env) {
+        if (null === $template || !$env) {
             throw new NotFoundHttpException();
         }
 
@@ -529,7 +535,7 @@ class DataController extends AbstractController
             ]);
         }
 
-        $response = $this->render("@$this->templateNamespace/ajax/notification.json.twig", [
+        $response = $this->flashMessageLogger->buildJsonResponse([
             'success' => $success,
         ]);
         $response->headers->set('Content-Type', 'application/json');
@@ -537,7 +543,7 @@ class DataController extends AbstractController
         return $response;
     }
 
-    public function ajaxUpdateAction(int $revisionId, Request $request, PublishService $publishService): Response
+    public function ajaxUpdate(int $revisionId, Request $request, PublishService $publishService): Response
     {
         $formErrors = [];
 
@@ -556,7 +562,7 @@ class DataController extends AbstractController
                 EmsFields::LOG_REVISION_ID_FIELD => $revision->getId(),
             ]);
 
-            $response = $this->render("@$this->templateNamespace/ajax/notification.json.twig", [
+            $response = $this->flashMessageLogger->buildJsonResponse([
                 'success' => false,
             ]);
             $response->headers->set('Content-Type', 'application/json');
@@ -583,7 +589,7 @@ class DataController extends AbstractController
             $request->getSession()->getBag('flashes')->clear();
 
             /**little trick to reorder collection*/
-            $requestRevision = $request->request->get('revision');
+            $requestRevision = $request->request->all('revision');
             $this->reorderCollection($requestRevision);
             $request->request->set('revision', $requestRevision);
             /**end little trick to reorder collection*/
@@ -604,7 +610,9 @@ class DataController extends AbstractController
             $this->revisionRepository->save($revision);
 
             $this->dataService->isValid($form, null, $objectArray);
-            $this->dataService->propagateDataToComputedField($form->get('data'), $objectArray, $revision->giveContentType(), $revision->giveContentType()->getName(), $revision->getOuuid(), false, false);
+            if (\is_array($objectArray)) {
+                $this->dataService->propagateDataToComputedField($form->get('data'), $objectArray, $revision->giveContentType(), $revision->giveContentType()->getName(), $revision->getOuuid(), false, false);
+            }
 
             $session = $request->getSession();
             if ($session instanceof Session) {
@@ -618,16 +626,28 @@ class DataController extends AbstractController
             }
         }
 
-        $response = $this->render("@$this->templateNamespace/data/ajax-revision.json.twig", [
+        $serialisedFormErrors = [];
+        foreach ($formErrors as $error) {
+            if (!$error instanceof FormError) {
+                continue;
+            }
+
+            $serialisedFormErrors[] = [
+                'propertyPath' => AppExtension::propertyPath($error),
+                'message' => $error->getMessage(),
+            ];
+        }
+
+        $response = $this->flashMessageLogger->buildJsonResponse([
             'success' => true,
-            'formErrors' => $formErrors,
+            'formErrors' => $serialisedFormErrors,
         ]);
         $response->headers->set('Content-Type', 'application/json');
 
         return $response;
     }
 
-    public function finalizeDraftAction(Revision $revision): Response
+    public function finalizeDraft(Revision $revision): Response
     {
         $this->dataService->loadDataStructure($revision);
         try {
@@ -646,7 +666,7 @@ class DataController extends AbstractController
             }
 
             $revision = $this->dataService->finalizeDraft($revision, $form);
-            if (0 !== (\is_countable($form->getErrors()) ? \count($form->getErrors()) : 0)) {
+            if (0 !== $form->getErrors()->count()) {
                 $this->logger->error('log.data.revision.can_finalized_as_invalid', [
                     EmsFields::LOG_CONTENTTYPE_FIELD => $revision->giveContentType()->getName(),
                     EmsFields::LOG_OUUID_FIELD => $revision->getOuuid(),
@@ -681,20 +701,21 @@ class DataController extends AbstractController
         ]);
     }
 
-    public function duplicateWithJsonContentAction(ContentType $contentType, string $ouuid, Request $request): RedirectResponse
+    public function duplicateWithJsonContent(ContentType $contentType, string $ouuid, Request $request): RedirectResponse
     {
-        $content = $request->get('JSON_BODY', null);
-        $jsonContent = \json_decode((string) $content, true, 512, JSON_THROW_ON_ERROR);
+        $content = $request->get('JSON_BODY');
+        $jsonContent = Json::decode((string) $content);
         $jsonContent = \array_merge($this->dataService->getNewestRevision($contentType->getName(), $ouuid)->getRawData(), $jsonContent);
 
         return $this->intNewDocumentFromArray($contentType, $jsonContent);
     }
 
-    public function addFromJsonContentAction(ContentType $contentType, Request $request): RedirectResponse
+    public function addFromJsonContent(ContentType $contentType, Request $request): RedirectResponse
     {
-        $content = $request->get('JSON_BODY', null);
-        $jsonContent = \json_decode((string) $content, true, 512, JSON_THROW_ON_ERROR);
-        if (null === $jsonContent) {
+        try {
+            $content = $request->get('JSON_BODY');
+            $jsonContent = Json::decode((string) $content);
+        } catch (\Throwable) {
             $this->logger->error('log.data.revision.add_from_json_error', [
                 EmsFields::LOG_CONTENTTYPE_FIELD => $contentType->getName(),
                 EmsFields::LOG_OPERATION_FIELD => EmsFields::LOG_OPERATION_CREATE,
@@ -731,7 +752,7 @@ class DataController extends AbstractController
         }
     }
 
-    public function addAction(ContentType $contentType, Request $request): Response
+    public function add(ContentType $contentType, Request $request): Response
     {
         if (!$this->isGranted($contentType->role(ContentTypeRoles::CREATE))) {
             throw $this->createAccessDeniedException('Create not granted');
@@ -746,7 +767,7 @@ class DataController extends AbstractController
                     'pattern' => '/^[A-Za-z0-9_\.\-~]*$/',
                     'match' => true,
                     'message' => 'Ouuid has an unauthorized character.',
-                    ]),
+                ]),
                 ],
                 'attr' => [
                     'class' => 'form-control',
@@ -784,7 +805,7 @@ class DataController extends AbstractController
         ]);
     }
 
-    public function revertRevisionAction(Revision $revision): Response
+    public function revertRevision(Revision $revision): Response
     {
         $type = $revision->giveContentType()->getName();
         $ouuid = $revision->giveOuuid();
@@ -801,7 +822,7 @@ class DataController extends AbstractController
         ]);
     }
 
-    public function linkDataAction(string $key, ContentTypeService $ctService): Response
+    public function linkData(string $key, ContentTypeService $ctService): Response
     {
         $category = $type = $ouuid = null;
         $split = \explode(':', $key);

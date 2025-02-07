@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Form\View;
 
 use EMS\CoreBundle\Entity\Form\Search;
@@ -22,65 +24,67 @@ class CalendarViewType extends ViewType
         parent::__construct($formFactory, $twig, $logger, $templateNamespace);
     }
 
+    #[\Override]
     public function getLabel(): string
     {
         return 'Calendar: a view where you can schedule your object';
     }
 
+    #[\Override]
     public function getName(): string
     {
         return 'Calendar';
     }
 
     /**
-     * @param FormBuilderInterface<FormBuilderInterface> $builder
-     * @param array<string, mixed>                       $options
+     * @param FormBuilderInterface<mixed> $builder
+     * @param array<string, mixed>        $options
      */
+    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         parent::buildForm($builder, $options);
         $builder->add('dateRangeField', TextType::class, [
         ])->add('timeFormat', TextType::class, [
-                'attr' => [
-                        'placeholder' => 'i.e. H(:mm)',
-                ],
+            'attr' => [
+                'placeholder' => 'i.e. H(:mm)',
+            ],
         ])->add('locale', TextType::class, [
-                'attr' => [
-                        'placeholder' => 'i.e. fr',
-                ],
+            'attr' => [
+                'placeholder' => 'i.e. fr',
+            ],
         ])->add('firstDay', IntegerType::class, [
-                'attr' => [
-                        'placeholder' => 'Sunday=0, Monday=1, Tuesday=2, etc.',
-                ],
+            'attr' => [
+                'placeholder' => 'Sunday=0, Monday=1, Tuesday=2, etc.',
+            ],
         ])->add('weekends', CheckboxType::class, [
         ])->add('slotDuration', TextType::class, [
-                'attr' => [
-                        'placeholder' => 'i.e. 00:30:00',
-                ],
+            'attr' => [
+                'placeholder' => 'i.e. 00:30:00',
+            ],
         ]);
     }
 
+    #[\Override]
     public function getBlockPrefix(): string
     {
         return 'calendar_view';
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function getParameters(View $view, FormFactoryInterface $formFactory, Request $request): array
     {
         $search = new Search();
         $form = $formFactory->create(SearchFormType::class, $search, [
-                'method' => 'GET',
-                'light' => true,
+            'method' => 'GET',
+            'light' => true,
         ]);
 
         $form->handleRequest($request);
 
         return [
             'view' => $view,
-            'field' => $view->getContentType()->getFieldType()->__get('ems_'.$view->getOptions()['dateRangeField']),
+            'field' => $view->getContentType()->getFieldType()->get('ems_'.$view->getOptions()['dateRangeField']),
             'contentType' => $view->getContentType(),
             'environment' => $view->getContentType()->getEnvironment(),
             'form' => $form->createView(),

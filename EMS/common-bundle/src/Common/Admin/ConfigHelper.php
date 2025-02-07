@@ -5,19 +5,20 @@ declare(strict_types=1);
 namespace EMS\CommonBundle\Common\Admin;
 
 use EMS\CommonBundle\Contracts\CoreApi\Endpoint\Admin\ConfigInterface;
+use EMS\Helpers\File\File;
 use EMS\Helpers\Standard\Json;
 use Symfony\Component\Finder\Finder;
 
-final class ConfigHelper
+final readonly class ConfigHelper
 {
-    public const DEFAULT_FOLDER = 'admin';
-    private readonly string $directory;
+    public const string DEFAULT_FOLDER = 'admin';
+    private string $directory;
 
-    public function __construct(private readonly ConfigInterface $config, string $saveFolder)
+    public function __construct(private ConfigInterface $config, string $saveFolder)
     {
         $this->directory = \implode(DIRECTORY_SEPARATOR, [$saveFolder, $this->config->getType()]);
         if (!\is_dir($this->directory)) {
-            \mkdir($this->directory, 0777, true);
+            \mkdir($this->directory, 0o777, true);
         }
     }
 
@@ -51,7 +52,7 @@ final class ConfigHelper
      */
     public function save(string $name, array $config): void
     {
-        \file_put_contents($this->getFilename($name), Json::encode($config, true));
+        File::putContents($this->getFilename($name), Json::encode($config, true));
     }
 
     public function getFilename(string $name): string
@@ -79,7 +80,7 @@ final class ConfigHelper
     }
 
     /**
-     * @return string[];
+     * @return string[]
      */
     public function remote(): array
     {

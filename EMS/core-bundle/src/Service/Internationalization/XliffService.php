@@ -64,7 +64,7 @@ class XliffService
             $baselineTranslationData = (null === $localeField && $withBaseline ? $sourceData : []);
         }
 
-        $xliffDoc = $extractor->addDocument($contentType->getName(), $source->getId(), \strval($sourceRevision->getId()));
+        $xliffDoc = $extractor->addDocument($contentType->getName(), $source->getId(), (string) $sourceRevision->getId());
         foreach ($fields as $fieldPath) {
             $propertyPath = Document::fieldPathToPropertyPath($fieldPath);
             foreach ($propertyAccessor->iterator($propertyPath, $sourceData, [InsertionRevision::LOCALE_PLACE_HOLDER => $extractor->getSourceLocale()]) as $path => $value) {
@@ -84,7 +84,7 @@ class XliffService
         }
     }
 
-    public function insert(InsertReport $insertReport, InsertionRevision $insertionRevision, ?string $localeField, ?string $translationField, ?Environment $publishAndArchive, string $username = null, bool $currentRevisionOnly = false): Revision
+    public function insert(InsertReport $insertReport, InsertionRevision $insertionRevision, ?string $localeField, ?string $translationField, ?Environment $publishAndArchive, ?string $username = null, bool $currentRevisionOnly = false): Revision
     {
         $propertyAccessor = PropertyAccessor::createPropertyAccessor();
         $revision = $this->revisionService->getByRevisionId($insertionRevision->getRevisionId());

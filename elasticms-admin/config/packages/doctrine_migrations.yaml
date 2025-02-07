@@ -1,14 +1,9 @@
 doctrine_migrations:
     migrations_paths:
-        Application\Migrations: '%env(string:ELASTICMS_PATH)%/core-bundle/src/Resources/DoctrineMigrations/pdo_%env(resolve:DB_DRIVER)%'
+        Application\Migrations: '%env(string:ELASTICMS_PATH)%/core-bundle/migrations/pdo_%env(resolve:DB_DRIVER)%'
     storage:
         table_storage:
             table_name: 'migration_versions'
             version_column_name: 'version'
             version_column_length: 191
             executed_at_column_name: 'executed_at'
-
-when@dev:
-  doctrine_migrations:
-    migrations_paths:
-      Application\Migrations: '%env(string:ELASTICMS_PATH)%/core-bundle/src/Resources/DoctrineMigrations/pdo_%env(resolve:DB_DRIVER)%'

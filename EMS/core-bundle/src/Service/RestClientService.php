@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Service;
 
 use GuzzleHttp\Client;
 
 class RestClientService
 {
-    public function getClient(string $baseUrl = null, int $timeout = 30): Client
+    public function getClient(?string $baseUrl = null, int $timeout = 30): Client
     {
         $options = [
             'timeout' => $timeout,

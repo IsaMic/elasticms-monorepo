@@ -12,13 +12,13 @@ use EMS\Xliff\XML\DomHelper;
 
 class InsertionRevision
 {
-    private const HTML_FIELD = 'html_field';
-    private const SIMPLE_FIELD = 'simple_field';
-    private const UNKNOWN_FIELD_TYPE = 'UNKNOWN_FIELD_TYPE';
-    final public const LOCALE_PLACE_HOLDER = '%locale%';
-    private string $contentType;
-    private string $ouuid;
-    private string $revisionId;
+    private const string HTML_FIELD = 'html_field';
+    private const string SIMPLE_FIELD = 'simple_field';
+    private const string UNKNOWN_FIELD_TYPE = 'UNKNOWN_FIELD_TYPE';
+    final public const string LOCALE_PLACE_HOLDER = '%locale%';
+    private readonly string $contentType;
+    private readonly string $ouuid;
+    private readonly string $revisionId;
 
     /**
      * @param string[] $nameSpaces
@@ -179,7 +179,7 @@ class InsertionRevision
             $attribute = $field->getAttributeNS($this->nameSpaces[$nameSpace], $tag);
         }
 
-        return \strval($attribute);
+        return (string) $attribute;
     }
 
     public function getTargetLocale(): string
@@ -345,7 +345,7 @@ class InsertionRevision
         }
 
         $expectedSourceValue ??= '';
-        if (\trim($expectedSourceValue) !== \trim($sourceValue)) {
+        if (\trim((string) $expectedSourceValue) !== \trim($sourceValue)) {
             $insertReport->addError($expectedSourceValue, $sourceValue, $sourcePropertyPath, $this->contentType, $this->ouuid, $this->revisionId);
         }
 

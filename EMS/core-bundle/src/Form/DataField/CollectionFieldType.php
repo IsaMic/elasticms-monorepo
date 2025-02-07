@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Form\DataField;
 
 use EMS\CoreBundle\Entity\DataField;
@@ -32,24 +34,24 @@ class CollectionFieldType extends DataFieldType
         FormRegistryInterface $formRegistry,
         ElasticsearchService $elasticsearchService,
         private readonly DataService $dataService,
-        private readonly LoggerInterface $logger)
-    {
+        private readonly LoggerInterface $logger
+    ) {
         parent::__construct($authorizationChecker, $formRegistry, $elasticsearchService);
     }
 
+    #[\Override]
     public function getLabel(): string
     {
         return 'Collection (manage array of children types)';
     }
 
+    #[\Override]
     public static function getIcon(): string
     {
         return 'fa fa-plus fa-rotate';
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function importData(DataField $dataField, array|string|int|float|bool|null $sourceArray, bool $isMigration): array
     {
         $migrationOptions = $dataField->giveFieldType()->getMigrationOptions();
@@ -92,15 +94,17 @@ class CollectionFieldType extends DataFieldType
         return [$dataField->giveFieldType()->getName()];
     }
 
+    #[\Override]
     public function getParent(): string
     {
         return EmsCollectionType::class;
     }
 
     /**
-     * @param FormInterface<FormInterface> $form
-     * @param array<string, mixed>         $options
+     * @param FormInterface<mixed> $form
+     * @param array<string, mixed> $options
      */
+    #[\Override]
     public function buildView(FormView $view, FormInterface $form, array $options): void
     {
         /* give options for twig context */
@@ -113,6 +117,7 @@ class CollectionFieldType extends DataFieldType
         $view->vars['labelField'] = $options['labelField'];
     }
 
+    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         /* set the default option value for this kind of compound field */
@@ -126,21 +131,21 @@ class CollectionFieldType extends DataFieldType
         $resolver->setDefault('labelField', null);
     }
 
+    #[\Override]
     public static function isContainer(): bool
     {
         /* this kind of compound field may contain children */
         return true;
     }
 
+    #[\Override]
     public static function isCollection(): bool
     {
         return true;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public function isValid(DataField &$dataField, DataField $parent = null, mixed &$masterRawData = null): bool
+    #[\Override]
+    public function isValid(DataField &$dataField, ?DataField $parent = null, mixed &$masterRawData = null): bool
     {
         if ($this->hasDeletedParent($parent)) {
             return true;
@@ -172,9 +177,7 @@ class CollectionFieldType extends DataFieldType
         return $isValid;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function buildOptionsForm(FormBuilderInterface $builder, array $options): void
     {
         parent::buildOptionsForm($builder, $options);
@@ -185,38 +188,35 @@ class CollectionFieldType extends DataFieldType
                 ->add('renumbering', CheckboxType::class, [
                     'required' => false,
                     'label' => 'Items will be renumbered',
-                ])
-                ->remove('index');
+                ]);
         }
 
         // an optional icon can't be specified ritgh to the container label
         $optionsForm->get('displayOptions')->add('singularLabel', TextType::class, [
-                'required' => false,
+            'required' => false,
         ])->add('itemBootstrapClass', TextType::class, [
-                'required' => false,
+            'required' => false,
         ])->add('labelField', TextType::class, [
-                'required' => false,
+            'required' => false,
         ])->add('icon', IconPickerType::class, [
-                'required' => false,
+            'required' => false,
         ])->add('collapsible', CheckboxType::class, [
-                'required' => false,
+            'required' => false,
         ])->add('sortable', CheckboxType::class, [
-                'required' => false,
+            'required' => false,
         ]);
 
         $optionsForm->get('restrictionOptions')
         ->add('min', IntegerType::class, [
-                'required' => false,
+            'required' => false,
         ])->add('max', IntegerType::class, [
-                'required' => false,
+            'required' => false,
         ]);
         $optionsForm->get('restrictionOptions')->remove('mandatory');
         $optionsForm->get('restrictionOptions')->remove('mandatory_if');
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function buildObjectArray(DataField $data, array &$out): void
     {
         if (!$data->giveFieldType()->getDeleted()) {
@@ -224,32 +224,31 @@ class CollectionFieldType extends DataFieldType
         }
     }
 
+    #[\Override]
     public function getBlockPrefix(): string
     {
         return 'collectionfieldtype';
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public static function getJsonNames(FieldType $current): array
     {
         return [$current->getName()];
     }
 
+    #[\Override]
     public function generateMapping(FieldType $current): array
     {
         return [$current->getName() => [
-                'type' => 'nested',
-                'properties' => [],
+            'type' => 'nested',
+            'properties' => [],
         ]];
     }
 
     /**
-     * {@inheritDoc}
-     *
      * @param array<mixed> $data
      */
+    #[\Override]
     public function reverseViewTransform($data, FieldType $fieldType): DataField
     {
         $cleaned = [];
@@ -274,9 +273,7 @@ class CollectionFieldType extends DataFieldType
         return $out;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function getDefaultOptions(string $name): array
     {
         $out = parent::getDefaultOptions($name);

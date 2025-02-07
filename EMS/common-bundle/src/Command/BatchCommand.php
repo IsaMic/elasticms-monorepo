@@ -9,6 +9,7 @@ use EMS\CommonBundle\Common\Command\AbstractCommand;
 use EMS\Helpers\File\File;
 use EMS\Helpers\Standard\Json;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -20,27 +21,32 @@ use Twig\TemplateWrapper;
 
 use function Symfony\Component\String\u;
 
+#[AsCommand(
+    name: Commands::BATCH,
+    description: 'Run commands defined in twig',
+    hidden: false
+)]
 class BatchCommand extends AbstractCommand
 {
-    protected static $defaultName = Commands::BATCH;
-    private const ARGUMENT_TEMPLATE = 'template';
-    private const OPTION_CONTEXT = 'context';
+    private const string ARGUMENT_TEMPLATE = 'template';
+    private const string OPTION_CONTEXT = 'context';
 
     public function __construct(private readonly Environment $twig)
     {
         parent::__construct();
     }
 
+    #[\Override]
     protected function configure(): void
     {
         parent::configure();
         $this
-            ->setDescription('Run commands defined in twig')
             ->addArgument(self::ARGUMENT_TEMPLATE, InputArgument::REQUIRED, 'template name, path or twig code')
             ->addOption(self::OPTION_CONTEXT, null, InputOption::VALUE_REQUIRED, 'context passed to twig')
         ;
     }
 
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
@@ -79,7 +85,7 @@ class BatchCommand extends AbstractCommand
         $source = match (true) {
             u($name)->startsWith('@EMSCH') => $this->twig->getLoader()->getSourceContext($name)->getCode(),
             \file_exists($name) => File::fromFilename($name)->getContents(),
-            default => $name
+            default => $name,
         };
 
         return $this->twig->createTemplate($source);

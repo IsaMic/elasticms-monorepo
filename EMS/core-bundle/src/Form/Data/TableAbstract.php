@@ -30,7 +30,7 @@ abstract class TableAbstract implements TableInterface
     private array $reordered = [];
     /** @var TableColumn[] */
     private array $columns = [];
-    private TableItemActionCollection $itemActionCollection;
+    private readonly TableItemActionCollection $itemActionCollection;
     /** @var TableAction[] */
     private array $tableActions = [];
     /** @var TableAction[] */
@@ -45,6 +45,7 @@ abstract class TableAbstract implements TableInterface
 
     /** @var array<string, string> */
     private array $exportUrls = [];
+    /** @var ?FormInterface<mixed> */
     private ?FormInterface $filterForm = null;
 
     private string $exportSheetName = 'table';
@@ -58,6 +59,7 @@ abstract class TableAbstract implements TableInterface
         $this->itemActionCollection = new TableItemActionCollection();
     }
 
+    #[\Override]
     public function isSortable(): bool
     {
         return false;
@@ -72,6 +74,7 @@ abstract class TableAbstract implements TableInterface
         $this->searchValue = $dataTableRequest->getSearchValue();
     }
 
+    #[\Override]
     public function next(int $pagingSize = 100): bool
     {
         if ($this->from + $this->size >= $this->count()) {
@@ -83,6 +86,7 @@ abstract class TableAbstract implements TableInterface
         return true;
     }
 
+    #[\Override]
     public function getLabelAttribute(): string
     {
         return $this->labelAttribute;
@@ -98,6 +102,7 @@ abstract class TableAbstract implements TableInterface
     /**
      * @return string[]
      */
+    #[\Override]
     public function getSelected(): array
     {
         return $this->selected;
@@ -106,6 +111,7 @@ abstract class TableAbstract implements TableInterface
     /**
      * @param string[] $selected
      */
+    #[\Override]
     public function setSelected(array $selected): void
     {
         $this->selected = $selected;
@@ -114,6 +120,7 @@ abstract class TableAbstract implements TableInterface
     /**
      * @return string[]
      */
+    #[\Override]
     public function getReordered(): array
     {
         return $this->reordered;
@@ -122,6 +129,7 @@ abstract class TableAbstract implements TableInterface
     /**
      * @param string[] $reordered
      */
+    #[\Override]
     public function setReordered(array $reordered): void
     {
         $this->reordered = $reordered;
@@ -155,6 +163,7 @@ abstract class TableAbstract implements TableInterface
     /**
      * @return TableColumn[]
      */
+    #[\Override]
     public function getColumns(): array
     {
         return $this->columns;
@@ -173,7 +182,7 @@ abstract class TableAbstract implements TableInterface
         return $validations;
     }
 
-    public function addItemActionCollection(null|string|TranslatableMessage $labelKey = null, ?string $icon = null): TableItemActionCollection
+    public function addItemActionCollection(string|TranslatableMessage|null $labelKey = null, ?string $icon = null): TableItemActionCollection
     {
         $itemActionCollection = new TableItemActionCollection($labelKey, $icon);
         $this->itemActionCollection->addItemActionCollection($itemActionCollection);
@@ -200,7 +209,7 @@ abstract class TableAbstract implements TableInterface
     /**
      * @param array<string, string|int> $routeParameters
      */
-    public function addDynamicItemPostAction(string $route, string|TranslatableMessage $labelKey, string $icon, null|string|TranslatableMessage $messageKey = null, array $routeParameters = []): TableItemAction
+    public function addDynamicItemPostAction(string $route, string|TranslatableMessage $labelKey, string $icon, string|TranslatableMessage|null $messageKey = null, array $routeParameters = []): TableItemAction
     {
         return $this->itemActionCollection->addDynamicItemPostAction($route, $labelKey, $icon, $messageKey, $routeParameters);
     }
@@ -213,12 +222,13 @@ abstract class TableAbstract implements TableInterface
         return $this->itemActionCollection->addDynamicItemGetAction($route, $labelKey, $icon, $routeParameters);
     }
 
+    #[\Override]
     public function getItemActions(): TableItemActionCollection
     {
         return $this->itemActionCollection;
     }
 
-    public function addTableAction(string $name, string $icon, string|TranslatableMessage $labelKey, null|string|TranslatableMessage $confirmationKey = null): TableAction
+    public function addTableAction(string $name, string $icon, string|TranslatableMessage $labelKey, string|TranslatableMessage|null $confirmationKey = null): TableAction
     {
         $action = TableAction::create($name, $icon, $labelKey, $confirmationKey);
         $this->tableActions[] = $action;
@@ -240,7 +250,7 @@ abstract class TableAbstract implements TableInterface
         return $toolbarAction;
     }
 
-    public function addMassAction(string $name, TranslatableMessage|string $label, string $icon, null|string|TranslatableMessage $confirmationKey = null): TableAction
+    public function addMassAction(string $name, TranslatableMessage|string $label, string $icon, string|TranslatableMessage|null $confirmationKey = null): TableAction
     {
         $massAction = TableAction::create($name, $icon, $label, $confirmationKey);
         $massAction->setCssClass('btn btn-sm btn-outline-danger');
@@ -250,6 +260,7 @@ abstract class TableAbstract implements TableInterface
         return $massAction;
     }
 
+    #[\Override]
     public function getTableMassActions(): iterable
     {
         return $this->massActions;
@@ -258,6 +269,7 @@ abstract class TableAbstract implements TableInterface
     /**
      * @return TableAction[]
      */
+    #[\Override]
     public function getTableActions(): iterable
     {
         return $this->tableActions;
@@ -292,6 +304,7 @@ abstract class TableAbstract implements TableInterface
     /**
      * @return array<string, mixed>
      */
+    #[\Override]
     public function getFrontendOptions(): array
     {
         $columnIndex = 0;
@@ -310,7 +323,7 @@ abstract class TableAbstract implements TableInterface
         }
         $options = [];
 
-        if (null !== $this->orderField && null !== $columnIndex) {
+        if (null !== $this->orderField) {
             $options['order'] = [[$columnIndex, $this->orderDirection]];
         }
 
@@ -351,16 +364,23 @@ abstract class TableAbstract implements TableInterface
         return $options;
     }
 
+    #[\Override]
     public function getAjaxUrl(): ?string
     {
         return $this->ajaxUrl;
     }
 
+    /**
+     * @return ?FormInterface<mixed>
+     */
     public function getFilterForm(): ?FormInterface
     {
         return $this->filterForm;
     }
 
+    /**
+     * @param ?FormInterface<mixed> $filterForm
+     */
     public function setFilterForm(?FormInterface $filterForm): self
     {
         $this->filterForm = $filterForm;
@@ -389,6 +409,7 @@ abstract class TableAbstract implements TableInterface
         return $this->size;
     }
 
+    #[\Override]
     public function setSize(int $size): void
     {
         $this->size = $size;
@@ -404,6 +425,7 @@ abstract class TableAbstract implements TableInterface
         return $this->searchValue;
     }
 
+    #[\Override]
     abstract public function supportsTableActions(): bool;
 
     abstract public function totalCount(): int;
@@ -421,6 +443,7 @@ abstract class TableAbstract implements TableInterface
         $this->exportUrls[$exportFormat] = $exportUrl;
     }
 
+    #[\Override]
     public function getExportSheetName(): string
     {
         return $this->exportSheetName;
@@ -433,6 +456,7 @@ abstract class TableAbstract implements TableInterface
         return $this;
     }
 
+    #[\Override]
     public function getExportFileName(): string
     {
         return $this->exportFileName;
@@ -445,6 +469,7 @@ abstract class TableAbstract implements TableInterface
         return $this;
     }
 
+    #[\Override]
     public function getExportDisposition(): string
     {
         return $this->exportDisposition;

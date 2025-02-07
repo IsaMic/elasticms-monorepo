@@ -9,10 +9,13 @@ use EMS\ClientHelperBundle\Helper\Environment\EnvironmentHelper;
 use Symfony\Bundle\FrameworkBundle\Translation\Translator as SymfonyTranslator;
 use Symfony\Component\HttpKernel\CacheWarmer\CacheWarmerInterface;
 
-final class Translator implements CacheWarmerInterface
+final readonly class Translator implements CacheWarmerInterface
 {
-    public function __construct(private readonly EnvironmentHelper $environmentHelper, private readonly TranslationBuilder $builder, private readonly SymfonyTranslator $translator)
-    {
+    public function __construct(
+        private EnvironmentHelper $environmentHelper,
+        private TranslationBuilder $builder,
+        private SymfonyTranslator $translator
+    ) {
     }
 
     public function addCatalogues(): void
@@ -24,17 +27,14 @@ final class Translator implements CacheWarmerInterface
         }
     }
 
+    #[\Override]
     public function isOptional(): bool
     {
         return false;
     }
 
-    /**
-     * @param string $cacheDir
-     *
-     * @return string[]
-     */
-    public function warmUp($cacheDir)
+    #[\Override]
+    public function warmUp($cacheDir, ?string $buildDir = null): array
     {
         try {
             foreach ($this->environmentHelper->getEnvironments() as $environment) {

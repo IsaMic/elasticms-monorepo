@@ -10,9 +10,9 @@ use EMS\CoreBundle\Service\DataService;
 use EMS\Helpers\ArrayHelper\ArrayHelper;
 use EMS\Helpers\Standard\Json;
 
-final class ContentTransformer
+final readonly class ContentTransformer
 {
-    public function __construct(private readonly ContentTransformers $transformers, private readonly DataService $dataService)
+    public function __construct(private ContentTransformers $transformers, private DataService $dataService)
     {
     }
 
@@ -52,7 +52,7 @@ final class ContentTransformer
     public function transform(Revision $revision, array $transformerDefinitions, string $user, bool $dryRun): bool
     {
         $rawData = ArrayHelper::map($revision->getRawData(), function ($value, $property) use ($transformerDefinitions) {
-            if (\key_exists($property, $transformerDefinitions)) {
+            if (\array_key_exists($property, $transformerDefinitions)) {
                 return $this->transformValue($value, $transformerDefinitions[$property]);
             }
 
@@ -66,7 +66,7 @@ final class ContentTransformer
         if (!$dryRun) {
             $revision = $this->dataService->initNewDraft($revision->getContentTypeName(), $revision->giveOuuid(), null, $user);
             $revision->setRawData($rawData);
-            $this->dataService->finalizeDraft($revision, $revisionType, $user, false);
+            $this->dataService->finalizeDraft($revision, null, $user, false);
         }
 
         return true;

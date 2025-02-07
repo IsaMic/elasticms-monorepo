@@ -6,13 +6,14 @@ namespace EMS\CoreBundle\Repository;
 
 use Doctrine\Bundle\DoctrineBundle\Registry;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\ORM\QueryBuilder;
 use EMS\CoreBundle\Entity\Analyzer;
 
 /**
  * @extends ServiceEntityRepository<Analyzer>
  *
- * @method Analyzer|null findOneBy(array $criteria, array $orderBy = null)
+ * @method Analyzer|null findOneBy(mixed[] $criteria, mixed[] $orderBy = null)
  */
 class AnalyzerRepository extends ServiceEntityRepository
 {
@@ -30,6 +31,7 @@ class AnalyzerRepository extends ServiceEntityRepository
     /**
      * @return Analyzer[]
      */
+    #[\Override]
     public function findAll(): array
     {
         return $this->findBy([], ['orderKey' => 'asc']);
@@ -57,7 +59,7 @@ class AnalyzerRepository extends ServiceEntityRepository
         $qb = $this->createQueryBuilder('a');
         $qb
             ->andWhere($qb->expr()->in('a.id', ':ids'))
-            ->setParameter('ids', $ids);
+            ->setParameter('ids', $ids, ArrayParameterType::INTEGER);
 
         return $qb->getQuery()->getResult();
     }

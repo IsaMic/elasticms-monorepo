@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace EMS\CommonBundle\Elasticsearch;
 
-use Elastica\Exception\ResponseException;
 use Elastica\Request;
 use Elastica\Response;
 use EMS\CommonBundle\Contracts\Elasticsearch\QueryLoggerInterface;
@@ -20,20 +19,23 @@ class ElasticaLogger extends AbstractLogger implements QueryLoggerInterface
 
     public function __construct(
         private readonly ?LoggerInterface $logger = null,
-        private readonly bool $debug = false
+        private readonly bool $debug = false,
     ) {
     }
 
+    #[\Override]
     public function isEnabled(): bool
     {
         return $this->enabled;
     }
 
+    #[\Override]
     public function disable(): void
     {
         $this->enabled = false;
     }
 
+    #[\Override]
     public function enable(): void
     {
         $this->enabled = true;
@@ -52,17 +54,15 @@ class ElasticaLogger extends AbstractLogger implements QueryLoggerInterface
         return $this->queries;
     }
 
-    /**
-     * @param array<mixed> $context
-     */
-    public function log($level, $message, array $context = []): void
+    #[\Override]
+    public function log($level, string|\Stringable $message, array $context = []): void
     {
         if (null !== $this->logger && $this->isEnabled()) {
             $this->logger->log($level, $message, $context);
         }
     }
 
-    public function logResponse(Response $response, Request $request, ?ResponseException $responseException = null): void
+    public function logResponse(Response $response, Request $request): void
     {
         $responseData = $response->getData();
         $queryTime = $response->getQueryTime();
@@ -85,7 +85,7 @@ class ElasticaLogger extends AbstractLogger implements QueryLoggerInterface
                 'data' => $data,
                 'executionMS' => $executionMS,
                 'engineMS' => $responseData['took'] ?? 0,
-                'exception' => $responseException,
+                'error' => $response->getFullError(),
                 'connection' => [
                     'host' => $connection->getHost(),
                     'port' => $connection->getPort(),

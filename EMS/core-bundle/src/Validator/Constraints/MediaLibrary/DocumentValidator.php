@@ -22,15 +22,16 @@ class DocumentValidator extends ConstraintValidator
     /**
      * @param MediaLibraryDocument $value
      */
+    #[\Override]
     public function validate($value, Constraint $constraint): void
     {
         if (!$constraint instanceof Document) {
             throw new UnexpectedValueException($constraint, Document::class);
         }
 
-        match (\get_class($value)) {
+        match ($value::class) {
             MediaLibraryFile::class, MediaLibraryFolder::class => $this->existsValidation($value),
-            default => throw new UnexpectedValueException($value, MediaLibraryDocument::class)
+            default => throw new UnexpectedValueException($value, MediaLibraryDocument::class),
         };
     }
 
@@ -42,7 +43,7 @@ class DocumentValidator extends ConstraintValidator
 
         $message = match (true) {
             $value instanceof MediaLibraryFile => 'media_library.error.file_exists',
-            $value instanceof MediaLibraryFolder => 'media_library.error.folder_exists'
+            $value instanceof MediaLibraryFolder => 'media_library.error.folder_exists',
         };
 
         $this->context

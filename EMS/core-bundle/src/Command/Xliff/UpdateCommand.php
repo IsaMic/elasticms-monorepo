@@ -20,30 +20,35 @@ use EMS\Helpers\File\TempFile;
 use EMS\Helpers\Html\MimeTypes;
 use EMS\Xliff\Xliff\Entity\InsertReport;
 use EMS\Xliff\Xliff\Inserter;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
+#[AsCommand(
+    name: Commands::XLIFF_UPDATE,
+    description: 'Update documents from a given XLIFF file.',
+    hidden: false
+)]
 final class UpdateCommand extends AbstractCommand
 {
-    private const XLIFF_UPLOAD_COMMAND = 'XLIFF_UPLOAD_COMMAND';
-    protected static $defaultName = Commands::XLIFF_UPDATE;
-    public const ARGUMENT_XLIFF_FILE = 'xliff-file';
-    public const OPTION_PUBLISH_TO = 'publish-to';
-    public const OPTION_ARCHIVE = 'archive';
-    public const OPTION_TRANSLATION_FIELD = 'translation-field';
-    public const OPTION_LOCALE_FIELD = 'locale-field';
-    public const OPTION_DRY_RUN = 'dry-run';
-    public const OPTION_CURRENT_REVISION_ONLY = 'current-revision-only';
-    public const OPTION_BASE_URL = 'base-url';
+    private const string XLIFF_UPLOAD_COMMAND = 'XLIFF_UPLOAD_COMMAND';
+    public const string ARGUMENT_XLIFF_FILE = 'xliff-file';
+    public const string OPTION_PUBLISH_TO = 'publish-to';
+    public const string OPTION_ARCHIVE = 'archive';
+    public const string OPTION_TRANSLATION_FIELD = 'translation-field';
+    public const string OPTION_LOCALE_FIELD = 'locale-field';
+    public const string OPTION_DRY_RUN = 'dry-run';
+    public const string OPTION_CURRENT_REVISION_ONLY = 'current-revision-only';
+    public const string OPTION_BASE_URL = 'base-url';
 
     private string $xliffFilename;
     private ?Environment $publishTo = null;
     private bool $archive = false;
-    private ?string $translationField;
-    private ?string $localeField;
+    private ?string $translationField = null;
+    private ?string $localeField = null;
     private bool $dryRun = false;
     private bool $currentRevisionOnly = false;
     private ?string $baseUrl = null;
@@ -59,6 +64,7 @@ final class UpdateCommand extends AbstractCommand
         parent::__construct();
     }
 
+    #[\Override]
     protected function configure(): void
     {
         $this
@@ -72,6 +78,7 @@ final class UpdateCommand extends AbstractCommand
             ->addOption(self::OPTION_BASE_URL, null, InputOption::VALUE_OPTIONAL, 'Base url, in order to generate a download link to the error report');
     }
 
+    #[\Override]
     protected function initialize(InputInterface $input, OutputInterface $output): void
     {
         parent::initialize($input, $output);
@@ -86,6 +93,7 @@ final class UpdateCommand extends AbstractCommand
         $this->localeField = $this->getOptionStringNull(self::OPTION_LOCALE_FIELD);
         $this->dryRun = $this->getOptionBool(self::OPTION_DRY_RUN);
         $this->currentRevisionOnly = $this->getOptionBool(self::OPTION_CURRENT_REVISION_ONLY);
+        $this->baseUrl = $this->getOptionStringNull(self::OPTION_BASE_URL);
 
         if ($this->archive && null === $this->publishTo) {
             throw new \RuntimeException(\sprintf('The %s option can be activate only if the %s option is DEFINED', self::OPTION_ARCHIVE, self::OPTION_PUBLISH_TO));
@@ -96,6 +104,7 @@ final class UpdateCommand extends AbstractCommand
         }
     }
 
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $this->io->text([

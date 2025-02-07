@@ -11,27 +11,25 @@ use EMS\CoreBundle\Entity\ContentType;
 class ObjectChoiceListItem implements \Stringable
 {
     private readonly string $label;
-    private ?string $title;
     private readonly string $value;
     private ?string $group = null;
     private ?string $color = null;
-    private ?string $tooltip;
+    private readonly ?string $tooltip;
 
-    public function __construct(Document $document, ?ContentType $contentType, string $displayLabel)
+    public function __construct(Document $document, ?ContentType $contentType, private readonly ?string $title)
     {
         $source = $document->getSource();
         $this->value = $document->getEmsId();
         $icon = 'fa fa-question';
-        $this->title = $displayLabel;
 
         if (null !== $contentType) {
             $categoryField = $contentType->getCategoryField();
-            if (null !== $categoryField && isset($source[$categoryField]) && null !== $source[$categoryField]) {
-                $this->group = \strval($source[$categoryField]);
+            if (null !== $categoryField && isset($source[$categoryField])) {
+                $this->group = (string) $source[$categoryField];
             }
             $colorField = $contentType->getColorField();
-            if (null !== $colorField && isset($source[$colorField]) && null !== $source[$colorField]) {
-                $this->color = \strval($source[$colorField]);
+            if (null !== $colorField && isset($source[$colorField])) {
+                $this->color = (string) $source[$colorField];
             }
             $contentTypeIcon = $contentType->getIcon();
             if (null !== $contentTypeIcon) {
@@ -75,6 +73,7 @@ class ObjectChoiceListItem implements \Stringable
         return $this->color;
     }
 
+    #[\Override]
     public function __toString(): string
     {
         return $this->getValue();

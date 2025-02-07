@@ -57,7 +57,7 @@ final class Route
 
         if (\is_array($path)) {
             foreach ($path as $key => $p) {
-                $locale = \in_array($key, $locales) ? \strval($key) : null;
+                $locale = \in_array($key, $locales) ? (string) $key : null;
                 $route = $this->createRoute($p, $locale);
                 $collection->add(\sprintf('%s.%s', $this->name, $key), $route);
             }
@@ -110,14 +110,14 @@ final class Route
                 'defaults' => [],
                 'requirements' => [],
                 'options' => [],
-                'host' => null,
-                'schemes' => null,
+                'host' => '',
+                'schemes' => [],
                 'prefix' => null,
                 'type' => null,
                 'query' => null,
                 'template' => '[template]',
                 'index_regex' => null,
-                'condition' => null,
+                'condition' => '',
             ])
             ->addAllowedTypes('method', ['string', 'string[]'])
             ->setNormalizer('defaults', function (Options $options, $value) {
@@ -129,7 +129,7 @@ final class Route
             })
             ->setNormalizer('options', function (Options $options, $value) {
                 if (null !== $options['query']) {
-                    $value['query'] = \json_encode($options['query'], JSON_THROW_ON_ERROR);
+                    $value['query'] = Json::encode($options['query']);
                 }
 
                 $value['type'] = $options['type'];

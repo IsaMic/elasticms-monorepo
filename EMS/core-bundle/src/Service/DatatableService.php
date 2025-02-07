@@ -7,29 +7,30 @@ namespace EMS\CoreBundle\Service;
 use EMS\CommonBundle\Service\ElasticaService;
 use EMS\CommonBundle\Storage\StorageManager;
 use EMS\CoreBundle\Form\Data\ElasticaTable;
+use EMS\Helpers\Standard\Json;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Routing\RouterInterface;
 
-final class DatatableService
+final readonly class DatatableService
 {
-    private const CONFIG = 'config';
-    private const ALIASES = 'aliases';
-    private const CONTENT_TYPES = 'contentTypes';
+    private const string CONFIG = 'config';
+    private const string ALIASES = 'aliases';
+    private const string CONTENT_TYPES = 'contentTypes';
 
     public function __construct(
-        private readonly LoggerInterface $logger,
-        private readonly RouterInterface $router,
-        private readonly ElasticaService $elasticaService,
-        private readonly StorageManager $storageManager,
-        private readonly EnvironmentService $environmentService,
-        private readonly string $templateNamespace)
-    {
+        private LoggerInterface $logger,
+        private RouterInterface $router,
+        private ElasticaService $elasticaService,
+        private StorageManager $storageManager,
+        private EnvironmentService $environmentService,
+        private string $templateNamespace
+    ) {
     }
 
     /**
      * @param string[]             $environmentNames
-     * @param string[]             $contentTypeNames
+     * @param list<string>         $contentTypeNames
      * @param array<string, mixed> $options
      */
     public function generateDatatable(array $environmentNames, array $contentTypeNames, array $options): ElasticaTable
@@ -98,12 +99,13 @@ final class DatatableService
     }
 
     /**
-     * @return array{contentTypes: string[], aliases: string[], config: array<mixed>}
+     * @return array{contentTypes: list<string>, aliases: string[], config: array<mixed>}
      */
     private function parsePersistedConfig(string $jsonConfig): array
     {
-        $parameters = \json_decode($jsonConfig, true, 512, JSON_THROW_ON_ERROR);
-        if (!\is_array($parameters)) {
+        try {
+            $parameters = Json::decode($jsonConfig);
+        } catch (\Throwable) {
             throw new \RuntimeException('Unexpected JSON config');
         }
 
@@ -118,7 +120,7 @@ final class DatatableService
             ->setAllowedTypes(self::ALIASES, ['array'])
             ->setAllowedTypes(self::CONFIG, ['array'])
         ;
-        /** @var array{contentTypes: string[], aliases: string[], config: array<mixed>} $resolvedParameter */
+        /** @var array{contentTypes: list<string>, aliases: string[], config: array<mixed>} $resolvedParameter */
         $resolvedParameter = $resolver->resolve($parameters);
 
         return $resolvedParameter;

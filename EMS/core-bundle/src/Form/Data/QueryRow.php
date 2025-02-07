@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Form\Data;
 
 class QueryRow implements TableRowInterface
@@ -14,6 +16,7 @@ class QueryRow implements TableRowInterface
     /**
      * @return mixed[]
      */
+    #[\Override]
     public function getData(): array
     {
         return $this->data;

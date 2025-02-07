@@ -8,20 +8,21 @@ use EMS\ClientHelperBundle\Contracts\Environment\EnvironmentHelperInterface;
 use EMS\ClientHelperBundle\Helper\Environment\Environment;
 use EMS\CoreBundle\Repository\ChannelRepository;
 use EMS\CoreBundle\Service\IndexService;
+use EMS\Helpers\Standard\Json;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
-final class ChannelRegistrar
+final readonly class ChannelRegistrar
 {
-    public const EMSCO_CHANNEL_PATH_REGEX = '/^(\\/index\\.php)?\\/channel\\/(?P<channel>([a-z\\-0-9_]+))(\\/)?/';
+    public const string EMSCO_CHANNEL_PATH_REGEX = '/^(\\/index\\.php)?\\/channel\\/(?P<channel>([a-z\\-0-9_]+))(\\/)?/';
 
     public function __construct(
-        private readonly ChannelRepository $channelRepository,
-        private readonly EnvironmentHelperInterface $environmentHelper,
-        private readonly LoggerInterface $logger,
-        private readonly IndexService $indexService,
-        private readonly string $firewallName
+        private ChannelRepository $channelRepository,
+        private EnvironmentHelperInterface $environmentHelper,
+        private LoggerInterface $logger,
+        private IndexService $indexService,
+        private string $firewallName,
     ) {
     }
 
@@ -46,9 +47,9 @@ final class ChannelRegistrar
 
         $baseUrl = \vsprintf('%s://%s%s', [$request->getScheme(), $request->getHttpHost(), $request->getBasePath()]);
         $defaultSearchConfigOption = (isset($channel->getOptions()['searchConfig']) && '' !== $channel->getOptions()['searchConfig']) ? $channel->getOptions()['searchConfig'] : '{}';
-        $searchConfig = \json_decode($defaultSearchConfigOption, true, 512, JSON_THROW_ON_ERROR);
+        $searchConfig = Json::decode((string) $defaultSearchConfigOption);
         $defaultAttributesOption = (isset($channel->getOptions()['attributes']) && '' !== $channel->getOptions()['attributes']) ? $channel->getOptions()['attributes'] : '{}';
-        $attributes = \json_decode($defaultAttributesOption, true, 512, JSON_THROW_ON_ERROR);
+        $attributes = Json::decode((string) $defaultAttributesOption);
 
         if (!$this->indexService->hasIndex($alias)) {
             $this->logger->warning('log.channel.alias_not_found', [
@@ -66,7 +67,7 @@ final class ChannelRegistrar
             'search_config' => $searchConfig,
         ];
 
-        if (\is_array($attributes) && \count($attributes) > 0) {
+        if (\count($attributes) > 0) {
             $options[Environment::REQUEST_CONFIG] = $attributes;
         }
 

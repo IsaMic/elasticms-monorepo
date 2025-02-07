@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Form\View;
 
 use EMS\CommonBundle\Service\ElasticaService;
@@ -20,43 +22,45 @@ class KeywordsViewType extends ViewType
         parent::__construct($formFactory, $twig, $logger, $templateNamespace);
     }
 
+    #[\Override]
     public function getLabel(): string
     {
         return 'Keywords: a view where all properties of kind (such as keyword) are listed on a single page';
     }
 
+    #[\Override]
     public function getName(): string
     {
         return 'Keywords';
     }
 
     /**
-     * @param FormBuilderInterface<FormBuilderInterface> $builder
-     * @param array<string, mixed>                       $options
+     * @param FormBuilderInterface<mixed> $builder
+     * @param array<string, mixed>        $options
      */
+    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         parent::buildForm($builder, $options);
         $builder
         ->add('aggsQuery', TextareaType::class, [
-                'label' => 'The aggregations Elasticsearch query [Twig]',
+            'label' => 'The aggregations Elasticsearch query [Twig]',
         ])
         ->add('template', TextareaType::class, [
-                'label' => 'The Twig template used to display each keywords',
+            'label' => 'The Twig template used to display each keywords',
         ])
         ->add('pathToBuckets', TextType::class, [
-                'label' => 'The twig path to the buckets array',
+            'label' => 'The twig path to the buckets array',
         ]);
     }
 
+    #[\Override]
     public function getBlockPrefix(): string
     {
         return 'keywords_view';
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function getParameters(View $view, FormFactoryInterface $formFactory, Request $request): array
     {
         $searchQuery = [

@@ -1,5 +1,7 @@
 # Upgrade
 
+  * [Switch to CK Editor 5](#switch-to-ck-editor-5)
+  * [version 6.0.x](#version-60x)
   * [version 5.23.x](#version-523x)
   * [version 5.22.x](#version-522x)
   * [version 5.21.x](#version-521x)
@@ -12,6 +14,175 @@
   * [version 4.2.x](#version-42x)
   * [version 4.x](#version-4x)
   * [Tips and tricks](#tips-and-tricks)
+
+## General remarks
+
+ * It's always a good idea to rebuild indexes on upgrade: `emsco:environment:rebuild --all`
+
+## Switch to CK Editor 5 (still in beta)
+
+Require ElasticMS version >= 6.0.0
+
+First activate Bootstrap 5 theme with the environment variable `EMSCO_TEMPLATE_NAMESPACE=EMSAdminUI/bootstrap5`
+
+Then go to your `WYSIWYG` > `WYSIWYG styles sets` configs and change the `attributes.class` by a `classes` attribute
+
+So
+
+```json
+[{
+    "name": "Dekstop only",
+    "element": "div",
+    "attributes": {
+      "class": "desktop-only row"
+    }
+}]
+```
+
+becomes
+
+```json
+[{
+    "name": "Dekstop only",
+    "element": "div",
+    "classes": [
+      "desktop-only",
+      "row"
+    ]
+}]
+```
+
+Check then [CK Editor styles configuration](https://ckeditor.com/docs/ckeditor5/latest/features/style.html#configuration) for more details.
+But defining other HTML attributes than the class attribute is not as easy as it was with CKE4.
+
+
+And for the `WYSIWYG` > `WYSIWYG profiles` the config must be recreate from scratch.
+But basically you can override every default [CK Editor config](https://github.com/ems-project/elasticms/blob/1ea0749ec813ac7bd3afd29a8ce9520654d9a97c/EMS/admin-ui-bundle/assets/js/core/helpers/editor.js#L80. 
+Check the [CK Editor builder](https://ckeditor.com/ckeditor-5/online-builder/).
+Here is an example.
+
+```json
+{
+  "ems": {
+    "paste": true
+  },
+  "toolbar": {
+    "items": [
+      "undo",
+      "redo",
+      "style",
+      "heading",
+      "|",
+      "bold",
+      "italic",
+      "bulletedList",
+      "numberedList",
+      "removeFormat",
+      "|",
+      "outdent",
+      "indent",
+      "|",
+      "link",
+      "imageUpload",
+      "insertTable",
+      "mediaEmbed",
+      "specialCharacters",
+      "|",
+      "findAndReplace",
+      "sourceEditing"
+    ],
+    "shouldNotGroupWhenFull": true
+  }
+}
+```
+
+## version 6.0.x
+
+### Postgres 17
+
+The `demo/docker-compose.yml` and the `docker/docker-compose.yml` files have been upgraded to use Postgres 17 insterad of Postgres 12.
+Unfortunately, you will have to dump your schemas, delete the Postgres's docker volume with the command `docker volume rm ems-mono_postgres`.
+And finally, recreate Postgres schemas and reload you dumps.
+
+### Symfony request inputBag
+
+Since symfony 6 the inputBag becomes stricter.
+
+```twig
+{# request example http://localhost?filters[]=value1&filters[]=value2&filters[]=value3 #}
+
+{%- set selectedFilters = app.request.query.get('filters') -%} {# can only work with scalar values #}
+Expected a scalar value as a 2nd argument to "Symfony\Component\HttpFoundation\InputBag::get()", "array" given."
+
+{%- set selectedFilters = app.request.query.all('filters') -%} {# correct #}
+```
+
+### Renamed embed methods in web/skeleton templates
+
+All controller methods have lost any trailing `Action`
+
+* `emsch.controller.embed::renderBlockAction` must be replaced by `emsch.controller.embed::renderEmbed`
+* `emsch.controller.embed::renderHierarchyAction` must be replaced by `emsch.controller.embed::renderHierarchy`
+
+E.g.:
+
+```twig
+{{ render(controller('emsch.controller.embed::renderHierarchy', {
+    'template': '@EMSCH/template/menu.html.twig',
+    'parent': 'emsLink',
+    'field': 'children',
+    'depth': 5,
+    'sourceFields': [],
+    'args': {'activeChild': emsLink, 'extra': 'test'}
+} )) }}
+```
+
+### Routes removed
+
+* `template.index` must be replaced by `ems_core_action_index`
+* `template.add` must be replaced by `ems_core_action_add`
+* `template.edit` must be replaced by `ems_core_action_edit`
+* `template.remove` must be replaced by `ems_core_action_delete`
+
+### Deprecated twig filters
+
+* `array_key` must be replaced by `ems_array_key`
+* `format_bytes` must be replaced by `ems_format_bytes`
+* `locale_attr` must be replaced by `ems_locale_attr`
+* `data` must be replaced by `emsco_get`
+* `url_generator` must be replaced by `ems_webalize`
+* `get_environment` must be replaced by `emsco_get_environment`
+* `get_content_type` must be replaced by `emsco_get_contentType`
+* `data_label` must be replaced by `emsco_display`
+* `emsch_ouuid` must be replaced by `ems_ouuid`
+* `array_intersect` must be replaced by `ems_array_intersect`
+* `merge_recursive` must be replaced by `ems_array_merge_recursive`
+* `inArray` must be replaced by `ems_in_array`
+* `soapRequest` must be replaced by `emsco_soap_request`
+* `all_granted` must be replaced by `emsco_all_granted`
+* `one_granted` must be replaced by `emsco_one_granted`
+* `in_my_circles` must be replaced by `emsco_in_my_circles`
+* `data_link` must be replaced by `emsco_data_link`
+* `i18n` must be replaced by `emsco_i18n`
+* `internal_links` must be replaced by `emsco_internal_links`
+* `displayname` must be replaced by `emsco_display_name`
+* `get_field_by_path` must be replaced by `emsco_get_field_by_path`
+* `get_revision_id` must be replaced by the function `emsco_get_revision_id`
+
+### Deprecated twig function
+
+* `cant_be_finalized` must be replaced by `emsco_cant_be_finalized`
+* `get_default_environments` must be replaced by `emsco_get_default_environment_names`
+* `get_content_types` must be replaced by `emsco_get_content_types`
+* `sequence` deprecated and must be replaced by `emsco_sequence`
+
+### New dynamic mapping config which change the elasticsearch indexes
+
+Before version 6 it was not possible to define elasticsearch dynamic mapping config. In other words, before version 6, every fields present in a document, that aren't strictly defined in the content type, a mapping was automatically guessed by elasticsearch.
+
+Since version 6 the default dynamic mapping config has changed. New fields are ignored. These fields will not be indexed or searchable, but will still appear in the _source field of returned hits. These fields will not be added to the mapping, and new fields must be added explicitly into the content type.
+
+You can reactivate the dynamic mapping with this environment variable:  `EMSCO_DYNAMIC_MAPPING='true'`. But it's not recommended. Check the [EMSCO_DYNAMIC_MAPPING documentation](elasticms-admin/environment-variables.md#emscodynamicmapping)
 
 ## version 5.25.x
 
@@ -99,7 +270,7 @@ It's not required, but warmly recommended to re-upload your assets and update th
 ## version 5.19.x
 
 * The core command ```emsco:release:publish``` has been removed, ```emsco:job:run``` will now publish releases
-* All indexes must be rebuilt (as a new field `_image_resized_hash` as been defined in file fields)
+* All indexes must be rebuilt (as a new field `_image_resized_hash` as been defined in file field's mapping): `emsco:environment:rebuild --all`
 * The function `emsch_unzip` is deprecated and should not be used anymore. use the function ems_file_from_archive or the route EMS\CommonBundle\Controller\FileController::assetInArchive instead
   * If the `emsch_unzip` function is used to serve assets via the web server you should use the route [EMS\CommonBundle\Controller\FileController::assetInArchive](dev/client-helper-bundle/routing.md#route-to-assets-in-archive)
   * If the `emsch_unzip` function is used to get local path to an asset you should use the [`ems_file_from_archive`](dev/common-bundle/twig.md#emsfilefromarchive) function

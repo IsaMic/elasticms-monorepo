@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace EMS\CommonBundle\Storage\Processor;
 
-use EMS\CommonBundle\Common\Standard\Base64;
 use EMS\CommonBundle\Helper\EmsFields;
 use EMS\CommonBundle\Storage\FileCollection;
 use EMS\CommonBundle\Storage\StorageManager;
 use EMS\Helpers\File\TempFile;
 use EMS\Helpers\Html\MimeTypes;
+use EMS\Helpers\Standard\Base64;
 use EMS\Helpers\Standard\Json;
 use EMS\Helpers\Standard\Type;
 use GuzzleHttp\Psr7\MimeType;
@@ -20,7 +20,7 @@ use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
-final class Config
+class Config
 {
     /** @var array<string, mixed> */
     private array $options;
@@ -42,7 +42,7 @@ final class Config
 
     private function makeCacheKey(string $configHash, string $assetHash): string
     {
-        return \join(DIRECTORY_SEPARATOR, [
+        return \implode(DIRECTORY_SEPARATOR, [
             \substr($configHash, 0, 3),
             \substr($configHash, 3),
             \substr($assetHash, 0, 3),
@@ -120,7 +120,7 @@ final class Config
     /**
      * Asset_config_type is optional, so _published_datetime can be null.
      */
-    public function isValid(\DateTime $lastCacheDate = null): bool
+    public function isValid(?\DateTime $lastCacheDate = null): bool
     {
         $publishedDateTime = $this->getLastUpdateDate();
 
@@ -260,7 +260,7 @@ final class Config
 
     public function getImageFormat(): ?string
     {
-        if (isset($this->options[EmsFields::ASSET_CONFIG_IMAGE_FORMAT]) && null !== $this->options[EmsFields::ASSET_CONFIG_IMAGE_FORMAT]) {
+        if (isset($this->options[EmsFields::ASSET_CONFIG_IMAGE_FORMAT])) {
             return (string) $this->options[EmsFields::ASSET_CONFIG_IMAGE_FORMAT];
         }
 
@@ -312,13 +312,13 @@ final class Config
             $beforeTime = \strtotime($before);
             $before = false !== $beforeTime ? $beforeTime : $before;
         }
-        $before = \intval($before);
+        $before = (int) $before;
 
         if (\is_string($after)) {
             $afterTime = \strtotime($after);
             $after = false !== $afterTime ? $afterTime : $after;
         }
-        $after = \intval($after);
+        $after = (int) $after;
 
         $time = \time();
         if (0 !== $before && $time > $before) {
@@ -366,6 +366,8 @@ final class Config
             ->setDefaults($defaults)
             ->setAllowedTypes(EmsFields::ASSET_CONFIG_URL_TYPE, ['int'])
             ->setAllowedTypes(EmsFields::ASSET_CONFIG_ROTATE, ['float', 'int'])
+            ->setAllowedTypes(EmsFields::ASSET_CONFIG_X, ['float', 'int', 'null'])
+            ->setAllowedTypes(EmsFields::ASSET_CONFIG_Y, ['float', 'int', 'null'])
             ->setAllowedTypes(EmsFields::ASSET_CONFIG_AUTO_ROTATE, ['bool'])
             ->setAllowedTypes(EmsFields::ASSET_CONFIG_FLIP_VERTICAL, ['bool'])
             ->setAllowedTypes(EmsFields::ASSET_CONFIG_FLIP_HORIZONTAL, ['bool'])
@@ -439,6 +441,8 @@ final class Config
             EmsFields::ASSET_CONFIG_AFTER => 0,
             EmsFields::ASSET_SEED => null,
             EmsFields::ASSET_CONFIG_IMAGE_FORMAT => null,
+            EmsFields::ASSET_CONFIG_X => null,
+            EmsFields::ASSET_CONFIG_Y => null,
         ];
     }
 
@@ -583,5 +587,15 @@ final class Config
         }
 
         return \implode('.', [\pathinfo($filename, PATHINFO_FILENAME), $mimetypes[$mimeType]]);
+    }
+
+    public function getX(): int
+    {
+        return (int) \round($this->options[EmsFields::ASSET_CONFIG_X] ?? 0);
+    }
+
+    public function getY(): int
+    {
+        return (int) \round($this->options[EmsFields::ASSET_CONFIG_Y] ?? 0);
     }
 }

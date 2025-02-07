@@ -1,140 +1,50 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Entity;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
-use Doctrine\ORM\Mapping as ORM;
 use EMS\CommonBundle\Entity\CreatedModifiedTrait;
+use EMS\CommonBundle\Entity\IdentifierIntegerTrait;
 use EMS\CoreBundle\Core\User\UserOptions;
 use EMS\CoreBundle\Roles;
-use EMS\Helpers\Standard\DateTime;
 use EMS\Helpers\Standard\Locale;
-use EMS\Helpers\Standard\Type;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 
-/**
- * @ORM\Entity
- *
- * @ORM\Table(name="`user`")
- *
- * @ORM\HasLifecycleCallbacks()
- */
 class User implements UserInterface, EntityInterface, PasswordAuthenticatedUserInterface, \Stringable
 {
     use CreatedModifiedTrait;
-    /**
-     * @ORM\Id
-     *
-     * @ORM\Column(type="integer")
-     *
-     * @ORM\GeneratedValue(strategy="AUTO")
-     */
-    private ?int $id = null;
-    /**
-     * @var ?string[]
-     *
-     * @ORM\Column(name="circles", type="json", nullable=true)
-     */
+    use IdentifierIntegerTrait;
+
+    /** @var ?string[] */
     private ?array $circles = [];
-    /**
-     * @ORM\Column(name="display_name", type="string", length=255, nullable=true)
-     */
     private ?string $displayName = null;
-    /**
-     * @ORM\ManyToOne(targetEntity="EMS\CoreBundle\Entity\WysiwygProfile", cascade={})
-     *
-     * @ORM\JoinColumn(name="wysiwyg_profile_id", referencedColumnName="id")
-     */
     private ?WysiwygProfile $wysiwygProfile = null;
-    /**
-     * @ORM\Column(name="layout_boxed", type="boolean")
-     */
     private bool $layoutBoxed = false;
-    /**
-     * @ORM\Column(name="email_notification", type="boolean")
-     */
     private bool $emailNotification = true;
-    /**
-     * @ORM\Column(name="sidebar_mini", type="boolean")
-     */
     private bool $sidebarMini = false;
-    /**
-     * @ORM\Column(name="sidebar_collapse", type="boolean")
-     */
     private bool $sidebarCollapse = false;
-    /**
-     * @var Collection<int,AuthToken>
-     *
-     * @ORM\OneToMany(targetEntity="AuthToken", mappedBy="user", cascade={"remove"})
-     *
-     * @ORM\OrderBy({"created" = "ASC"})
-     */
+    /** @var Collection<int,AuthToken> */
     private Collection $authTokens;
-    /**
-     * @ORM\Column(name="locale", type="string", nullable=false, options={"default":"en"})
-     */
     private string $locale = self::DEFAULT_LOCALE;
-    /**
-     * @ORM\Column(name="locale_preferred", type="string", nullable=true)
-     */
     private ?string $localePreferred = null;
-    /**
-     * @ORM\Column(name="username", type="string", length=180)
-     */
     private ?string $username = null;
-    /**
-     * @ORM\Column(name="username_canonical", type="string", length=180, unique=true)
-     */
     private ?string $usernameCanonical = null;
-    /**
-     * @ORM\Column(name="email", type="string", length=180)
-     */
     private ?string $email = null;
-    /**
-     * @ORM\Column(name="email_canonical", type="string", length=180, unique=true)
-     */
     private ?string $emailCanonical = null;
-    /**
-     * @ORM\Column(name="enabled", type="boolean")
-     */
     private bool $enabled = false;
-    /**
-     * @ORM\Column(name="salt", type="string", nullable=true)
-     */
     private ?string $salt = null;
-    /**
-     * @ORM\Column(name="password", type="string")
-     */
     private ?string $password = null;
     private ?string $plainPassword = null;
-    /**
-     * @ORM\Column(name="last_login", type="datetime", nullable=true)
-     */
     private ?\DateTime $lastLogin = null;
-    /**
-     * @ORM\Column(name="expiration_date", type="datetime", nullable=true)
-     */
     private ?\DateTime $expirationDate = null;
-    /**
-     * @ORM\Column(name="confirmation_token", type="string", length=180, unique=true, nullable=true)
-     */
     private ?string $confirmationToken = null;
-    /**
-     * @ORM\Column(name="password_requested_at", type="datetime", nullable=true)
-     */
     private ?\DateTime $passwordRequestedAt = null;
-    /**
-     * @var string[]
-     *
-     * @ORM\Column(name="roles", type="json")
-     */
+    /** @var string[] */
     private array $roles = [];
-    /**
-     * @var ?array<string, mixed>
-     *
-     * @ORM\Column(name="user_options", type="json", nullable=true)
-     */
+    /** @var ?array<string, mixed> */
     protected ?array $userOptions = [];
     public const DEFAULT_LOCALE = 'en';
 
@@ -142,8 +52,8 @@ class User implements UserInterface, EntityInterface, PasswordAuthenticatedUserI
     {
         $this->authTokens = new ArrayCollection();
 
-        $this->created = DateTime::create('now');
-        $this->modified = DateTime::create('now');
+        $this->created = new \DateTime();
+        $this->modified = new \DateTime();
     }
 
     public function __clone()
@@ -151,9 +61,7 @@ class User implements UserInterface, EntityInterface, PasswordAuthenticatedUserI
         $this->authTokens = new ArrayCollection();
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function toArray(): array
     {
         return [
@@ -172,6 +80,7 @@ class User implements UserInterface, EntityInterface, PasswordAuthenticatedUserI
         ];
     }
 
+    #[\Override]
     public function isExpired(): bool
     {
         if (null === $this->expirationDate) {
@@ -212,14 +121,13 @@ class User implements UserInterface, EntityInterface, PasswordAuthenticatedUserI
         $this->localePreferred = $localePreferred;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function getCircles(): array
     {
         return $this->circles ?? [];
     }
 
+    #[\Override]
     public function getExpirationDate(): ?\DateTime
     {
         return $this->expirationDate;
@@ -230,16 +138,15 @@ class User implements UserInterface, EntityInterface, PasswordAuthenticatedUserI
         $this->expirationDate = $time;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public function setCircles(array $circles): self
+    #[\Override]
+    public function setCircles(?array $circles): self
     {
         $this->circles = $circles;
 
         return $this;
     }
 
+    #[\Override]
     public function setDisplayName(string $displayName): self
     {
         $this->displayName = $displayName;
@@ -247,6 +154,7 @@ class User implements UserInterface, EntityInterface, PasswordAuthenticatedUserI
         return $this;
     }
 
+    #[\Override]
     public function getDisplayName(): string
     {
         if (empty($this->displayName)) {
@@ -256,6 +164,7 @@ class User implements UserInterface, EntityInterface, PasswordAuthenticatedUserI
         return $this->displayName;
     }
 
+    #[\Override]
     public function setWysiwygProfile(?WysiwygProfile $wysiwygProfile): self
     {
         $this->wysiwygProfile = $wysiwygProfile;
@@ -263,11 +172,13 @@ class User implements UserInterface, EntityInterface, PasswordAuthenticatedUserI
         return $this;
     }
 
+    #[\Override]
     public function getWysiwygProfile(): ?WysiwygProfile
     {
         return $this->wysiwygProfile;
     }
 
+    #[\Override]
     public function setLayoutBoxed(bool $layoutBoxed): self
     {
         $this->layoutBoxed = $layoutBoxed;
@@ -275,11 +186,13 @@ class User implements UserInterface, EntityInterface, PasswordAuthenticatedUserI
         return $this;
     }
 
+    #[\Override]
     public function getLayoutBoxed(): bool
     {
         return $this->layoutBoxed;
     }
 
+    #[\Override]
     public function setSidebarMini(bool $sidebarMini): self
     {
         $this->sidebarMini = $sidebarMini;
@@ -287,11 +200,13 @@ class User implements UserInterface, EntityInterface, PasswordAuthenticatedUserI
         return $this;
     }
 
+    #[\Override]
     public function getSidebarMini(): bool
     {
         return $this->sidebarMini;
     }
 
+    #[\Override]
     public function setSidebarCollapse(bool $sidebarCollapse): self
     {
         $this->sidebarCollapse = $sidebarCollapse;
@@ -299,11 +214,13 @@ class User implements UserInterface, EntityInterface, PasswordAuthenticatedUserI
         return $this;
     }
 
+    #[\Override]
     public function getSidebarCollapse(): bool
     {
         return $this->sidebarCollapse;
     }
 
+    #[\Override]
     public function addAuthToken(AuthToken $authToken): self
     {
         $this->authTokens[] = $authToken;
@@ -311,19 +228,19 @@ class User implements UserInterface, EntityInterface, PasswordAuthenticatedUserI
         return $this;
     }
 
+    #[\Override]
     public function removeAuthToken(AuthToken $authToken): void
     {
         $this->authTokens->removeElement($authToken);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function getAuthTokens(): Collection
     {
         return $this->authTokens;
     }
 
+    #[\Override]
     public function setEmailNotification(bool $emailNotification): self
     {
         $this->emailNotification = $emailNotification;
@@ -331,16 +248,19 @@ class User implements UserInterface, EntityInterface, PasswordAuthenticatedUserI
         return $this;
     }
 
+    #[\Override]
     public function getEmailNotification(): bool
     {
         return $this->emailNotification;
     }
 
+    #[\Override]
     public function isEnabled(): bool
     {
         return $this->enabled;
     }
 
+    #[\Override]
     public function getName(): string
     {
         return $this->getDisplayName();
@@ -355,6 +275,7 @@ class User implements UserInterface, EntityInterface, PasswordAuthenticatedUserI
         return ($this->passwordRequestedAt->getTimestamp() + $ttl) > \time();
     }
 
+    #[\Override]
     public function __toString(): string
     {
         return $this->getUsername();
@@ -404,21 +325,19 @@ class User implements UserInterface, EntityInterface, PasswordAuthenticatedUserI
         [$this->password, $this->salt, $this->usernameCanonical, $this->username, $this->enabled, $this->id, $this->email, $this->emailCanonical] = $data;
     }
 
+    #[\Override]
     public function eraseCredentials(): void
     {
         $this->plainPassword = null;
     }
 
-    public function getId(): int
-    {
-        return Type::integer($this->id);
-    }
-
+    #[\Override]
     public function getUserIdentifier(): string
     {
         return $this->username ?? '';
     }
 
+    #[\Override]
     public function getUsername(): string
     {
         return $this->username ?? '';
@@ -434,6 +353,7 @@ class User implements UserInterface, EntityInterface, PasswordAuthenticatedUserI
         return $this->salt;
     }
 
+    #[\Override]
     public function getEmail(): string
     {
         return $this->email ?? '';
@@ -444,6 +364,7 @@ class User implements UserInterface, EntityInterface, PasswordAuthenticatedUserI
         return $this->emailCanonical;
     }
 
+    #[\Override]
     public function getPassword(): ?string
     {
         return $this->password;
@@ -454,6 +375,7 @@ class User implements UserInterface, EntityInterface, PasswordAuthenticatedUserI
         return $this->plainPassword;
     }
 
+    #[\Override]
     public function getLastLogin(): ?\DateTime
     {
         return $this->lastLogin;
@@ -467,6 +389,7 @@ class User implements UserInterface, EntityInterface, PasswordAuthenticatedUserI
     /**
      * @return string[]
      */
+    #[\Override]
     public function getRoles(): array
     {
         $roles = $this->roles;
@@ -477,6 +400,7 @@ class User implements UserInterface, EntityInterface, PasswordAuthenticatedUserI
         return \array_unique($roles);
     }
 
+    #[\Override]
     public function hasRole(string $role): bool
     {
         return \in_array(\strtoupper($role), $this->getRoles(), true);
@@ -544,7 +468,7 @@ class User implements UserInterface, EntityInterface, PasswordAuthenticatedUserI
         $this->plainPassword = $password;
     }
 
-    public function setLastLogin(\DateTime $time = null): void
+    public function setLastLogin(?\DateTime $time = null): void
     {
         $this->lastLogin = $time;
     }
@@ -554,7 +478,7 @@ class User implements UserInterface, EntityInterface, PasswordAuthenticatedUserI
         $this->confirmationToken = $confirmationToken;
     }
 
-    public function setPasswordRequestedAt(\DateTime $date = null): void
+    public function setPasswordRequestedAt(?\DateTime $date = null): void
     {
         $this->passwordRequestedAt = $date;
     }

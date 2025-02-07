@@ -8,11 +8,12 @@ use EMS\FormBundle\Submission\AbstractHandler;
 use EMS\SubmissionBundle\Response\SftpHandleResponse;
 use EMS\SubmissionBundle\Tests\Functional\App\FilesystemFactory;
 
-final class SftpHandlerTest extends AbstractHandlerTest
+final class SftpHandlerTest extends AbstractHandlerTestCase
 {
     /** @var FilesystemFactory */
     private $filesystemFactory;
 
+    #[\Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -21,6 +22,7 @@ final class SftpHandlerTest extends AbstractHandlerTest
         // $this->filesystemFactory->setFlagNullAdapter(false); uncomment for enabling sftp
     }
 
+    #[\Override]
     protected function getHandler(): AbstractHandler
     {
         return $this->container->get('functional_test.emss.handler.sftp');

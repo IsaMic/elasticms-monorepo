@@ -20,11 +20,12 @@ class ReleaseRevisionsPublishDataTableType extends AbstractQueryTableType
     public function __construct(
         ReleaseRevisionService $releaseRevisionService,
         private readonly ReleaseService $releaseService,
-        private readonly string $templateNamespace
+        private readonly string $templateNamespace,
     ) {
         parent::__construct($releaseRevisionService);
     }
 
+    #[\Override]
     public function build(QueryTable $table): void
     {
         /** @var Release $release */
@@ -51,24 +52,29 @@ class ReleaseRevisionsPublishDataTableType extends AbstractQueryTableType
                 'release' => (string) $release->getId(),
                 'type' => 'publish',
                 'emsLinkToAdd' => 'emsLink',
-            ]);
+            ]
+        );
     }
 
+    #[\Override]
     public function getQueryName(): string
     {
         return 'revisions-to-publish';
     }
 
+    #[\Override]
     public function getRoles(): array
     {
         return [Roles::ROLE_PUBLISHER];
     }
 
+    #[\Override]
     public function getContext(array $options): Release
     {
         return $this->releaseService->getById($options['release_id']);
     }
 
+    #[\Override]
     public function configureOptions(OptionsResolver $optionsResolver): void
     {
         $optionsResolver->setRequired(['release_id']);

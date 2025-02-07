@@ -19,7 +19,7 @@ use Symfony\Component\Serializer\Serializer;
 
 class Url
 {
-    private const ABSOLUTE_SCHEME = ['mailto', 'javascript', 'tel'];
+    private const array ABSOLUTE_SCHEME = ['mailto', 'javascript', 'tel'];
     private string $scheme;
     private string $host;
     private ?int $port;
@@ -28,7 +28,7 @@ class Url
     private string $path;
     private ?string $query;
     private ?string $fragment;
-    private ?string $referer;
+    private readonly ?string $referer;
 
     public function __construct(string $url, ?string $referer = null, private readonly ?string $refererLabel = null)
     {
@@ -148,7 +148,7 @@ class Url
         return $this->cleanPath($path);
     }
 
-    public function getUrl(string $path = null, bool $withFragment = false, bool $withPassword = true, bool $withQuery = true): string
+    public function getUrl(?string $path = null, bool $withFragment = false, bool $withPassword = true, bool $withQuery = true): string
     {
         if (null !== $path) {
             return (new Url($path, $this->getUrl()))->getUrl(null, $withFragment);

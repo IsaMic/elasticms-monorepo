@@ -8,10 +8,13 @@ use EMS\CommonBundle\Elasticsearch\Document\Document;
 use EMS\CommonBundle\Elasticsearch\Document\DocumentInterface;
 use EMS\CommonBundle\Search\Search;
 use EMS\CommonBundle\Service\ElasticaService;
+use EMS\CoreBundle\Commands;
 use EMS\CoreBundle\Service\ContentTypeService;
 use EMS\CoreBundle\Service\EnvironmentService;
 use EMS\CoreBundle\Service\NotificationService;
 use EMS\CoreBundle\Service\Revision\RevisionService;
+use EMS\Helpers\Standard\Json;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -19,10 +22,15 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+#[AsCommand(
+    name: Commands::NOTIFICATION_BULK_ACTION,
+    description: 'Bulk all notifications actions for the passed query.',
+    hidden: false,
+    aliases: ['ems:notification:bulk-action']
+)]
 final class BulkActionCommand extends Command
 {
-    protected static $defaultName = 'ems:notification:bulk-action';
-    private const CONTENT_TYPE_NAME = 'contentTypeName';
+    private const string CONTENT_TYPE_NAME = 'contentTypeName';
     private SymfonyStyle $io;
 
     public function __construct(
@@ -30,14 +38,15 @@ final class BulkActionCommand extends Command
         private readonly EnvironmentService $environmentService,
         private readonly ContentTypeService $contentTypeService,
         private readonly ElasticaService $elasticaService,
-        private readonly RevisionService $revisionService
+        private readonly RevisionService $revisionService,
     ) {
         parent::__construct();
     }
 
+    #[\Override]
     protected function configure(): void
     {
-        $this->setDescription('Bulk all notifications actions for the passed query')
+        $this
             ->addArgument(self::CONTENT_TYPE_NAME, InputArgument::REQUIRED, 'Content type name')
             ->addArgument('actionName', InputArgument::REQUIRED, 'Notification action name')
             ->addArgument('query', InputArgument::REQUIRED, 'ES query')
@@ -46,30 +55,33 @@ final class BulkActionCommand extends Command
             ->addOption('force', null, InputOption::VALUE_NONE, 'Do the bulk');
     }
 
+    #[\Override]
     protected function initialize(InputInterface $input, OutputInterface $output): void
     {
         $this->io = new SymfonyStyle($input, $output);
         $this->io->title('Bulk action notifications');
     }
 
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $contentTypeName = \strval($input->getArgument(self::CONTENT_TYPE_NAME));
+        $contentTypeName = (string) $input->getArgument(self::CONTENT_TYPE_NAME);
         $contentType = $this->contentTypeService->giveByName($contentTypeName);
-        $actionName = \strval($input->getArgument('actionName'));
+        $actionName = (string) $input->getArgument('actionName');
         $action = $contentType->getActionByName($actionName);
         if (null === $action) {
             throw new \Exception(\sprintf('No notification action found with name %d', $actionName));
         }
 
-        $rawQuery = \strval($input->getArgument('query'));
-        $query = \json_decode($rawQuery, true);
-        if (\json_last_error() > 0) {
+        $rawQuery = (string) $input->getArgument('query');
+        try {
+            $query = Json::decode($rawQuery);
+        } catch (\Throwable) {
             throw new \RuntimeException(\sprintf('Invalid json query %s', $rawQuery));
         }
 
         $inputEnvironment = $input->getOption('environment');
-        $environmentName = $inputEnvironment ? \strval($inputEnvironment) : null;
+        $environmentName = $inputEnvironment ? (string) $inputEnvironment : null;
         if (null !== $environmentName) {
             $environment = $this->environmentService->giveByName($environmentName);
         } else {
@@ -96,7 +108,7 @@ final class BulkActionCommand extends Command
             return 0;
         }
 
-        $username = \strval($input->getOption('username'));
+        $username = (string) $input->getOption('username');
         $countSend = 0;
         $progress = $this->io->createProgressBar($countDocuments);
         $progress->start();

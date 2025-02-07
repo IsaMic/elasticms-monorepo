@@ -56,6 +56,7 @@ final class Response implements ResponseInterface
         return new self($result->getResponse()->getData());
     }
 
+    #[\Override]
     public function hasDocuments(): bool
     {
         return \count($this->hits) > 0;
@@ -64,6 +65,7 @@ final class Response implements ResponseInterface
     /**
      * @return DocumentInterface[]
      */
+    #[\Override]
     public function getDocuments(): iterable
     {
         foreach ($this->hits as $hit) {
@@ -71,6 +73,7 @@ final class Response implements ResponseInterface
         }
     }
 
+    #[\Override]
     public function getDocument(int $index): DocumentInterface
     {
         return Document::fromArray($this->hits[$index]);
@@ -95,16 +98,19 @@ final class Response implements ResponseInterface
         }
     }
 
+    #[\Override]
     public function getDocumentCollection(): DocumentCollectionInterface
     {
         return DocumentCollection::fromResponse($this);
     }
 
+    #[\Override]
     public function getScrollId(): ?string
     {
         return $this->scrollId;
     }
 
+    #[\Override]
     public function getTotal(): int
     {
         return $this->total;
@@ -120,6 +126,7 @@ final class Response implements ResponseInterface
         return \sprintf($format, $this->total);
     }
 
+    #[\Override]
     public function getTotalDocuments(): int
     {
         return \count($this->hits);
@@ -130,7 +137,8 @@ final class Response implements ResponseInterface
         return $this->accurate;
     }
 
-    public function buildResultSet(Query $query, string $version): ResultSet
+    #[\Override]
+    public function buildResultSet(Query $query): ResultSet
     {
         $response = new \Elastica\Response([
             'timed_out' => false,
@@ -144,7 +152,7 @@ final class Response implements ResponseInterface
             'aggregations' => $this->aggregations,
             'hits' => [
                 'hits' => $this->hits,
-                'total' => \version_compare($version, '6') < 0 ? $this->total : [
+                'total' => [
                     'value' => $this->total,
                     'relation' => 'eq',
                 ],

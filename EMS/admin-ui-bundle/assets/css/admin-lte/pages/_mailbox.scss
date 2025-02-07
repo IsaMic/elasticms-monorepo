@@ -1,6 +1,4 @@
-//
 // Pages: Mailbox
-//
 
 .mailbox-messages {
   > .table {
@@ -41,7 +39,8 @@
 }
 
 .mailbox-attachments {
-  @include list-unstyled ();
+  @include list-unstyled;
+
   li {
     border: 1px solid #eee;
     float: left;
@@ -95,5 +94,5 @@
 }
 
 .mailbox-attachment-close {
-  @extend .close;
+  @extend %close;
 }

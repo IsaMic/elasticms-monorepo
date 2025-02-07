@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CommonBundle\Twig;
 
+use EMS\Helpers\Standard\Json;
 use Twig\Extension\RuntimeExtensionInterface;
 
 class ManifestRuntime implements RuntimeExtensionInterface
@@ -14,7 +17,7 @@ class ManifestRuntime implements RuntimeExtensionInterface
             return $manifestUrl;
         }
 
-        $manifest = \json_decode($contents, true, 512, JSON_THROW_ON_ERROR);
+        $manifest = Json::decode($contents);
 
         if (!isset($manifest[$resource])) {
             return $manifestUrl;

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CommonBundle\Command\Submission;
 
 use EMS\CommonBundle\Commands;
@@ -11,6 +13,7 @@ use EMS\Helpers\Html\MimeTypes;
 use EMS\Helpers\Security\HashcashToken;
 use EMS\Helpers\Standard\Json;
 use EMS\Helpers\Standard\Type;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -21,10 +24,13 @@ use Symfony\Component\HttpFoundation\Cookie;
 use Symfony\Component\Mime\Part\DataPart;
 use Symfony\Component\Mime\Part\Multipart\FormDataPart;
 
+#[AsCommand(
+    name: Commands::SUBMISSION_FORWARD,
+    description: 'Forward a form submission form the admin to a form\'s url.',
+    hidden: false
+)]
 class ForwardCommand extends AbstractCommand
 {
-    protected static $defaultName = Commands::SUBMISSION_FORWARD;
-
     public const ARG_FORM_UUID_FROM = 'form-uuid';
     public const ARG_FORM_URL_TO = 'post-url';
     private string $fromUuid;
@@ -35,10 +41,10 @@ class ForwardCommand extends AbstractCommand
         parent::__construct();
     }
 
+    #[\Override]
     protected function configure(): void
     {
         $this
-            ->setDescription('Forward a form submission form the admin to a form\'s url')
             ->addArgument(
                 self::ARG_FORM_UUID_FROM,
                 InputArgument::REQUIRED,
@@ -50,6 +56,7 @@ class ForwardCommand extends AbstractCommand
             );
     }
 
+    #[\Override]
     protected function initialize(InputInterface $input, OutputInterface $output): void
     {
         parent::initialize($input, $output);
@@ -57,6 +64,7 @@ class ForwardCommand extends AbstractCommand
         $this->toUrl = new Url($this->getArgumentString(self::ARG_FORM_URL_TO));
     }
 
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $this->io->section(\sprintf('Forward the form %s to %s', $this->fromUuid, $this->toUrl->getUrl()));
@@ -108,7 +116,7 @@ class ForwardCommand extends AbstractCommand
 
             return self::EXECUTE_ERROR;
         }
-        $results = JSON::decode($httpResponse->getContent());
+        $results = Json::decode($httpResponse->getContent());
         foreach (($results['summaries'] ?? []) as $result) {
             $this->io->writeln(\sprintf('%s with %s %s', $result['data'] ?? '', $result['status'] ?? '', $result['uid'] ?? ''));
         }

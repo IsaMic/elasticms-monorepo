@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Form\DataField;
 
 use EMS\CommonBundle\Elasticsearch\Response\Response;
@@ -35,24 +37,24 @@ class JsonMenuNestedLinkFieldType extends DataFieldType
         private readonly ElasticaService $elasticaService,
         private readonly EnvironmentService $environmentService,
         private readonly Environment $twig,
-        private readonly LoggerInterface $logger
+        private readonly LoggerInterface $logger,
     ) {
         parent::__construct($authorizationChecker, $formRegistry, $elasticsearchService);
     }
 
+    #[\Override]
     public function getLabel(): string
     {
         return 'JSON menu nested link field';
     }
 
+    #[\Override]
     public static function getIcon(): string
     {
         return 'fa fa-link';
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function buildObjectArray(DataField $data, array &$out): void
     {
         $fieldType = $data->getFieldType();
@@ -67,9 +69,10 @@ class JsonMenuNestedLinkFieldType extends DataFieldType
     }
 
     /**
-     * @param FormBuilderInterface<FormBuilderInterface> $builder
-     * @param array<string, mixed>                       $options
+     * @param FormBuilderInterface<mixed> $builder
+     * @param array<string, mixed>        $options
      */
+    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         /** @var FieldType $fieldType */
@@ -98,9 +101,10 @@ class JsonMenuNestedLinkFieldType extends DataFieldType
     }
 
     /**
-     * @param FormInterface<FormInterface> $form
-     * @param array<mixed>                 $options
+     * @param FormInterface<mixed> $form
+     * @param array<mixed>         $options
      */
+    #[\Override]
     public function buildView(FormView $view, FormInterface $form, array $options): void
     {
         parent::buildView($view, $form, $options);
@@ -111,6 +115,7 @@ class JsonMenuNestedLinkFieldType extends DataFieldType
         ];
     }
 
+    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         parent::configureOptions($resolver);
@@ -131,9 +136,7 @@ class JsonMenuNestedLinkFieldType extends DataFieldType
         ;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function buildOptionsForm(FormBuilderInterface $builder, array $options): void
     {
         parent::buildOptionsForm($builder, $options);
@@ -164,27 +167,16 @@ class JsonMenuNestedLinkFieldType extends DataFieldType
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public function getDefaultOptions(string $name): array
-    {
-        $out = parent::getDefaultOptions($name);
-        $out['mappingOptions']['index'] = 'not_analyzed';
-
-        return $out;
-    }
-
+    #[\Override]
     public function getBlockPrefix(): string
     {
         return 'ems_choice';
     }
 
     /**
-     * {@inheritDoc}
-     *
      * @param array<mixed> $data
      */
+    #[\Override]
     public function reverseViewTransform($data, FieldType $fieldType): DataField
     {
         $value = null;
@@ -195,9 +187,7 @@ class JsonMenuNestedLinkFieldType extends DataFieldType
         return parent::reverseViewTransform($value, $fieldType);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function viewTransform(DataField $dataField)
     {
         $temp = parent::viewTransform($dataField);
@@ -210,26 +200,26 @@ class JsonMenuNestedLinkFieldType extends DataFieldType
             } elseif (\is_array($temp)) {
                 $out = [];
                 foreach ($temp as $item) {
-                    if (\is_string($item) || \is_integer($item)) {
+                    if (\is_string($item) || \is_int($item)) {
                         $out[] = $item;
                     } else {
-                        $dataField->addMessage('Was not able to import the data : '.\json_encode($item, JSON_THROW_ON_ERROR));
+                        $dataField->addMessage('Was not able to import the data : '.Json::encode($item));
                     }
                 }
             } else {
-                $dataField->addMessage('Was not able to import the data : '.\json_encode($out));
+                $dataField->addMessage('Was not able to import the data : '.Json::encode($out));
                 $out = [];
             }
         } else { // not mutiple
             if (null === $temp) {
                 $out = null;
-            } elseif (\is_string($temp) || \is_integer($temp)) {
+            } elseif (\is_string($temp) || \is_int($temp)) {
                 $out = $temp;
-            } elseif (\is_array($temp) && null != $temp && (\is_string(\array_values($temp)[0]) || \is_integer(\array_values($temp)[0]))) {
+            } elseif (\is_array($temp) && null != $temp && (\is_string(\array_values($temp)[0]) || \is_int(\array_values($temp)[0]))) {
                 $out = \array_values($temp)[0];
-                $dataField->addMessage('Only the first item has been imported : '.\json_encode($temp, JSON_THROW_ON_ERROR));
+                $dataField->addMessage('Only the first item has been imported : '.Json::encode($temp));
             } else {
-                $dataField->addMessage('Was not able to import the data : '.\json_encode($temp, JSON_THROW_ON_ERROR));
+                $dataField->addMessage('Was not able to import the data : '.Json::encode($temp));
                 $out = [];
             }
         }
@@ -251,7 +241,7 @@ class JsonMenuNestedLinkFieldType extends DataFieldType
         array $jmnTypes = [],
         bool $jmnUnique = false,
         array $rawData = [],
-        bool $migration = false
+        bool $migration = false,
     ): array {
         if (null === $jmnQuery || null === $jmnField) {
             return [];

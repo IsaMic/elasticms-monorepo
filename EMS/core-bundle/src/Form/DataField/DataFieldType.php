@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Form\DataField;
 
 use EMS\CoreBundle\Core\ContentType\DataFieldFormOptions;
@@ -8,8 +10,8 @@ use EMS\CoreBundle\Entity\FieldType;
 use EMS\CoreBundle\Form\DataField\Options\OptionsType;
 use EMS\CoreBundle\Form\DataTransformer\DataFieldModelTransformer;
 use EMS\CoreBundle\Form\DataTransformer\DataFieldViewTransformer;
-use EMS\CoreBundle\Form\Field\SelectPickerType;
 use EMS\CoreBundle\Service\ElasticsearchService;
+use EMS\Helpers\Standard\Text;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormError;
@@ -20,9 +22,7 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 
 /**
- * It's the mother class of all specific DataField used in eMS.
- *
- * @author Mathieu De Keyzer <ems@theus.be>
+ * @extends AbstractType<mixed>
  */
 abstract class DataFieldType extends AbstractType
 {
@@ -31,7 +31,7 @@ abstract class DataFieldType extends AbstractType
     public function __construct(
         protected AuthorizationCheckerInterface $authorizationChecker,
         protected FormRegistryInterface $formRegistry,
-        protected ElasticsearchService $elasticsearchService
+        protected ElasticsearchService $elasticsearchService,
     ) {
     }
 
@@ -53,15 +53,17 @@ abstract class DataFieldType extends AbstractType
         return true;
     }
 
+    #[\Override]
     public function getBlockPrefix(): string
     {
         return 'data_field_type';
     }
 
     /**
-     * @param FormBuilderInterface<FormBuilderInterface> $builder
-     * @param array<string, mixed>                       $options
+     * @param FormBuilderInterface<mixed> $builder
+     * @param array<string, mixed>        $options
      */
+    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->setDisabled($this->isDisabled($options));
@@ -162,7 +164,7 @@ abstract class DataFieldType extends AbstractType
     {
         return [
             'displayOptions' => [
-                'label' => SelectPickerType::humanize($name),
+                'label' => Text::humanize($name),
                 'class' => 'col-md-12',
             ],
             'mappingOptions' => [
@@ -254,23 +256,24 @@ abstract class DataFieldType extends AbstractType
         return 'fa fa-square';
     }
 
+    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
-                // 'data_class' => 'EMS\CoreBundle\Entity\DataField',
-                'lastOfRow' => false,
-                'class' => null, // used to specify a bootstrap class arround the compoment
-                'metadata' => null, // used to keep a link to the FieldType
-                'error_bubbling' => false,
-                'required' => false,
-                'translation_domain' => false,
-                'migration' => false,
-                'with_warning' => true,
-                'raw_data' => [],
-                'helptext' => null,
-                'disabled_fields' => [],
-                'referrer-ems-id' => null,
-                'is_visible' => true,
+            // 'data_class' => 'EMS\CoreBundle\Entity\DataField',
+            'lastOfRow' => false,
+            'class' => null, // used to specify a bootstrap class arround the compoment
+            'metadata' => null, // used to keep a link to the FieldType
+            'error_bubbling' => false,
+            'required' => false,
+            'translation_domain' => false,
+            'migration' => false,
+            'with_warning' => true,
+            'raw_data' => [],
+            'helptext' => null,
+            'disabled_fields' => [],
+            'referrer-ems-id' => null,
+            'is_visible' => true,
         ]);
     }
 
@@ -302,9 +305,10 @@ abstract class DataFieldType extends AbstractType
     }
 
     /**
-     * @param FormInterface<FormInterface> $form
-     * @param array<string, mixed>         $options
+     * @param FormInterface<mixed> $form
+     * @param array<string, mixed> $options
      */
+    #[\Override]
     public function buildView(FormView $view, FormInterface $form, array $options): void
     {
         $view->vars['class'] = $options['class'];
@@ -330,7 +334,7 @@ abstract class DataFieldType extends AbstractType
      * Build an array representing the object, this array is ready to be serialized in json
      * and push in elasticsearch.
      *
-     * @param array<string, mixed> $out
+     * @param array<int|string, mixed> $out
      */
     public function buildObjectArray(DataField $data, array &$out): void
     {
@@ -374,7 +378,7 @@ abstract class DataFieldType extends AbstractType
     /**
      * Test if the field is valid.
      */
-    public function isValid(DataField &$dataField, DataField $parent = null, mixed &$masterRawData = null): bool
+    public function isValid(DataField &$dataField, ?DataField $parent = null, mixed &$masterRawData = null): bool
     {
         if ($this->hasDeletedParent($parent)) {
             return true;
@@ -386,7 +390,7 @@ abstract class DataFieldType extends AbstractType
     /**
      * Test if the requirment of the field is reached.
      */
-    public function isMandatory(DataField &$dataField, DataField $parent = null, mixed &$masterRawData = null): bool
+    public function isMandatory(DataField &$dataField, ?DataField $parent = null, mixed &$masterRawData = null): bool
     {
         $isValidMandatory = true;
         // Get FieldType mandatory option
@@ -433,7 +437,7 @@ abstract class DataFieldType extends AbstractType
         return $current;
     }
 
-    public function hasDeletedParent(DataField $parent = null): bool
+    public function hasDeletedParent(?DataField $parent = null): bool
     {
         if (!$parent) {
             return false;
@@ -451,8 +455,8 @@ abstract class DataFieldType extends AbstractType
     /**
      * Build a Field specific options sub-form (or compount field) (used in edit content type).
      *
-     * @param FormBuilderInterface<FormBuilderInterface> $builder
-     * @param array<string, mixed>                       $options
+     * @param FormBuilderInterface<mixed> $builder
+     * @param array<string, mixed>        $options
      */
     public function buildOptionsForm(FormBuilderInterface $builder, array $options): void
     {
@@ -502,6 +506,9 @@ abstract class DataFieldType extends AbstractType
         return [$current->getName() => $options];
     }
 
+    /**
+     * @param FormBuilderInterface<mixed> $builder
+     */
     protected function buildChildForm(FieldType $fieldType, mixed $options, FormBuilderInterface $builder): void
     {
         if (!$fieldType->getDeleted()) {

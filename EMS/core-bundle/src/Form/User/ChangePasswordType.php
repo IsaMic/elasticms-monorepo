@@ -14,12 +14,16 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Security\Core\Validator\Constraints\UserPassword;
 use Symfony\Component\Validator\Constraints\NotBlank;
 
+/**
+ * @extends AbstractType<mixed>
+ */
 class ChangePasswordType extends AbstractType
 {
     /**
-     * @param FormBuilderInterface<FormBuilderInterface> $builder
-     * @param array<string, mixed>                       $options
+     * @param FormBuilderInterface<mixed> $builder
+     * @param array<string, mixed>        $options
      */
+    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->add('current_password', PasswordType::class, [
@@ -36,13 +40,14 @@ class ChangePasswordType extends AbstractType
             'type' => PasswordType::class,
             'options' => [
                 'attr' => ['autocomplete' => 'new-password',
-            ], ],
+                ], ],
             'first_options' => ['label' => 'user.new_password'],
             'second_options' => ['label' => 'user.new_password_confirmation'],
             'invalid_message' => 'user.password.mismatch',
         ]);
     }
 
+    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([

@@ -15,7 +15,7 @@ final class TranslationBuilder extends AbstractBuilder
     /**
      * @return \Generator|MessageCatalogue[]
      */
-    public function buildMessageCatalogues(Environment $environment, string $domain = null): \Generator
+    public function buildMessageCatalogues(Environment $environment, ?string $domain = null): \Generator
     {
         if (null === $contentType = $this->settings($environment)->getTranslationContentType()) {
             return [];
@@ -48,6 +48,7 @@ final class TranslationBuilder extends AbstractBuilder
         return $this->searchDocuments($contentType);
     }
 
+    #[\Override]
     protected function modifySearch(Search $search): void
     {
         $search->setSort(['key' => ['order' => 'asc', 'missing' => '_last', 'unmapped_type' => 'text']]);

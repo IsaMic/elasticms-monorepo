@@ -55,7 +55,7 @@ $command = static function (InputInterface $input, OutputInterface $output): int
     $format = $input->getOption('format');
 
     if (!\in_array($format, ['yml', 'xlf'], true)) {
-        throw new \RuntimeException('Invalid format');
+        throw new RuntimeException('Invalid format');
     }
 
     $io->writeln('Booting admin kernel');
@@ -80,7 +80,7 @@ $command = static function (InputInterface $input, OutputInterface $output): int
     $catalogueDomains = $currentCatalogue->getDomains();
     \array_walk($domains, static function (string $d) use ($catalogueDomains) {
         if (!\in_array($d, $catalogueDomains, true)) {
-            throw new \RuntimeException(\sprintf('Invalid domain: %s', $d));
+            throw new RuntimeException(\sprintf('Invalid domain: %s', $d));
         }
     });
 
@@ -97,12 +97,12 @@ $command = static function (InputInterface $input, OutputInterface $output): int
         ->in($bundleDir);
 
     $extractors = [
-       ['Parsing php files', '*.php', new PhpAstExtractor([
-          new Visitor\ConstraintVisitor(),
-          new Visitor\TransMethodVisitor(),
-          new Visitor\TranslatableMessageVisitor(),
-       ])],
-       ['Parsing twig files', '*.twig', $container->get('twig.translation.extractor')],
+        ['Parsing php files', '*.php', new PhpAstExtractor([
+            new Visitor\ConstraintVisitor(),
+            new Visitor\TransMethodVisitor(),
+            new Visitor\TranslatableMessageVisitor(),
+        ])],
+        ['Parsing twig files', '*.twig', $container->get('twig.translation.extractor')],
     ];
 
     foreach ($extractors as [$title, $name, $extractor]) {
@@ -140,7 +140,7 @@ $command = static function (InputInterface $input, OutputInterface $output): int
     $result = $operation->getResult();
 
     if (0 === \count($result->all())) {
-        throw new \RuntimeException('No translations found');
+        throw new RuntimeException('No translations found');
     }
 
     $sortedMessages = new MessageCatalogue($result->getLocale());
@@ -154,7 +154,7 @@ $command = static function (InputInterface $input, OutputInterface $output): int
 
         $translationWriter = new TranslationWriter();
         $translationWriter->addDumper('xlf', new XliffFileDumper());
-        $translationWriter->addDumper('yml', new class() extends YamlFileDumper {
+        $translationWriter->addDumper('yml', new class extends YamlFileDumper {
             public function formatCatalogue(MessageCatalogue $messages, string $domain, array $options = []): string
             {
                 return Yaml::dump(
@@ -175,7 +175,7 @@ $command = static function (InputInterface $input, OutputInterface $output): int
                 'path' => $bundleDir.'/Resources/translations',
                 'version' => '1.2',
                 'default_locale' => 'en',
-            ]
+            ],
         });
     }
 

@@ -8,10 +8,10 @@ use Psr\Http\Message\StreamInterface;
 
 class TikaJarPromise implements TikaPromiseInterface
 {
-    private TikaWrapper $textWrapper;
-    private TikaWrapper $htmlWrapper;
-    private TikaWrapper $metaWrapper;
-    private TikaWrapper $languageWrapper;
+    private readonly TikaWrapper $textWrapper;
+    private readonly TikaWrapper $htmlWrapper;
+    private readonly TikaWrapper $metaWrapper;
+    private readonly TikaWrapper $languageWrapper;
 
     public function __construct(StreamInterface $stream)
     {
@@ -21,32 +21,38 @@ class TikaJarPromise implements TikaPromiseInterface
         $this->languageWrapper = TikaWrapper::getLanguage($stream);
     }
 
+    #[\Override]
     public function startText(): void
     {
         $this->textWrapper->start();
     }
 
+    #[\Override]
     public function getText(): string
     {
         return $this->textWrapper->getOutput();
     }
 
+    #[\Override]
     public function startMeta(): void
     {
         $this->languageWrapper->start();
         $this->metaWrapper->start();
     }
 
+    #[\Override]
     public function getMeta(): TikaMeta
     {
         return new TikaMeta([...$this->metaWrapper->getJson(), ...['language' => $this->languageWrapper->getOutput()]]);
     }
 
+    #[\Override]
     public function startHtml(): void
     {
         $this->htmlWrapper->start();
     }
 
+    #[\Override]
     public function getHtml(): string
     {
         return $this->htmlWrapper->getOutput();

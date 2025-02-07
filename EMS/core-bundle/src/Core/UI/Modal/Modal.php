@@ -14,7 +14,7 @@ class Modal implements \JsonSerializable
     public function __construct(
         public ?string $title = null,
         public ?string $body = null,
-        public ?string $footer = null
+        public ?string $footer = null,
     ) {
     }
 
@@ -30,6 +30,7 @@ class Modal implements \JsonSerializable
     /**
      * @return array{modalTitle?: string, modalBody?: string, modalFooter?: string}
      */
+    #[\Override]
     public function jsonSerialize(): array
     {
         return \array_filter([

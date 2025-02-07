@@ -10,6 +10,7 @@ use EMS\CommonBundle\Common\EMSLink;
 use EMS\CommonBundle\Helper\EmsFields;
 use EMS\CommonBundle\Twig\AssetRuntime;
 use EMS\Helpers\Html\MimeTypes;
+use EMS\Helpers\Standard\Json;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Twig\Environment;
@@ -59,7 +60,7 @@ final class Transformer
 
             return null;
         } catch (\Exception $ex) {
-            $this->logger->error(\sprintf('%s match (%s)', $ex->getMessage(), \json_encode($match, JSON_THROW_ON_ERROR)));
+            $this->logger->error(\sprintf('%s match (%s)', $ex->getMessage(), Json::encode($match)));
 
             return null;
         }
@@ -87,7 +88,7 @@ final class Transformer
             }
             $transformed = $baseUrl.$route;
             if (\strlen($match['query'] ?? '') > 0) {
-                $transformed = \join('?', [$transformed, $match['query']]);
+                $transformed = \implode('?', [$transformed, $match['query']]);
             }
 
             return $srcAttribute ? 'src="'.$transformed : $transformed;

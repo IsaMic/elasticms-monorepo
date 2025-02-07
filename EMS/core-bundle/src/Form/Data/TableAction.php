@@ -18,15 +18,15 @@ final class TableAction
         private readonly string $name,
         private readonly string $icon,
         private readonly TranslatableMessage $labelKey,
-        private readonly ?TranslatableMessage $confirmationKey = null)
-    {
+        private readonly ?TranslatableMessage $confirmationKey = null
+    ) {
     }
 
     public static function create(
         string $name,
         string $icon,
         string|TranslatableMessage $labelKey,
-        null|string|TranslatableMessage $confirmationKey = null
+        string|TranslatableMessage|null $confirmationKey = null,
     ): self {
         if (!$labelKey instanceof TranslatableMessage) {
             $labelKey = new TranslatableMessage($labelKey, [], EMSCoreBundle::TRANS_DOMAIN);

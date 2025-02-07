@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Form\View;
 
 use EMS\CommonBundle\Service\ElasticaService;
@@ -20,66 +22,68 @@ class ReportViewType extends ViewType
         parent::__construct($formFactory, $twig, $logger, $templateNamespace);
     }
 
+    #[\Override]
     public function getLabel(): string
     {
         return 'Report: perform an elasticsearch query and generate a report with a twig template';
     }
 
+    #[\Override]
     public function getName(): string
     {
         return 'Report';
     }
 
     /**
-     * @param FormBuilderInterface<FormBuilderInterface> $builder
-     * @param array<string, mixed>                       $options
+     * @param FormBuilderInterface<mixed> $builder
+     * @param array<string, mixed>        $options
      */
+    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         parent::buildForm($builder, $options);
         $builder
         ->add('body', CodeEditorType::class, [
-                'label' => 'The Elasticsearch body query [JSON Twig]',
-                'attr' => [
-                ],
-                'slug' => 'report_query',
+            'label' => 'The Elasticsearch body query [JSON Twig]',
+            'attr' => [
+            ],
+            'slug' => 'report_query',
         ])
         ->add('size', IntegerType::class, [
-                'label' => 'Limit the result to the x first results',
+            'label' => 'Limit the result to the x first results',
         ])
         ->add('template', CodeEditorType::class, [
-                'label' => 'The Twig template used to display each keywords',
-                'attr' => [
-                ],
-                'slug' => 'report_template',
+            'label' => 'The Twig template used to display each keywords',
+            'attr' => [
+            ],
+            'slug' => 'report_template',
         ])
         ->add('header', CodeEditorType::class, [
-                'label' => 'The HTML template included at the end of the header',
-                'attr' => [
-                ],
+            'label' => 'The HTML template included at the end of the header',
+            'attr' => [
+            ],
         ])
         ->add('javascript', CodeEditorType::class, [
-                'label' => 'The HTML template included at the end of the page (after jquery and bootstrap)',
-                'attr' => [
-                ],
+            'label' => 'The HTML template included at the end of the page (after jquery and bootstrap)',
+            'attr' => [
+            ],
         ]);
     }
 
+    #[\Override]
     public function getBlockPrefix(): string
     {
         return 'report_view';
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function getParameters(View $view, FormFactoryInterface $formFactory, Request $request): array
     {
         try {
             $renderQuery = $this->twig->createTemplate($view->getOptions()['body'] ?? '')->render([
-                    'view' => $view,
-                    'contentType' => $view->getContentType(),
-                    'environment' => $view->getContentType()->getEnvironment(),
+                'view' => $view,
+                'contentType' => $view->getContentType(),
+                'environment' => $view->getContentType()->getEnvironment(),
             ]);
         } catch (\Exception $e) {
             $this->logger->error($e->getMessage(), ['view' => $view->getName(), 'option' => 'body']);

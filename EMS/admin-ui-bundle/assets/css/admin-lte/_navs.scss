@@ -1,13 +1,14 @@
-//
 // Component: Nav
-//
+
+@use "sass:color";
+@use "sass:map";
 
 .nav-pills {
   .nav-link {
     color: $gray-600;
 
     &:not(.active):hover {
-      color: map-get($theme-colors, "primary");
+      color: map.get($theme-colors, "primary");
     }
   }
 
@@ -46,10 +47,7 @@
     border-right: 0;
 
     .nav-link {
-      border-bottom-left-radius: 0;
-      border-bottom-right-radius: $nav-tabs-border-radius;
-      border-top-left-radius: 0;
-      border-top-right-radius: $nav-tabs-border-radius;
+      border-radius: 0 $nav-tabs-border-radius $nav-tabs-border-radius 0;
       margin-left: -$nav-tabs-border-width;
 
       &:hover,
@@ -83,8 +81,9 @@
   @if $color == dark or $color == light {
     .navbar-#{$color} {
       background-color: $value;
+
       @if $color == dark {
-        border-color: lighten($dark, 10%);
+        border-color: color.adjust($dark, $lightness: 10%);
       }
     }
   }
@@ -114,23 +113,23 @@
 }
 
 
-@include dark-mode () {
+@include dark-mode {
   .nav-pills .nav-link {
     color: $gray-400;
   }
 
   .nav-tabs {
-    border-color: lighten($dark, 15%);
+    border-color: color.adjust($dark, $lightness: 15%);
 
     .nav-link:focus,
     .nav-link:hover {
-      border-color: lighten($dark, 15%);
+      border-color: color.adjust($dark, $lightness: 15%);
     }
 
     .nav-item.show .nav-link,
     .nav-link.active {
       background-color: $dark;
-      border-color: lighten($dark, 15%) lighten($dark, 15%) transparent lighten($dark, 15%);
+      border-color: color.adjust($dark, $lightness: 15%) color.adjust($dark, $lightness: 15%) transparent color.adjust($dark, $lightness: 15%);
       color: $white;
     }
 
@@ -140,20 +139,23 @@
         &.active,
         &:focus,
         &:hover {
-          border-color: lighten($dark, 15%) transparent lighten($dark, 15%) lighten($dark, 15%);
+          border-color: color.adjust($dark, $lightness: 15%) transparent color.adjust($dark, $lightness: 15%) color.adjust($dark, $lightness: 15%);
         }
+
         &:focus,
         &:hover {
-          background-color: lighten($dark, 5%);
+          background-color: color.adjust($dark, $lightness: 5%);
         }
       }
+
       &.nav-tabs-right {
-        border-color: lighten($dark, 15%);
+        border-color: color.adjust($dark, $lightness: 15%);
+
         .nav-link {
           &.active,
           &:focus,
           &:hover {
-            border-color: lighten($dark, 15%) lighten($dark, 15%) lighten($dark, 15%) transparent;
+            border-color: color.adjust($dark, $lightness: 15%) color.adjust($dark, $lightness: 15%) color.adjust($dark, $lightness: 15%) transparent;
           }
         }
       }
@@ -165,8 +167,9 @@
     @if $color == dark or $color == light {
       .navbar-#{$color} {
         background-color: $value;
+
         @if $color == dark {
-          border-color: lighten($dark, 10%);
+          border-color: color.adjust($dark, $lightness: 10%);
         }
       }
     }

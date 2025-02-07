@@ -6,13 +6,13 @@ namespace EMS\CoreBundle\Service;
 
 use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\Persistence\ObjectManager;
-use EMS\CommonBundle\Common\Standard\DateTime;
 use EMS\CommonBundle\Entity\EntityInterface;
 use EMS\CoreBundle\Command\JobOutput;
 use EMS\CoreBundle\Core\Job\ScheduleManager;
 use EMS\CoreBundle\Entity\Helper\JsonClass;
 use EMS\CoreBundle\Entity\Job;
 use EMS\CoreBundle\Repository\JobRepository;
+use EMS\Helpers\Standard\DateTime;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
 use Symfony\Component\Console\Input\StringInput;
@@ -24,7 +24,7 @@ use function Symfony\Component\String\u;
 
 class JobService implements EntityServiceInterface
 {
-    private ObjectManager $em;
+    private readonly ObjectManager $em;
 
     public function __construct(
         ManagerRegistry $doctrine,
@@ -32,7 +32,7 @@ class JobService implements EntityServiceInterface
         private readonly LoggerInterface $logger,
         private readonly JobRepository $repository,
         private readonly ScheduleManager $scheduleManager,
-        private readonly TokenStorageInterface $tokenStorage
+        private readonly TokenStorageInterface $tokenStorage,
     ) {
         $this->em = $doctrine->getManager();
     }
@@ -89,7 +89,8 @@ class JobService implements EntityServiceInterface
         return $doneJobs;
     }
 
-    public function count(string $searchValue = '', $context = null): int
+    #[\Override]
+    public function count(string $searchValue = '', mixed $context = null): int
     {
         if (null !== $context) {
             throw new \RuntimeException('Unexpected context');
@@ -235,6 +236,7 @@ class JobService implements EntityServiceInterface
         return $jobsCleaned;
     }
 
+    #[\Override]
     public function isSortable(): bool
     {
         return false;
@@ -243,11 +245,13 @@ class JobService implements EntityServiceInterface
     /**
      * @return Job[]
      */
-    public function get(int $from, int $size, ?string $orderField, string $orderDirection, string $searchValue, $context = null): array
+    #[\Override]
+    public function get(int $from, int $size, ?string $orderField, string $orderDirection, string $searchValue, mixed $context = null): array
     {
         return $this->repository->get($from, $size, $orderField, $orderDirection, $searchValue);
     }
 
+    #[\Override]
     public function getEntityName(): string
     {
         return 'job';
@@ -256,6 +260,7 @@ class JobService implements EntityServiceInterface
     /**
      * @return string[]
      */
+    #[\Override]
     public function getAliasesName(): array
     {
         return [
@@ -265,20 +270,23 @@ class JobService implements EntityServiceInterface
         ];
     }
 
+    #[\Override]
     public function getByItemName(string $name): ?EntityInterface
     {
         try {
-            return $this->repository->findById(\intval($name));
+            return $this->repository->findById((int) $name);
         } catch (\Throwable) {
             return null;
         }
     }
 
+    #[\Override]
     public function updateEntityFromJson(EntityInterface $entity, string $json): EntityInterface
     {
         throw new \RuntimeException('Job entities doesn\'t support JSON update');
     }
 
+    #[\Override]
     public function createEntityFromJson(string $json, ?string $name = null): EntityInterface
     {
         if (null !== $name) {
@@ -299,13 +307,14 @@ class JobService implements EntityServiceInterface
         return $job;
     }
 
+    #[\Override]
     public function deleteByItemName(string $name): string
     {
-        $job = $this->repository->findById(\intval($name));
+        $job = $this->repository->findById((int) $name);
         $id = $job->getId();
         $this->repository->delete($job);
 
-        return \strval($id);
+        return (string) $id;
     }
 
     public function write(int $jobId, string $message, bool $newLine): void

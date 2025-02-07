@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Service;
 
 use Doctrine\Bundle\DoctrineBundle\Registry;
@@ -146,10 +148,10 @@ class NotificationService
             $repository = $em->getRepository(Notification::class);
 
             $alreadyPending = $repository->findBy([
-                    'template' => $template,
-                    'revision' => $revision,
-                    'environment' => $environment,
-                    'status' => 'pending',
+                'template' => $template,
+                'revision' => $revision,
+                'environment' => $environment,
+                'status' => 'pending',
             ]);
 
             if (!empty($alreadyPending)) {
@@ -276,7 +278,7 @@ class NotificationService
      *
      * @return Notification[]
      */
-    public function listRejectedNotifications(int $from, int $limit, array $filters = null): array
+    public function listRejectedNotifications(int $from, int $limit, ?array $filters = null): array
     {
         $contentTypes = null;
         $environments = null;
@@ -306,7 +308,7 @@ class NotificationService
      *
      * @return Notification[]
      */
-    public function listInboxNotifications(int $from, int $limit, array $filters = null): array
+    public function listInboxNotifications(int $from, int $limit, ?array $filters = null): array
     {
         $contentTypes = null;
         $environments = null;
@@ -343,7 +345,7 @@ class NotificationService
      *
      * @return Notification[]
      */
-    public function listArchivesNotifications(int $from, int $limit, array $filters = null): array
+    public function listArchivesNotifications(int $from, int $limit, ?array $filters = null): array
     {
         $contentTypes = null;
         $environments = null;

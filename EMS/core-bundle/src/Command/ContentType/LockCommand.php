@@ -13,6 +13,7 @@ use EMS\CoreBundle\Entity\ContentType;
 use EMS\CoreBundle\Repository\ContentTypeRepository;
 use EMS\CoreBundle\Repository\RevisionRepository;
 use EMS\Helpers\Standard\Json;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -20,10 +21,14 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+#[AsCommand(
+    name: Commands::CONTENT_TYPE_LOCK,
+    description: 'Lock a content type.',
+    hidden: false,
+    aliases: ['ems:contenttype:lock']
+)]
 final class LockCommand extends Command
 {
-    protected static $defaultName = Commands::CONTENT_TYPE_LOCK;
-
     private string $by;
     private ContentType $contentType;
     private bool $force;
@@ -31,28 +36,28 @@ final class LockCommand extends Command
     private string $query;
     private \DateTime $until;
 
-    public const ARGUMENT_CONTENT_TYPE = 'contentType';
-    public const ARGUMENT_TIME = 'time';
-    public const OPTION_QUERY = 'query';
-    public const OPTION_USER = 'user';
-    public const OPTION_FORCE = 'force';
-    public const OPTION_IF_EMPTY = 'if-empty';
-    public const OPTION_OUUID = 'ouuid';
+    public const string ARGUMENT_CONTENT_TYPE = 'contentType';
+    public const string ARGUMENT_TIME = 'time';
+    public const string OPTION_QUERY = 'query';
+    public const string OPTION_USER = 'user';
+    public const string OPTION_FORCE = 'force';
+    public const string OPTION_IF_EMPTY = 'if-empty';
+    public const string OPTION_OUUID = 'ouuid';
 
-    public const RESULT_SUCCESS = 0;
+    public const int RESULT_SUCCESS = 0;
 
     public function __construct(
         private readonly ContentTypeRepository $contentTypeRepository,
         private readonly ElasticaService $elasticaService,
-        private readonly RevisionRepository $revisionRepository
+        private readonly RevisionRepository $revisionRepository,
     ) {
         parent::__construct();
     }
 
+    #[\Override]
     protected function configure(): void
     {
         $this
-            ->setDescription('Lock a content type')
             ->addArgument(self::ARGUMENT_CONTENT_TYPE, InputArgument::REQUIRED, 'content type to recompute')
             ->addArgument(self::ARGUMENT_TIME, InputArgument::REQUIRED, 'lock until (+1day, +5min, now)')
             ->addOption(self::OPTION_QUERY, null, InputOption::VALUE_OPTIONAL, 'ES query', '{}')
@@ -63,6 +68,7 @@ final class LockCommand extends Command
         ;
     }
 
+    #[\Override]
     protected function initialize(InputInterface $input, OutputInterface $output): void
     {
         $this->io = new SymfonyStyle($input, $output);
@@ -96,22 +102,23 @@ final class LockCommand extends Command
         $this->by = $by;
 
         if (null !== $input->getOption(self::OPTION_QUERY)) {
-            $this->query = \strval($input->getOption('query'));
+            $this->query = (string) $input->getOption('query');
             Json::decode($this->query, 'Invalid json query');
         }
 
         $this->force = true === $input->getOption(self::OPTION_FORCE);
     }
 
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        if ($input->getOption(self::OPTION_IF_EMPTY) &&
-            0 !== $this->revisionRepository->findAllLockedRevisions($this->contentType, $this->by)->count()) {
+        if ($input->getOption(self::OPTION_IF_EMPTY)
+            && 0 !== $this->revisionRepository->findAllLockedRevisions($this->contentType, $this->by)->count()) {
             return 0;
         }
 
-        $query = \json_decode($this->query, true, 512, JSON_THROW_ON_ERROR);
-        if ((\is_countable($query) ? \count($query) : 0) > 0) {
+        $query = Json::decode($this->query);
+        if (!empty($query)) {
             $search = $this->elasticaService->convertElasticsearchSearch([
                 'index' => (null !== $this->contentType->getEnvironment()) ? $this->contentType->getEnvironment()->getAlias() : '',
                 '_source' => false,
@@ -131,7 +138,7 @@ final class LockCommand extends Command
                 $revisionCount += $this->revisionRepository->lockRevisions($this->contentType, $this->until, $this->by, $this->force, $document->getId());
             }
         } else {
-            $ouuid = $input->getOption(self::OPTION_OUUID) ? \strval($input->getOption(self::OPTION_OUUID)) : null;
+            $ouuid = $input->getOption(self::OPTION_OUUID) ? (string) ($input->getOption(self::OPTION_OUUID)) : null;
             $revisionCount = $this->revisionRepository->lockRevisions($this->contentType, $this->until, $this->by, $this->force, $ouuid);
         }
 

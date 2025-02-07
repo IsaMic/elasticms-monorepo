@@ -25,14 +25,14 @@ final class SubmissionController extends AbstractController
 {
     public function __construct(
         private readonly FormSubmissionService $formSubmissionService,
-        private readonly LoggerInterface $logger
+        private readonly LoggerInterface $logger,
     ) {
     }
 
     public function submit(Request $request): JsonResponse
     {
         try {
-            $json = Json::decode(\strval($request->getContent()));
+            $json = Json::decode((string) $request->getContent());
 
             return new JsonResponse($this->formSubmissionService->submit(new DatabaseRequest($json)));
         } catch (FormSubmissionException $e) {
@@ -54,7 +54,8 @@ final class SubmissionController extends AbstractController
         $fileUrl = $request->query->get('fileUrl');
 
         if ($fileUrl && $submission->getFiles()->count() > 0) {
-            $data['file_urls'] = $submission->getFiles()->map(fn (FormSubmissionFile $f) => u($fileUrl)
+            $data['file_urls'] = $submission->getFiles()->map(
+                fn (FormSubmissionFile $f) => u($fileUrl)
                 ->replace('{SUBMISSION_ID}', $submission->getId())
                 ->replace('{FILE_ID}', $f->getId())
                 ->toString()

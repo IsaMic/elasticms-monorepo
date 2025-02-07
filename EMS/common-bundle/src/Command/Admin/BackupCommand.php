@@ -10,6 +10,7 @@ use EMS\CommonBundle\Common\Admin\ConfigHelper;
 use EMS\CommonBundle\Common\Command\AbstractCommand;
 use EMS\CommonBundle\Contracts\CoreApi\CoreApiInterface;
 use EMS\CommonBundle\Search\Search;
+use EMS\Helpers\File\File;
 use EMS\Helpers\Standard\Json;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -19,12 +20,12 @@ use Symfony\Component\Finder\Finder;
 
 class BackupCommand extends AbstractCommand
 {
-    final public const EXPORT = 'export';
-    final public const EXPORT_FOLDER = 'export-folder';
-    final public const CONFIGS_FOLDER = 'configs-folder';
-    final public const DOCUMENTS_FOLDER = 'documents-folder';
-    final public const CONFIGS_OPTION = 'configs';
-    final public const DOCUMENTS_OPTION = 'documents';
+    final public const string EXPORT = 'export';
+    final public const string EXPORT_FOLDER = 'export-folder';
+    final public const string CONFIGS_FOLDER = 'configs-folder';
+    final public const string DOCUMENTS_FOLDER = 'documents-folder';
+    final public const string CONFIGS_OPTION = 'configs';
+    final public const string DOCUMENTS_OPTION = 'documents';
     private bool $export;
     private string $configsFolder;
     private string $documentsFolder;
@@ -42,6 +43,7 @@ class BackupCommand extends AbstractCommand
         $this->documentsFolder = $projectFolder.DIRECTORY_SEPARATOR.DownloadCommand::DEFAULT_FOLDER;
     }
 
+    #[\Override]
     public function initialize(InputInterface $input, OutputInterface $output): void
     {
         parent::initialize($input, $output);
@@ -64,6 +66,7 @@ class BackupCommand extends AbstractCommand
         $this->exportDocumentsOnly = $this->getOptionBool(self::DOCUMENTS_OPTION);
     }
 
+    #[\Override]
     protected function configure(): void
     {
         parent::configure();
@@ -75,6 +78,7 @@ class BackupCommand extends AbstractCommand
         $this->addOption(self::DOCUMENTS_OPTION, null, InputOption::VALUE_NONE, 'Export elasticMS\'s documents only');
     }
 
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $this->coreApi = $this->adminHelper->getCoreApi();
@@ -118,14 +122,14 @@ class BackupCommand extends AbstractCommand
 
         $directory = \implode(DIRECTORY_SEPARATOR, [$this->documentsFolder, $contentType]);
         if (!\is_dir($directory)) {
-            \mkdir($directory, 0777, true);
+            \mkdir($directory, 0o777, true);
         }
 
         $counter = 0;
         $ouuids = [];
         foreach ($this->coreApi->search()->scroll($search) as $hit) {
             $json = Json::encode($hit->getSource(true), true);
-            \file_put_contents(\implode(DIRECTORY_SEPARATOR, [$directory, $hit->getId().'.json']), $json);
+            File::putContents(\implode(DIRECTORY_SEPARATOR, [$directory, $hit->getId().'.json']), $json);
             $ouuids[] = $hit->getId();
             ++$counter;
         }

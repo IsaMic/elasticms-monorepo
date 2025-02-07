@@ -1,10 +1,9 @@
-//
 // Pages: E-commerce
-//
 
 // product image
 .product-image {
-  @include img-fluid ();
+  @include img-fluid;
+
   width: 100%;
 }
 
@@ -28,7 +27,8 @@
   padding: $thumbnail-padding * 2;
 
   img {
-    @include img-fluid ();
+    @include img-fluid;
+
     align-self: center;
   }
 

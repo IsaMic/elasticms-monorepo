@@ -13,12 +13,10 @@ use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
 
 final class EMSSubmissionExtension extends Extension implements PrependExtensionInterface
 {
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function load(array $configs, ContainerBuilder $container): void
     {
-        $loader = new XmlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
+        $loader = new XmlFileLoader($container, new FileLocator(__DIR__.'/../../config'));
         $loader->load('services.xml');
         $loader->load('handlers.xml');
 
@@ -29,6 +27,7 @@ final class EMSSubmissionExtension extends Extension implements PrependExtension
         $container->setParameter('emss.connections', $config['connections']);
     }
 
+    #[\Override]
     public function prepend(ContainerBuilder $container): void
     {
         $bundles = $container->getParameter('kernel.bundles');

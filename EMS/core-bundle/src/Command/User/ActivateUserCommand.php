@@ -5,31 +5,37 @@ declare(strict_types=1);
 namespace EMS\CoreBundle\Command\User;
 
 use EMS\CoreBundle\Commands;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\Question;
 
+#[AsCommand(
+    name: Commands::USER_ACTIVATE,
+    description: 'Activate a user.',
+    hidden: false
+)]
 class ActivateUserCommand extends AbstractUserCommand
 {
-    protected static $defaultName = Commands::USER_ACTIVATE;
-
+    #[\Override]
     protected function configure(): void
     {
         $this
-            ->setDescription('Activate a user')
             ->setDefinition([
                 new InputArgument('username', InputArgument::REQUIRED, 'The username'),
             ])
-            ->setHelp(<<<'EOT'
-The <info>emsco:user:activate</info> command activates a user (so they will be able to log in):
+            ->setHelp(
+                <<<'EOT'
+                    The <info>emsco:user:activate</info> command activates a user (so they will be able to log in):
 
-  <info>php %command.full_name% matthieu</info>
-EOT
+                      <info>php %command.full_name% matthieu</info>
+                    EOT
             );
     }
 
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         try {
@@ -46,6 +52,7 @@ EOT
         }
     }
 
+    #[\Override]
     protected function interact(InputInterface $input, OutputInterface $output): ?string
     {
         if (!$input->getArgument('username')) {

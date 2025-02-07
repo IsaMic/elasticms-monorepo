@@ -20,38 +20,43 @@ use EMS\CoreBundle\Service\EnvironmentService;
 use EMS\CoreBundle\Service\ReleaseService;
 use EMS\CoreBundle\Service\Revision\RevisionService;
 use EMS\Helpers\Standard\Json;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
+#[AsCommand(
+    name: Commands::RELEASE_CREATE,
+    description: 'Add documents for a given contenttype in a release.',
+    hidden: false
+)]
 class CreateReleaseCommand extends AbstractCommand
 {
-    protected static $defaultName = Commands::RELEASE_CREATE;
-
     private ContentType $contentType;
     private Environment $target;
     /** @var array<mixed> */
     private array $query;
 
-    private const ARGUMENT_CONTENT_TYPE = 'contentType';
-    private const ARGUMENT_TARGET = 'target';
-    private const OPTION_QUERY = 'query';
+    private const string ARGUMENT_CONTENT_TYPE = 'contentType';
+    private const string ARGUMENT_TARGET = 'target';
+    private const string OPTION_QUERY = 'query';
 
     public function __construct(private readonly ReleaseService $releaseService, private readonly EnvironmentService $environmentService, private readonly ContentTypeService $contentTypeService, private readonly RevisionService $revisionService, private readonly ElasticaService $elasticaService)
     {
         parent::__construct();
     }
 
+    #[\Override]
     protected function configure(): void
     {
         $this
-            ->setDescription('Add documents for a given contenttype in a release')
             ->addArgument(self::ARGUMENT_CONTENT_TYPE, InputArgument::REQUIRED, 'ContentType')
             ->addArgument(self::ARGUMENT_TARGET, InputArgument::REQUIRED, 'Target managed alias name')
             ->addOption(self::OPTION_QUERY, null, InputOption::VALUE_OPTIONAL, 'ES query', '{}');
     }
 
+    #[\Override]
     protected function initialize(InputInterface $input, OutputInterface $output): void
     {
         parent::initialize($input, $output);
@@ -60,6 +65,7 @@ class CreateReleaseCommand extends AbstractCommand
         $this->query = Json::decode($this->getOptionString(self::OPTION_QUERY));
     }
 
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         if (null === $this->contentType->getEnvironment()) {

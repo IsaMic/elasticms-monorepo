@@ -1,6 +1,8 @@
-.close {
+%close {
   float: right;
+
   @include font-size($close-font-size);
+
   font-weight: $close-font-weight;
   line-height: 1;
   color: $close-color;
@@ -14,7 +16,7 @@
     text-decoration: none;
   }
 
-  &:not(:disabled):not(.disabled) {
+  &:not(:disabled, .disabled) {
     &:hover,
     &:focus {
       opacity: .75;
@@ -24,6 +26,10 @@
   &:focus {
     outline: none;
   }
+}
+
+.close {
+  @extend %close;
 }
 
 // Additional properties for button version

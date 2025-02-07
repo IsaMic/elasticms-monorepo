@@ -1,21 +1,26 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\FormBundle\Components\Field;
 
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 
 class Submit extends AbstractField
 {
+    #[\Override]
     public function getHtmlClass(): string
     {
         return 'submit';
     }
 
+    #[\Override]
     public function getFieldClass(): string
     {
         return SubmitType::class;
     }
 
+    #[\Override]
     public function getOptions(): array
     {
         return [

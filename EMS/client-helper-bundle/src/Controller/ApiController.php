@@ -13,11 +13,11 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
-final class ApiController
+final readonly class ApiController
 {
     public function __construct(
-        private readonly ApiService $service,
-        private readonly HashcashHelper $hashcashHelper
+        private ApiService $service,
+        private HashcashHelper $hashcashHelper,
     ) {
     }
 
@@ -29,7 +29,7 @@ final class ApiController
     public function contentType(Request $request, string $apiName, string $contentType): JsonResponse
     {
         $scrollId = $request->query->get('scroll');
-        $size = \intval($request->query->get('size'));
+        $size = (int) $request->query->get('size');
         /** @var string[] $filter */
         $filter = $request->query->all('filter');
 
@@ -38,7 +38,7 @@ final class ApiController
 
     public function getSubmissionFile(string $apiName, string $submissionId, string $submissionFileId): Response
     {
-        $coreApi = $this->service->getApiClient($apiName)->coreApi;
+        $coreApi = $this->service->getApiClient($apiName)->getCoreApi();
 
         try {
             return $coreApi->form()->getSubmissionFileAsStreamResponse($submissionId, $submissionFileId);
@@ -70,7 +70,7 @@ final class ApiController
         }
     }
 
-    public function createDocumentFromForm(Request $request, string $apiName, string $contentType, ?string $ouuid, string $redirectUrl, string $validationTemplate = null): RedirectResponse
+    public function createDocumentFromForm(Request $request, string $apiName, string $contentType, ?string $ouuid, string $redirectUrl, ?string $validationTemplate = null): RedirectResponse
     {
         $rawData = $this->service->treatFormRequest($request, $apiName, $validationTemplate);
 
@@ -80,7 +80,7 @@ final class ApiController
         return new RedirectResponse($url);
     }
 
-    public function updateDocumentFromForm(Request $request, string $apiName, string $contentType, string $ouuid, string $redirectUrl, string $validationTemplate = null): RedirectResponse
+    public function updateDocumentFromForm(Request $request, string $apiName, string $contentType, string $ouuid, string $redirectUrl, ?string $validationTemplate = null): RedirectResponse
     {
         $rawData = $this->service->treatFormRequest($request, $apiName, $validationTemplate);
 

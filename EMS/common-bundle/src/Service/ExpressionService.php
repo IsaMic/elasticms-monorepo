@@ -16,9 +16,7 @@ final class ExpressionService implements ExpressionServiceInterface
     {
     }
 
-    /**
-     * {@inheritdoc}
-     */
+    #[\Override]
     public function evaluateToBool(string $expression, array $values = []): bool
     {
         $evaluate = $this->evaluate($expression, $values);
@@ -26,9 +24,7 @@ final class ExpressionService implements ExpressionServiceInterface
         return \is_bool($evaluate) ? $evaluate : false;
     }
 
-    /**
-     * {@inheritdoc}
-     */
+    #[\Override]
     public function evaluateToString(string $expression, array $values = []): ?string
     {
         $evaluate = $this->evaluate($expression, $values);

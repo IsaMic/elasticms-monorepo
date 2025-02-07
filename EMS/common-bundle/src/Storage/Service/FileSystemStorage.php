@@ -22,11 +22,13 @@ class FileSystemStorage extends AbstractUrlStorage
         parent::__construct($logger, $usage, $hotSynchronizeLimit);
     }
 
+    #[\Override]
     protected function getBaseUrl(): string
     {
         return $this->storagePath;
     }
 
+    #[\Override]
     public function __toString(): string
     {
         return FileSystemStorage::class." ($this->storagePath)";
@@ -35,11 +37,13 @@ class FileSystemStorage extends AbstractUrlStorage
     /**
      * @return null
      */
+    #[\Override]
     protected function getContext()
     {
         return null;
     }
 
+    #[\Override]
     public function readCache(Config $config): ?StreamInterface
     {
         $filename = $this->getCachePath($config);
@@ -54,6 +58,7 @@ class FileSystemStorage extends AbstractUrlStorage
         return new Stream($resource);
     }
 
+    #[\Override]
     public function saveCache(Config $config, FileInterface $file): bool
     {
         $filename = $this->getCachePath($config);
@@ -62,10 +67,11 @@ class FileSystemStorage extends AbstractUrlStorage
         return \copy($file->getFilename(), $filename);
     }
 
+    #[\Override]
     public function clearCache(): bool
     {
         $filesystem = new Filesystem();
-        $filesystem->remove(\join(DIRECTORY_SEPARATOR, [
+        $filesystem->remove(\implode(DIRECTORY_SEPARATOR, [
             $this->getBaseUrl(),
             'cache',
         ]));
@@ -73,9 +79,10 @@ class FileSystemStorage extends AbstractUrlStorage
         return true;
     }
 
+    #[\Override]
     public function readFromArchiveInCache(string $hash, string $path): ?StreamWrapper
     {
-        $filename = \join(DIRECTORY_SEPARATOR, [
+        $filename = \implode(DIRECTORY_SEPARATOR, [
             $this->getBaseUrl(),
             'cache',
             \substr($hash, 0, 3),
@@ -91,9 +98,10 @@ class FileSystemStorage extends AbstractUrlStorage
         }
         $mimeTypeHelper = MimeTypeHelper::getInstance();
 
-        return new StreamWrapper(new Stream($resource), $mimeTypeHelper->guessMimeType($filename), \intval(\filesize($filename)));
+        return new StreamWrapper(new Stream($resource), $mimeTypeHelper->guessMimeType($filename), (int) \filesize($filename));
     }
 
+    #[\Override]
     public function addFileInArchiveCache(string $hash, SplFileInfo $file, string $mimeType): bool
     {
         $filename = \implode(DIRECTORY_SEPARATOR, [
@@ -109,14 +117,15 @@ class FileSystemStorage extends AbstractUrlStorage
         return \copy($file->getPathname(), $filename);
     }
 
-    public function loadArchiveItemsInCache(string $archiveHash, Archive $archive, callable $callback = null): bool
+    #[\Override]
+    public function loadArchiveItemsInCache(string $archiveHash, Archive $archive, ?callable $callback = null): bool
     {
         return false;
     }
 
     protected function getCachePath(Config $config): string
     {
-        return \join(DIRECTORY_SEPARATOR, [
+        return \implode(DIRECTORY_SEPARATOR, [
             $this->getBaseUrl(),
             'cache',
             \substr($config->getAssetHash(), 0, 3),

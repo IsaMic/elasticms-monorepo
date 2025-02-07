@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Controller;
 
 use Elasticsearch\Common\Exceptions\ElasticsearchException;
@@ -74,11 +76,11 @@ class ElasticsearchController extends AbstractController
         private readonly int $pagingSize,
         private readonly ?string $healthCheckAllowOrigin,
         private readonly array $elasticsearchCluster,
-        private readonly string $templateNamespace)
-    {
+        private readonly string $templateNamespace
+    ) {
     }
 
-    public function addAliasAction(string $name, Request $request): Response
+    public function addAlias(string $name, Request $request): Response
     {
         $form = $this->createFormBuilder([])->add('name', IconTextType::class, [
             'icon' => 'fa fa-key',
@@ -110,7 +112,7 @@ class ElasticsearchController extends AbstractController
         ]);
     }
 
-    public function healthCheckAction(string $_format): Response
+    public function healthCheck(string $_format): Response
     {
         try {
             $health = $this->elasticaService->getClusterHealth();
@@ -131,7 +133,7 @@ class ElasticsearchController extends AbstractController
         }
     }
 
-    public function statusAction(string $_format): Response
+    public function status(string $_format): Response
     {
         try {
             $status = $this->elasticaService->getClusterHealth();
@@ -186,7 +188,7 @@ class ElasticsearchController extends AbstractController
     /**
      * @param int $id
      */
-    public function deleteSearchAction($id): Response
+    public function deleteSearch($id): Response
     {
         $search = $this->searchRepository->find($id);
         if (null === $search) {
@@ -197,7 +199,7 @@ class ElasticsearchController extends AbstractController
         return $this->redirectToRoute('elasticsearch.search');
     }
 
-    public function quickSearchAction(Request $request): Response
+    public function quickSearch(Request $request): Response
     {
         $dashboard = $this->dashboardManager->getDefinition(Dashboard::DEFINITION_QUICK_SEARCH);
         if (null !== $dashboard) {
@@ -222,14 +224,14 @@ class ElasticsearchController extends AbstractController
             }
         }
 
-        return $this->forward('EMS\CoreBundle\Controller\ElasticsearchController::searchAction', [
+        return $this->forward('EMS\CoreBundle\Controller\ElasticsearchController::search', [
             'query' => null,
         ], [
             'search_form' => $search->jsonSerialize(),
         ]);
     }
 
-    public function setDefaultSearchAction(int $id, ?string $contentType): Response
+    public function setDefaultSearch(int $id, ?string $contentType): Response
     {
         if (null !== $contentType) {
             $contentType = $this->contentTypeService->giveByName($contentType);
@@ -272,7 +274,7 @@ class ElasticsearchController extends AbstractController
     }
 
     /** @deprecated */
-    public function deprecatedSearchApiAction(Request $request, DataLinks $dataLinks): void
+    public function deprecatedSearchApi(Request $request, DataLinks $dataLinks): void
     {
         @\trigger_error('QuerySearch not defined, you should refer to one', E_USER_DEPRECATED);
         $environments = Type::string($request->query->get('environment', ''));
@@ -338,7 +340,7 @@ class ElasticsearchController extends AbstractController
 
             $ouuids = [];
             foreach ($circles as $circle) {
-                \preg_match('/(?P<type>\w+):(?P<ouuid>\w+)/', $circle, $matches);
+                \preg_match('/(?P<type>\w+):(?P<ouuid>\w+)/', (string) $circle, $matches);
                 if (isset($matches['ouuid'])) {
                     $ouuids[] = $matches['ouuid'];
                 }
@@ -384,7 +386,7 @@ class ElasticsearchController extends AbstractController
         }
     }
 
-    public function exportAction(Request $request, ContentType $contentType): Response
+    public function export(Request $request, ContentType $contentType): Response
     {
         $exportDocuments = new ExportDocuments($contentType, $this->generateUrl('emsco_search_export', ['contentType' => $contentType]), '{}');
         $form = $this->createForm(ExportDocumentsType::class, $exportDocuments);
@@ -414,14 +416,14 @@ class ElasticsearchController extends AbstractController
         ]);
     }
 
-    public function searchAction(Request $request): Response
+    public function search(Request $request): Response
     {
         try {
             $search = new Search();
             $search->setEnvironments($this->environmentService->getEnvironmentNames());
 
             if ('POST' == $request->getMethod()) {
-                $request->request->set('search_form', $request->query->get('search_form'));
+                $request->request->set('search_form', $request->query->all('search_form'));
 
                 $form = $this->createForm(SearchFormType::class, $search);
 
@@ -473,7 +475,7 @@ class ElasticsearchController extends AbstractController
             }
 
             // Form treatment after the "Save" button has been pressed (= ask for a name to save the search preset)
-            if ($form->isSubmitted() && $form->isValid() && $request->query->get('search_form') && \array_key_exists('save', $request->query->all('search_form'))) {
+            if ($form->isSubmitted() && $form->isValid() && \array_key_exists('save', $request->query->all('search_form'))) {
                 $form = $this->createFormBuilder($search)
                     ->add('name', TextType::class)
                     ->add('save_search', SubmitEmsType::class, [
@@ -488,7 +490,7 @@ class ElasticsearchController extends AbstractController
                 return $this->render("@$this->templateNamespace/elasticsearch/save-search.html.twig", [
                     'form' => $form->createView(),
                 ]);
-            } elseif ($form->isSubmitted() && $form->isValid() && $request->query->get('search_form') && \array_key_exists('delete', $request->query->all('search_form'))) {
+            } elseif ($form->isSubmitted() && $form->isValid() && \array_key_exists('delete', $request->query->all('search_form'))) {
                 // Form treatment after the "Delete" button has been pressed (to delete a previous saved search preset)
 
                 $this->logger->notice('log.elasticsearch.search_deleted', [
@@ -538,7 +540,7 @@ class ElasticsearchController extends AbstractController
             $currentFilters->remove('search_form[_token]');
 
             // Form treatment after the "Export results" button has been pressed (= ask for a "content type" <-> "template" mapping)
-            if (null !== $response && $form->isSubmitted() && $form->isValid() && $request->query->get('search_form') && \array_key_exists('exportResults', $request->query->all('search_form'))) {
+            if (null !== $response && $form->isSubmitted() && $form->isValid() && \array_key_exists('exportResults', $request->query->all('search_form'))) {
                 $exportForms = [];
                 $contentTypes = $this->getAllContentType($response);
                 foreach ($contentTypes as $name) {

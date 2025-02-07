@@ -19,11 +19,12 @@ class I18nDataTableType extends AbstractEntityTableType
 
     public function __construct(
         I18nService $i18NService,
-        private readonly string $templateNamespace
+        private readonly string $templateNamespace,
     ) {
         parent::__construct($i18NService);
     }
 
+    #[\Override]
     public function build(EntityTable $table): void
     {
         $table
@@ -47,11 +48,13 @@ class I18nDataTableType extends AbstractEntityTableType
             ->addTableActionDelete($table, 'i18n');
     }
 
+    #[\Override]
     public function getLoadMaxRows(): int
     {
         return 50;
     }
 
+    #[\Override]
     public function getRoles(): array
     {
         return [Roles::ROLE_ADMIN];

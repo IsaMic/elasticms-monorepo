@@ -6,10 +6,16 @@ namespace EMS\CoreBundle\Command\Environment;
 
 use EMS\CoreBundle\Commands;
 use EMS\CoreBundle\Entity\Environment;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
+#[AsCommand(
+    name: Commands::ENVIRONMENT_UNPUBLISH,
+    description: 'Unpublish revision from an environment.',
+    hidden: false
+)]
 final class UnpublishCommand extends AbstractEnvironmentCommand
 {
     private Environment $environment;
@@ -17,16 +23,14 @@ final class UnpublishCommand extends AbstractEnvironmentCommand
     /** @var array<string, int> */
     private array $warnings = [];
 
-    public const ARGUMENT_ENVIRONMENT = 'environment';
+    public const string ARGUMENT_ENVIRONMENT = 'environment';
 
-    private const LOCK_USER = 'SYSTEM_UNPUBLISH';
+    private const string LOCK_USER = 'SYSTEM_UNPUBLISH';
 
-    protected static $defaultName = Commands::ENVIRONMENT_UNPUBLISH;
-
+    #[\Override]
     protected function configure(): void
     {
         $this
-            ->setDescription('Unpublish revision from an environment')
             ->addArgument(self::ARGUMENT_ENVIRONMENT, InputArgument::REQUIRED, 'Environment name')
         ;
 
@@ -34,6 +38,7 @@ final class UnpublishCommand extends AbstractEnvironmentCommand
         $this->configureRevisionSearcher();
     }
 
+    #[\Override]
     protected function initialize(InputInterface $input, OutputInterface $output): void
     {
         parent::initialize($input, $output);
@@ -42,11 +47,13 @@ final class UnpublishCommand extends AbstractEnvironmentCommand
         $this->initializeRevisionSearcher(self::LOCK_USER);
     }
 
+    #[\Override]
     protected function interact(InputInterface $input, OutputInterface $output): void
     {
         $this->environment = $this->choiceEnvironment(self::ARGUMENT_ENVIRONMENT, 'Select an existing environment');
     }
 
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         if (!$this->forceProtection($input)) {

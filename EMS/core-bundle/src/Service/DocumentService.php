@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Service;
 
 use Doctrine\Bundle\DoctrineBundle\Registry;
@@ -23,7 +25,6 @@ class DocumentService
 
     public function initDocumentImporterContext(ContentType $contentType, string $lockUser, bool $rawImport, bool $signData, bool $indexInDefaultEnv, int $bulkSize, bool $finalize, bool $force): DocumentImportContext
     {
-        $this->getEntityManager()->getConnection()->getConfiguration()->setSQLLogger(null);
         $this->bulker->setSign($signData);
         $this->bulker->setSize($bulkSize);
 
@@ -38,7 +39,7 @@ class DocumentService
         }
     }
 
-    private function submitData(DocumentImportContext $documentImportContext, Revision $revision, Revision $previousRevision = null): void
+    private function submitData(DocumentImportContext $documentImportContext, Revision $revision, ?Revision $previousRevision = null): void
     {
         $revisionType = $this->formFactory->create(RevisionType::class, $revision, ['migration' => true, 'with_warning' => false, 'raw_data' => $revision->getRawData()]);
         $viewData = $this->dataService->getSubmitData($revisionType->get('data'));
@@ -101,7 +102,7 @@ class DocumentService
 
             $currentRevision->setEndTime($newRevision->getStartTime());
             $currentRevision->setDraft(false);
-            $currentRevision->setAutoSave(null);
+            $currentRevision->autoSaveClear();
             if ($documentImportContext->shouldFinalize()) {
                 $currentRevision->removeEnvironment($documentImportContext->getEnvironment());
             }

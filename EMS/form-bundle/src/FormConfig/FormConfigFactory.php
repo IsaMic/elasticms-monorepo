@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\FormBundle\FormConfig;
 
 use EMS\ClientHelperBundle\Contracts\Elasticsearch\ClientRequestInterface;
@@ -28,7 +30,7 @@ class FormConfigFactory
         private readonly AdapterInterface $cache,
         private readonly LoggerInterface $logger,
         private readonly TextRuntime $textRuntime,
-        array $emsConfig
+        array $emsConfig,
     ) {
         $this->client = $manager->getDefault();
         $this->loadFromJson = $emsConfig[Configuration::LOAD_FROM_JSON];
@@ -155,7 +157,7 @@ class FormConfigFactory
     {
         $choices = $this->getDocument($emsLink, ['values', 'labels_'.$locale, 'choice_sort']);
 
-        $decoder = fn (string $input) => \json_decode($input, true, 512, JSON_THROW_ON_ERROR);
+        $decoder = fn (string $input) => Json::decode($input);
 
         $source = $choices->getSource();
         $fieldChoicesConfig = new FieldChoicesConfig(

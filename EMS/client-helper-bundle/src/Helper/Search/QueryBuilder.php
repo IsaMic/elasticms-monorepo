@@ -18,16 +18,16 @@ use Elastica\Suggest\Term;
 use EMS\ClientHelperBundle\Helper\Elasticsearch\ClientRequest;
 use EMS\CommonBundle\Search\Search as CommonSearch;
 
-final class QueryBuilder
+final readonly class QueryBuilder
 {
     public function __construct(
-        private readonly ClientRequest $clientRequest,
-        private readonly Search $search
+        private ClientRequest $clientRequest,
+        private Search $search,
     ) {
     }
 
     /**
-     * @param string[] $types
+     * @param list<string> $types
      */
     public function buildSearch(array $types): CommonSearch
     {
@@ -140,7 +140,7 @@ final class QueryBuilder
         return $query;
     }
 
-    private function getPostFilters(Filter $exclude = null): ?AbstractQuery
+    private function getPostFilters(?Filter $exclude = null): ?AbstractQuery
     {
         $postFilters = new BoolQuery();
 
@@ -196,7 +196,7 @@ final class QueryBuilder
             $aggs[$filter->getName()] = $aggregation;
         }
 
-        return \array_filter($aggs);
+        return $aggs;
     }
 
     private function getAgg(Filter $filter): AbstractAggregation
@@ -305,18 +305,11 @@ final class QueryBuilder
 
     private function addToBoolQuery(BoolQuery $query, AbstractQuery $nested, Filter $filter): void
     {
-        switch ($filter->getClause()) {
-            case 'must':
-                $query->addMust($nested);
-                break;
-            case 'should':
-                $query->addShould($nested);
-                break;
-            case 'must_not':
-                $query->addMustNot($nested);
-                break;
-            default:
-                throw new \RuntimeException(\sprintf('Clause %s not suported', $filter->getClause()));
-        }
+        match ($filter->getClause()) {
+            'must' => $query->addMust($nested),
+            'should' => $query->addShould($nested),
+            'must_not' => $query->addMustNot($nested),
+            default => throw new \RuntimeException(\sprintf('Clause %s not suported', $filter->getClause())),
+        };
     }
 }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\FormBundle\Components\Constraint;
 
 use EMS\FormBundle\Components\ValueObject\BelgiumOnssRszNumber;
@@ -15,6 +17,7 @@ class IsOnssRszValidator extends AbstractConstraintValidator
      * @param mixed      $value      The value that should be validated
      * @param Constraint $constraint The constraint for the validation
      */
+    #[\Override]
     public function validate($value, Constraint $constraint): void
     {
         if (!$constraint instanceof IsOnssRsz) {

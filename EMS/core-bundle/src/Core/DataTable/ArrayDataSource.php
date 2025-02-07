@@ -10,10 +10,11 @@ class ArrayDataSource implements \Countable
 {
     /** @param array<int, array<string, mixed>|object> $data */
     public function __construct(
-        public readonly array $data
+        public readonly array $data,
     ) {
     }
 
+    #[\Override]
     public function count(): int
     {
         return \count($this->data);
@@ -63,7 +64,7 @@ class ArrayDataSource implements \Countable
 
         \usort($data, static function (
             array|object $a,
-            array|object $b
+            array|object $b,
         ) use ($propertyPath, $orderDirection): int {
             $propertyAccessor = new PropertyAccessor();
             $aValue = $propertyAccessor->getValue($a, $propertyPath);
@@ -85,6 +86,6 @@ class ArrayDataSource implements \Countable
             return 'desc' === $orderDirection ? $result * -1 : $result;
         });
 
-        return new self(data: \array_values($data));
+        return new self(data: $data);
     }
 }

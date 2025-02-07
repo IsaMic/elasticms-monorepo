@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Form\Field;
 
 use Symfony\Component\Form\ChoiceList\Loader\ChoiceLoaderInterface;
@@ -17,9 +19,7 @@ class ContentTypeFieldChoiceLoader implements ChoiceLoaderInterface
         $this->contentTypeFieldChoiceList = new ContentTypeFieldChoiceList($mapping, $types, $firstLevelOnly);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function loadChoiceList($value = null): ContentTypeFieldChoiceList
     {
         return $this->contentTypeFieldChoiceList;
@@ -34,12 +34,11 @@ class ContentTypeFieldChoiceLoader implements ChoiceLoaderInterface
     }
 
     /**
-     * {@inheritDoc}
-     *
      * @param array<mixed> $values
      *
      * @return array<mixed>
      */
+    #[\Override]
     public function loadChoicesForValues(array $values, $value = null): array
     {
         $this->contentTypeFieldChoiceList->loadChoices($values);
@@ -48,12 +47,11 @@ class ContentTypeFieldChoiceLoader implements ChoiceLoaderInterface
     }
 
     /**
-     * {@inheritDoc}
-     *
      * @param array<mixed> $choices
      *
      * @return array<mixed>
      */
+    #[\Override]
     public function loadValuesForChoices(array $choices, $value = null): array
     {
         $this->contentTypeFieldChoiceList->loadChoices($choices);

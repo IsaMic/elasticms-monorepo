@@ -16,37 +16,44 @@ use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\PropertyAccess\PropertyAccessor;
 
+/**
+ * @extends AbstractType<mixed>
+ */
 final class SelectUserPropertyType extends AbstractType
 {
     public function __construct(private readonly UserService $userService)
     {
     }
 
+    #[\Override]
     public function getParent(): string
     {
         return ChoiceType::class;
     }
 
+    #[\Override]
     public function getBlockPrefix(): string
     {
         return 'select2';
     }
 
     /**
-     * @param FormBuilderInterface<FormBuilderInterface> $builder
-     * @param array<string, mixed>                       $options
+     * @param FormBuilderInterface<mixed> $builder
+     * @param array<string, mixed>        $options
      */
+    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         parent::buildForm($builder, $options);
 
         $eventDispatcher = $options['event_dispatcher'];
 
-        if ($eventDispatcher instanceof EventDispatcher || false !== \boolval($options['allow_add'])) {
+        if ($eventDispatcher instanceof EventDispatcher || false !== (bool) $options['allow_add']) {
             $this->allowDynamicChoices($builder, $eventDispatcher);
         }
     }
 
+    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         parent::configureOptions($resolver);
@@ -77,7 +84,7 @@ final class SelectUserPropertyType extends AbstractType
                 );
             })
             ->setNormalizer('attr', function (Options $options, $value) {
-                $allowAdd = \boolval($options['allow_add']) ? true : false;
+                $allowAdd = (bool) ($options['allow_add']) ? true : false;
 
                 if ($allowAdd) {
                     $value['data-tags'] = true; // select2 allow add tags
@@ -118,7 +125,7 @@ final class SelectUserPropertyType extends AbstractType
     }
 
     /**
-     * @param FormBuilderInterface<FormBuilderInterface> $builder
+     * @param FormBuilderInterface<mixed> $builder
      */
     private function allowDynamicChoices(FormBuilderInterface $builder, EventDispatcher $eventDispatcher): void
     {

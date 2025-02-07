@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Form\DataField;
 
 use EMS\CoreBundle\Entity\DataField;
@@ -9,6 +11,7 @@ use EMS\CoreBundle\Form\Field\AnalyzerPickerType;
 use EMS\CoreBundle\Form\Field\ObjectPickerType;
 use EMS\CoreBundle\Form\Field\QuerySearchPickerType;
 use EMS\CoreBundle\Service\ElasticsearchService;
+use EMS\Helpers\Standard\Json;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
@@ -31,14 +34,12 @@ class DataLinkFieldType extends DataFieldType
         AuthorizationCheckerInterface $authorizationChecker,
         FormRegistryInterface $formRegistry,
         ElasticsearchService $elasticsearchService,
-        protected EventDispatcherInterface $dispatcher
+        protected EventDispatcherInterface $dispatcher,
     ) {
         parent::__construct($authorizationChecker, $formRegistry, $elasticsearchService);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function postFinalizeTreatment(string $type, string $id, DataField $dataField, mixed $previousData): mixed
     {
         $name = $dataField->giveFieldType()->getName();
@@ -59,18 +60,17 @@ class DataLinkFieldType extends DataFieldType
         return parent::postFinalizeTreatment($type, $id, $dataField, $previousData);
     }
 
+    #[\Override]
     public function getLabel(): string
     {
         return 'Link to data object(s)';
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function getElasticsearchQuery(DataField $dataField, array $options = []): array
     {
         $opt = [...[
-                'nested' => '',
+            'nested' => '',
         ], ...$options];
         if (\strlen((string) $opt['nested'])) {
             $opt['nested'] .= '.';
@@ -81,28 +81,27 @@ class DataLinkFieldType extends DataFieldType
         if (\is_array($data)) {
             $out = [
                 'terms' => [
-                        $opt['nested'].$dataField->giveFieldType()->getName() => $data,
+                    $opt['nested'].$dataField->giveFieldType()->getName() => $data,
                 ],
             ];
         } else {
             $out = [
-                    'term' => [
-                            $opt['nested'].$dataField->giveFieldType()->getName() => $data,
-                    ],
+                'term' => [
+                    $opt['nested'].$dataField->giveFieldType()->getName() => $data,
+                ],
             ];
         }
 
         return $out;
     }
 
+    #[\Override]
     public static function getIcon(): string
     {
         return 'fa fa-sitemap';
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function buildObjectArray(DataField $data, array &$out): void
     {
         if (!$data->giveFieldType()->getDeleted()) {
@@ -116,9 +115,10 @@ class DataLinkFieldType extends DataFieldType
     }
 
     /**
-     * @param FormBuilderInterface<FormBuilderInterface> $builder
-     * @param array<string, mixed>                       $options
+     * @param FormBuilderInterface<mixed> $builder
+     * @param array<string, mixed>        $options
      */
+    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         /** @var FieldType $fieldType */
@@ -168,6 +168,7 @@ class DataLinkFieldType extends DataFieldType
         }
     }
 
+    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         /* set the default option value for this kind of compound field */
@@ -183,28 +184,25 @@ class DataLinkFieldType extends DataFieldType
         $resolver->setDefault('querySearch', null);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function getDefaultOptions(string $name): array
     {
         $out = parent::getDefaultOptions($name);
 
         $out['displayOptions']['dynamicLoading'] = true;
-        $out['mappingOptions']['index'] = 'not_analyzed';
+        $out['mappingOptions']['analyzer'] = 'keyword';
         $out['displayOptions']['querySearch'] = null;
 
         return $out;
     }
 
+    #[\Override]
     public function getBlockPrefix(): string
     {
         return 'bypassdatafield';
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function getChoiceList(FieldType $fieldType, array $choices): array
     {
         /** @var ObjectPickerType $objectPickerType */
@@ -218,15 +216,13 @@ class DataLinkFieldType extends DataFieldType
                     unset($all[$key]);
                 }
             }
-//             return $loader->loadChoiceList()->loadChoices($choices);
+            //             return $loader->loadChoiceList()->loadChoices($choices);
         }
 
         return $all;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function buildOptionsForm(FormBuilderInterface $builder, array $options): void
     {
         parent::buildOptionsForm($builder, $options);
@@ -234,23 +230,23 @@ class DataLinkFieldType extends DataFieldType
 
         // String specific display options
         $optionsForm->get('displayOptions')->add('multiple', CheckboxType::class, [
-                'required' => false,
+            'required' => false,
         ])->add('dynamicLoading', CheckboxType::class, [
-                'required' => false,
+            'required' => false,
         ])->add('sortable', CheckboxType::class, [
-                'required' => false,
+            'required' => false,
         ])->add('querySearch', QuerySearchPickerType::class, [
-                'required' => false,
+            'required' => false,
         ])->add('type', TextType::class, [
             'required' => false,
         ])->add('searchId', TextType::class, [
             'required' => false,
         ])->add('defaultValue', TextType::class, [
-                'required' => false,
+            'required' => false,
         ]);
 
         $optionsForm->get('extraOptions')->add('updateReferersField', TextType::class, [
-                'required' => false,
+            'required' => false,
         ]);
 
         if ($optionsForm->has('mappingOptions')) {
@@ -260,9 +256,7 @@ class DataLinkFieldType extends DataFieldType
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function modelTransform($data, FieldType $fieldType): DataField
     {
         $out = parent::modelTransform($data, $fieldType);
@@ -275,14 +269,14 @@ class DataLinkFieldType extends DataFieldType
                     if (\is_string($item)) {
                         $temp[] = $item;
                     } else {
-                        $out->addMessage('Some data was not able to be imported: '.\json_encode($item, JSON_THROW_ON_ERROR));
+                        $out->addMessage('Some data was not able to be imported: '.Json::encode($item));
                     }
                 }
             } elseif (\is_string($data)) {
                 $temp[] = $data;
                 $out->addMessage('Data converted into array');
             } else {
-                $out->addMessage('Data was not able to be imported: '.\json_encode($data, JSON_THROW_ON_ERROR));
+                $out->addMessage('Data was not able to be imported: '.Json::encode($data));
             }
             $out->setRawData($temp);
         } else {
@@ -304,16 +298,14 @@ class DataLinkFieldType extends DataFieldType
                 }
             } else {
                 $out->setRawData(null);
-                $out->addMessage('Data was not able to be imported: '.\json_encode($data, JSON_THROW_ON_ERROR));
+                $out->addMessage('Data was not able to be imported: '.Json::encode($data));
             }
         }
 
         return $out;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function viewTransform(DataField $dataField)
     {
         $out = parent::viewTransform($dataField);
@@ -322,10 +314,9 @@ class DataLinkFieldType extends DataFieldType
     }
 
     /**
-     * {@inheritDoc}
-     *
      * @param ?array<mixed> $data
      */
+    #[\Override]
     public function reverseViewTransform($data, FieldType $fieldType): DataField
     {
         $data = (null !== $data && isset($data['value'])) ? $data['value'] : null;

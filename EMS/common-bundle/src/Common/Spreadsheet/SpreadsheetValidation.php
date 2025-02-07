@@ -34,7 +34,7 @@ final class SpreadsheetValidation implements SpreadsheetValidationInterface
     public function addValidation(DataValidation $cellValidation): DataValidation
     {
         if ('list' == $this->type) {
-            $cellValidation->setType(\PhpOffice\PhpSpreadsheet\Cell\DataValidation::TYPE_LIST)
+            $cellValidation->setType(DataValidation::TYPE_LIST)
                 ->setAllowBlank($this->allowBlank)
                 ->setShowDropDown(true)
                 ->setShowInputMessage($this->showInput)

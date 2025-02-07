@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Form\Field;
 
 use EMS\CommonBundle\Helper\EmsFields;
@@ -12,17 +14,21 @@ use Symfony\Component\Form\FormInterface;
 use Symfony\Component\Form\FormView;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
+/**
+ * @extends AbstractType<mixed>
+ */
 class FileType extends AbstractType
 {
     /**
-     * @param FormBuilderInterface<FormBuilderInterface> $builder
-     * @param array<string, mixed>                       $options
+     * @param FormBuilderInterface<mixed> $builder
+     * @param array<string, mixed>        $options
      */
+    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->add('sha1', HiddenType::class, [
             'attr' => [
-                    'class' => 'sha1',
+                'class' => 'sha1',
             ],
             'required' => $options['required'],
         ])
@@ -34,52 +40,53 @@ class FileType extends AbstractType
         ])
         ->add('mimetype', TextType::class, [
             'attr' => [
-                    'class' => 'type',
+                'class' => 'type',
             ],
             'required' => $options['required'],
         ])
         ->add('filename', TextType::class, [
-                'attr' => [
-                        'class' => 'name',
-                ],
-                'required' => $options['required'],
+            'attr' => [
+                'class' => 'name',
+            ],
+            'required' => $options['required'],
         ]);
 
         if ($options['meta_fields']) {
             $builder->add('_title', TextType::class, [
-                    'attr' => [
-                            'class' => 'title',
-                    ],
-                    'required' => false,
+                'attr' => [
+                    'class' => 'title',
+                ],
+                'required' => false,
             ])
             ->add('_date', TextType::class, [
-                    'attr' => [
-                            'class' => 'date',
-                    ],
-                    'required' => false,
+                'attr' => [
+                    'class' => 'date',
+                ],
+                'required' => false,
             ])
             ->add('_author', TextType::class, [
-                    'attr' => [
-                            'class' => 'author',
-                    ],
-                    'required' => false,
+                'attr' => [
+                    'class' => 'author',
+                ],
+                'required' => false,
             ])
             ->add('_language', TextType::class, [
-                    'attr' => [
-                            'class' => 'language',
-                    ],
-                    'required' => false,
+                'attr' => [
+                    'class' => 'language',
+                ],
+                'required' => false,
             ])
             ->add('_content', TextareaType::class, [
-                    'attr' => [
-                            'class' => 'content',
-                            'rows' => 6,
-                    ],
-                    'required' => false,
+                'attr' => [
+                    'class' => 'content',
+                    'rows' => 6,
+                ],
+                'required' => false,
             ]);
         }
     }
 
+    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
@@ -88,15 +95,17 @@ class FileType extends AbstractType
     }
 
     /**
-     * @param FormInterface<FormInterface> $form
-     * @param array<string, mixed>         $options
+     * @param FormInterface<mixed> $form
+     * @param array<string, mixed> $options
      */
+    #[\Override]
     public function buildView(FormView $view, FormInterface $form, array $options): void
     {
         parent::buildView($view, $form, $options);
         $view->vars['meta_fields'] = $options['meta_fields'];
     }
 
+    #[\Override]
     public function getBlockPrefix(): string
     {
         return 'filetype';

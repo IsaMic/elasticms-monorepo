@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CommonBundle\Common\CoreApi\Search;
 
 use EMS\CommonBundle\Common\CoreApi\Client;
@@ -22,11 +24,13 @@ class Scroll implements \Iterator
     {
     }
 
+    #[\Override]
     public function current(): DocumentInterface
     {
         return $this->currentResponse->getDocument($this->index);
     }
 
+    #[\Override]
     public function next(): void
     {
         ++$this->index;
@@ -50,10 +54,11 @@ class Scroll implements \Iterator
     {
         $this->index = 0;
         $count = $this->currentResponse->getTotal();
-        $totalPages = \intval($this->search->getSize() > 0 ? \floor($count / $this->search->getSize()) : 0);
+        $totalPages = (int) ($this->search->getSize() > 0 ? \floor($count / $this->search->getSize()) : 0);
         $this->nextScrollId = $this->currentPage <= $totalPages ? $this->currentResponse->getScrollId() : null;
     }
 
+    #[\Override]
     public function key(): string
     {
         if (null === $this->nextScrollId) {
@@ -63,11 +68,13 @@ class Scroll implements \Iterator
         return $this->currentResponse->getDocument($this->index)->getId();
     }
 
+    #[\Override]
     public function valid(): bool
     {
         return null !== $this->nextScrollId && $this->currentResponse->getTotalDocuments() > 0;
     }
 
+    #[\Override]
     public function rewind(): void
     {
         $this->initScroll();

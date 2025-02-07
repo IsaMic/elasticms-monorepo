@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Service;
 
 use Doctrine\Bundle\DoctrineBundle\Registry;
@@ -39,7 +41,7 @@ class PublishService
         private readonly EventDispatcherInterface $dispatcher,
         private readonly LoggerInterface $logger,
         private readonly LoggerInterface $auditLogger,
-        private readonly Bulker $bulker
+        private readonly Bulker $bulker,
     ) {
         /** @var RevisionRepository $revRepository */
         $revRepository = $this->doctrine->getManager()->getRepository(Revision::class);
@@ -393,7 +395,7 @@ class PublishService
             return;
         }
 
-        $publishedRevision = $this->revRepository->findLatestVersion($contentType, $versionUuid, $environment);
+        $publishedRevision = $this->revRepository->findLatestVersion($contentType, $versionUuid->toString(), $environment);
 
         $now = new \DateTimeImmutable();
         $form = null;

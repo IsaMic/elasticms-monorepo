@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Form\DataField\Options;
 
 use EMS\CoreBundle\Entity\FieldType;
@@ -8,17 +10,15 @@ use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
- * It's the default option compound field of eMS data type.
- * The panes for display and mapping options are added.
- *
- * @author Mathieu De Keyzer <ems@theus.be>
+ * @extends AbstractType<mixed>
  */
 class OptionsType extends AbstractType
 {
     /**
-     * @param FormBuilderInterface<FormBuilderInterface> $builder
-     * @param array<string, mixed>                       $options
+     * @param FormBuilderInterface<mixed> $builder
+     * @param array<string, mixed>        $options
      */
+    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         /** @var FieldType $fieldType */
@@ -35,6 +35,7 @@ class OptionsType extends AbstractType
         $builder->add('extraOptions', ExtraOptionsType::class);
     }
 
+    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver
@@ -43,6 +44,7 @@ class OptionsType extends AbstractType
         ;
     }
 
+    #[\Override]
     public function getBlockPrefix(): string
     {
         return 'data_field_options';

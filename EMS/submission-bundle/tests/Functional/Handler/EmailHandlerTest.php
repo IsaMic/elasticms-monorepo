@@ -9,16 +9,18 @@ use Symfony\Component\Mailer\EventListener\MessageLoggerListener;
 use Symfony\Component\Mime\Address;
 use Symfony\Component\Mime\Email;
 
-final class EmailHandlerTest extends AbstractHandlerTest
+final class EmailHandlerTest extends AbstractHandlerTestCase
 {
     private MessageLoggerListener $messageLogger;
 
+    #[\Override]
     protected function setUp(): void
     {
         parent::setUp();
         $this->messageLogger = $this->container->get('functional_test.message_listener');
     }
 
+    #[\Override]
     protected function getHandler(): AbstractHandler
     {
         return $this->container->get('functional_test.emss.handler.email');

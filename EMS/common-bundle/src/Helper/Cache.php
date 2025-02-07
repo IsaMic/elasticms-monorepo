@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CommonBundle\Helper;
 
 use EMS\Helpers\Html\Headers;
@@ -26,7 +28,7 @@ class Cache
     {
         $rewritedEtags = [];
         foreach ($request->getETags() as $requestEtag) {
-            $rewritedEtags[] = \preg_replace('/\-gzip"$/i', '"', $requestEtag);
+            $rewritedEtags[] = \preg_replace('/\-gzip"$/i', '"', (string) $requestEtag);
         }
         $request->headers->replace([Headers::IF_NONE_MATCH => $rewritedEtags]);
         $response->setCache([

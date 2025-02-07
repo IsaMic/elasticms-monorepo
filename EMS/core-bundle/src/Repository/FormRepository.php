@@ -6,6 +6,7 @@ namespace EMS\CoreBundle\Repository;
 
 use Doctrine\Bundle\DoctrineBundle\Registry;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\ORM\QueryBuilder;
 use EMS\CoreBundle\Entity\Form;
 
@@ -13,8 +14,8 @@ use EMS\CoreBundle\Entity\Form;
  * @extends ServiceEntityRepository<Form>
  *
  * @method Form|null find($id, $lockMode = null, $lockVersion = null)
- * @method Form|null findOneBy(array $criteria, array $orderBy = null)
- * @method Form[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+ * @method Form|null findOneBy(mixed[] $criteria, mixed[] $orderBy = null)
+ * @method Form[]    findBy(mixed[] $criteria, mixed[] $orderBy = null, $limit = null, $offset = null)
  */
 final class FormRepository extends ServiceEntityRepository
 {
@@ -37,7 +38,7 @@ final class FormRepository extends ServiceEntityRepository
         $qb->select('count(c.id)');
         $this->addSearchFilters($qb, $searchValue);
 
-        return \intval($qb->getQuery()->getSingleScalarResult());
+        return (int) $qb->getQuery()->getSingleScalarResult();
     }
 
     public function create(Form $form): void
@@ -61,7 +62,7 @@ final class FormRepository extends ServiceEntityRepository
     {
         $queryBuilder = $this->createQueryBuilder('form');
         $queryBuilder->where('form.id IN (:ids)')
-            ->setParameter('ids', $ids);
+            ->setParameter('ids', $ids, ArrayParameterType::STRING);
 
         return $queryBuilder->getQuery()->getResult();
     }
@@ -108,6 +109,15 @@ final class FormRepository extends ServiceEntityRepository
 
     public function getByName(string $name): ?Form
     {
-        return $this->findOneBy(['name' => $name]);
+        $qb = $this->createQueryBuilder('form');
+        $qb
+            ->addSelect('fieldType')
+            ->leftJoin('form.fieldType', 'fieldType')
+            ->andWhere($qb->expr()->eq('form.name', ':name'))
+            ->setParameter('name', $name);
+
+        $form = $qb->getQuery()->getOneOrNullResult();
+
+        return $form instanceof Form ? $form : null;
     }
 }

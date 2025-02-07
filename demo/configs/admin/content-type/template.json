@@ -202,7 +202,8 @@
         "versionTags": [],
         "versionOptions": {
             "dates_read_only": true,
-            "dates_interval_one_day": false
+            "dates_interval_one_day": false,
+            "not_blank_new_version": false
         },
         "versionFields": {
             "date_from": null,
@@ -221,6 +222,7 @@
             "show_link_search": "not-defined"
         },
         "fields": {
+            "display": null,
             "label": "name",
             "color": null,
             "sort": null,
@@ -232,6 +234,7 @@
         },
         "settings": {
             "tasks_enabled": false,
+            "tasks_titles": [],
             "hide_revision_sidebar": false
         }
     },

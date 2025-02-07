@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Controller;
 
 use EMS\CommonBundle\Service\ElasticaService;
@@ -18,7 +20,7 @@ use function Symfony\Component\Translation\t;
 
 class TwigElementsController extends AbstractController
 {
-    final public const ASSET_EXTRACTOR_STATUS_CACHE_ID = 'status.asset_extractor.result';
+    final public const string ASSET_EXTRACTOR_STATUS_CACHE_ID = 'status.asset_extractor.result';
 
     public function __construct(
         private readonly AssetExtractorService $assetExtractorService,
@@ -27,11 +29,11 @@ class TwigElementsController extends AbstractController
         private readonly JobService $jobService,
         private readonly DashboardManager $dashboardManager,
         private readonly ContentTypeService $contentTypeService,
-        private readonly string $templateNamespace)
-    {
+        private readonly string $templateNamespace
+    ) {
     }
 
-    public function sideMenuAction(): Response
+    public function sideMenu(): Response
     {
         $status = $this->elasticaService->getHealthStatus();
         if ('green' === $status) {
@@ -56,7 +58,7 @@ class TwigElementsController extends AbstractController
         );
     }
 
-    public function jobsAction(string $username): Response
+    public function jobs(string $username): Response
     {
         return $this->render(
             "@$this->templateNamespace/elements/jobs-list.html.twig",

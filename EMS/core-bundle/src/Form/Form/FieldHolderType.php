@@ -16,19 +16,23 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints\Callback;
 use Symfony\Component\Validator\Context\ExecutionContextInterface;
 
+/**
+ * @extends AbstractType<mixed>
+ */
 class FieldHolderType extends AbstractType
 {
     public function __construct(
         private readonly FormManager $formManager,
         protected FormRegistryInterface $formRegistry,
-        protected DataService $dataService)
-    {
+        protected DataService $dataService
+    ) {
     }
 
     /**
-     * @param FormBuilderInterface<FormBuilderInterface> $builder
-     * @param array<string, mixed>                       $options
+     * @param FormBuilderInterface<mixed> $builder
+     * @param array<string, mixed>        $options
      */
+    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         if (!\is_string($options['form_name'])) {
@@ -39,7 +43,7 @@ class FieldHolderType extends AbstractType
             'metadata' => $form->getFieldType(),
             'label' => false,
             'constraints' => [
-                new Callback([$this, 'validate']),
+                new Callback($this->validate(...)),
             ],
         ]);
 
@@ -48,6 +52,7 @@ class FieldHolderType extends AbstractType
             ->addModelTransformer(new FormModelTransformer($form->getFieldType(), $this->formRegistry));
     }
 
+    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults(['form_name' => null]);

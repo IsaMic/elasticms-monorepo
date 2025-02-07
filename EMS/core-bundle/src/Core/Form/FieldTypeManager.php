@@ -15,9 +15,10 @@ use Symfony\Component\Form\FormRegistryInterface;
 
 class FieldTypeManager
 {
-    public function __construct(private readonly LoggerInterface $logger,
-                                private readonly FormRegistryInterface $formRegistry)
-    {
+    public function __construct(
+        private readonly LoggerInterface $logger,
+        private readonly FormRegistryInterface $formRegistry
+    ) {
     }
 
     /**
@@ -62,9 +63,6 @@ class FieldTypeManager
                     $fieldTypeNameOrServiceName = $formArray['ems:internal:add:field:class'];
                     $fieldName = $formArray['ems:internal:add:field:name'];
                     $dataFieldType = $this->getDataFieldType($fieldTypeNameOrServiceName);
-                    if (!$dataFieldType instanceof DataFieldType) {
-                        throw new \RuntimeException('Unexpected DataFieldType object');
-                    }
                     $child = new FieldType();
                     $child->setName($fieldName);
                     $child->setType($fieldTypeNameOrServiceName);
@@ -193,7 +191,7 @@ class FieldTypeManager
                 if (!$child->getDeleted()) {
                     $out = $this->duplicateField($formArray['ems_'.$child->getName()], $child);
                     if (false !== $out) {
-                        if (\is_string($out) && 'first' == \substr($out, 0, 5)) {
+                        if (\is_string($out) && \str_starts_with($out, 'first')) {
                             return \substr($out, 5);
                         }
 
@@ -241,17 +239,25 @@ class FieldTypeManager
         if (\array_key_exists('reorder', $formArray)) {
             /** @var string[] $keys */
             $keys = \array_keys($formArray);
+            $fields = [];
             foreach ($fieldType->getChildren() as $child) {
-                if (!$child instanceof FieldType) {
-                    throw new \RuntimeException('Unexpected FieldType object');
+                $fields[] = $child;
+            }
+            \usort($fields, function (FieldType $a, FieldType $b) use ($keys) {
+                $orderA = \array_search('ems_'.$a->getName(), $keys, true);
+                $orderB = \array_search('ems_'.$b->getName(), $keys, true);
+                if (!\is_int($orderA)) {
+                    $orderA = $a->getOrderKey();
                 }
-                if (!$child->getDeleted()) {
-                    $order = \array_search('ems_'.$child->getName(), $keys, true);
-                    if (false === $order || !\is_int($order)) {
-                        continue;
-                    }
-                    $child->setOrderKey($order);
+                if (!\is_int($orderB)) {
+                    $orderB = $b->getOrderKey();
                 }
+
+                return $orderA <=> $orderB;
+            });
+            $fieldType->getChildren()->clear();
+            foreach ($fields as $field) {
+                $fieldType->getChildren()->add($field);
             }
             $this->logger->notice('log.contenttype.field.reordered', [
                 'field_name' => $fieldType->getName(),

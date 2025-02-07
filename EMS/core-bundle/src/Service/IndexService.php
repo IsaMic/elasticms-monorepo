@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Service;
 
 use Elastica\Exception\ResponseException;
@@ -13,12 +15,12 @@ use EMS\CoreBundle\Entity\Environment;
 use EMS\CoreBundle\Entity\Revision;
 use EMS\CoreBundle\Exception\NotFoundException;
 
-final class IndexService
+final readonly class IndexService
 {
     public function __construct(
-        private readonly AliasService $aliasService,
-        private readonly Client $client,
-        private readonly ContentTypeService $contentTypeService
+        private AliasService $aliasService,
+        private Client $client,
+        private ContentTypeService $contentTypeService,
     ) {
     }
 
@@ -51,7 +53,7 @@ final class IndexService
         } catch (ResponseException $e) {
             match ($e->getResponse()->getStatus()) {
                 404 => throw NotFoundException::index($indexName),
-                default => throw $e
+                default => throw $e,
             };
         }
     }
@@ -95,7 +97,7 @@ final class IndexService
         $result = $this->client->requestEndpoint($endpoint)->getData();
 
         $ouuid = null;
-        if (\is_array($result) && \intval($result['_shards']['successful'] ?? 0) > 0) {
+        if (\is_array($result) && (int) ($result['_shards']['successful'] ?? 0) > 0) {
             $ouuid = $result['_id'];
         }
 

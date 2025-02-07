@@ -1,9 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Form\Subform;
 
 use EMS\CoreBundle\Entity\Form\SearchFilter;
 use EMS\CoreBundle\Entity\SearchFieldOption;
+use EMS\Helpers\Standard\Json;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;
@@ -12,12 +15,16 @@ use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
+/**
+ * @extends AbstractType<mixed>
+ */
 class SearchFilterType extends AbstractType
 {
     /**
-     * @param FormBuilderInterface<FormBuilderInterface> $builder
-     * @param array<string, mixed>                       $options
+     * @param FormBuilderInterface<mixed> $builder
+     * @param array<string, mixed>        $options
      */
+    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         if ($options['is_super'] || empty($options['searchFields'])) {
@@ -33,8 +40,8 @@ class SearchFilterType extends AbstractType
                     $searchFieldOption = $options['searchFields'][$key];
 
                     return [
-                        'data-content-types' => \json_encode($searchFieldOption->getContentTypes(), JSON_THROW_ON_ERROR),
-                        'data-operators' => \json_encode($searchFieldOption->getOperators(), JSON_THROW_ON_ERROR),
+                        'data-content-types' => Json::encode($searchFieldOption->getContentTypes()),
+                        'data-operators' => Json::encode($searchFieldOption->getOperators()),
                     ];
                 },
             ]);
@@ -75,6 +82,7 @@ class SearchFilterType extends AbstractType
         ]);
     }
 
+    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
@@ -85,6 +93,7 @@ class SearchFilterType extends AbstractType
         ]);
     }
 
+    #[\Override]
     public function getBlockPrefix(): string
     {
         return 'search_filter';

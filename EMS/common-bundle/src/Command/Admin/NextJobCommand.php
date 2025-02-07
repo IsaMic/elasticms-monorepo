@@ -8,17 +8,22 @@ use EMS\CommonBundle\Commands;
 use EMS\CommonBundle\Common\Admin\AdminHelper;
 use EMS\CommonBundle\Common\Command\AbstractCommand;
 use EMS\CommonBundle\Common\Job\JobManager;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Logger\ConsoleLogger;
 use Symfony\Component\Console\Output\OutputInterface;
 
+#[AsCommand(
+    name: Commands::ADMIN_NEXT_JOB,
+    description: 'Contact the admin to check if a job is planned for the given tag and run it locally.',
+    hidden: false
+)]
 class NextJobCommand extends AbstractCommand
 {
-    public const TAG_ARGUMENT = 'tag';
-    public const SILENT_OPTION = 'silent';
-    protected static $defaultName = Commands::ADMIN_NEXT_JOB;
+    final public const string TAG_ARGUMENT = 'tag';
+    final public const string SILENT_OPTION = 'silent';
     private string $tag;
     private bool $silent;
 
@@ -27,14 +32,15 @@ class NextJobCommand extends AbstractCommand
         parent::__construct();
     }
 
+    #[\Override]
     protected function configure(): void
     {
         parent::configure();
-        $this->setDescription('Contact the admin to check if a job is planned for the given tag and run it locally');
         $this->addArgument(self::TAG_ARGUMENT, InputArgument::REQUIRED, 'Tag that identifies the scheduled jobs');
         $this->addOption(self::SILENT_OPTION, null, InputOption::VALUE_NONE, 'Dont echo outputs in the console (only in the admin job logs)');
     }
 
+    #[\Override]
     public function initialize(InputInterface $input, OutputInterface $output): void
     {
         parent::initialize($input, $output);
@@ -43,6 +49,7 @@ class NextJobCommand extends AbstractCommand
         $this->silent = $this->getOptionBool(self::SILENT_OPTION);
     }
 
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $job = $this->adminHelper->getCoreApi()->admin()->getNextJob($this->tag);

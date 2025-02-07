@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Form\Field;
 
 use EMS\CoreBundle\Service\ObjectChoiceCacheService;
@@ -15,14 +17,12 @@ class ObjectChoiceLoader implements ChoiceLoaderInterface
         bool $loadAll,
         bool $circleOnly,
         bool $withWarning,
-        ?string $querySearchName
+        ?string $querySearchName,
     ) {
         $this->objectChoiceList = new ObjectChoiceList($objectChoiceCacheService, $types, $loadAll, $circleOnly, $withWarning, $querySearchName);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function loadChoiceList($value = null): ObjectChoiceList
     {
         return $this->objectChoiceList;
@@ -37,12 +37,11 @@ class ObjectChoiceLoader implements ChoiceLoaderInterface
     }
 
     /**
-     * {@inheritDoc}
-     *
      * @param array<mixed> $values
      *
      * @return array<mixed>
      */
+    #[\Override]
     public function loadChoicesForValues(array $values, $value = null): array
     {
         $this->objectChoiceList->loadChoices($values);
@@ -51,12 +50,11 @@ class ObjectChoiceLoader implements ChoiceLoaderInterface
     }
 
     /**
-     * {@inheritDoc}
-     *
      * @param array<mixed> $choices
      *
      * @return array<mixed>
      */
+    #[\Override]
     public function loadValuesForChoices(array $choices, $value = null): array
     {
         $this->objectChoiceList->loadChoices($choices);

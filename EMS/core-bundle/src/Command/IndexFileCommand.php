@@ -1,19 +1,26 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Command;
 
 use Doctrine\Bundle\DoctrineBundle\Registry;
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Platforms\MySQLPlatform;
+use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Doctrine\ORM\EntityManager;
 use EMS\CommonBundle\Common\Command\AbstractCommand;
 use EMS\CommonBundle\Helper\EmsFields;
+use EMS\CoreBundle\Commands;
 use EMS\CoreBundle\Entity\Revision;
 use EMS\CoreBundle\Repository\RevisionRepository;
 use EMS\CoreBundle\Service\AssetExtractorService;
 use EMS\CoreBundle\Service\ContentTypeService;
 use EMS\CoreBundle\Service\FileService;
+use EMS\Helpers\File\File;
 use EMS\Helpers\File\TempFile;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Input\InputArgument;
@@ -22,11 +29,16 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\ConfirmationQuestion;
 
+#[AsCommand(
+    name: Commands::REVISIONS_INDEX_FILE_FIELDS,
+    description: 'Migrate an ingested file field from an elasticsearch index.',
+    hidden: false,
+    aliases: ['ems:revisions:index-file-fields']
+)]
 class IndexFileCommand extends AbstractCommand
 {
-    protected static $defaultName = 'ems:revisions:index-file-fields';
     /** @var string */
-    private const SYSTEM_USERNAME = 'SYSTEM_FILE_INDEXER';
+    private const string SYSTEM_USERNAME = 'SYSTEM_FILE_INDEXER';
     /** @var string */
     protected $databaseName;
     /** @var string */
@@ -37,9 +49,10 @@ class IndexFileCommand extends AbstractCommand
         parent::__construct();
     }
 
+    #[\Override]
     protected function configure(): void
     {
-        $this->setDescription('Migrate an ingested file field from an elasticsearch index')
+        $this
             ->addArgument(
                 'contentType',
                 InputArgument::REQUIRED,
@@ -64,6 +77,7 @@ class IndexFileCommand extends AbstractCommand
             );
     }
 
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $output->writeln('Please do a backup of your DB first!');
@@ -132,7 +146,7 @@ class IndexFileCommand extends AbstractCommand
                     $date->modify('+5 minutes');
                     $revision->setLockUntil($date);
                     $em->persist($revision);
-                    $em->flush($revision);
+                    $em->flush();
                 }
                 unset($revision);
 
@@ -202,7 +216,7 @@ class IndexFileCommand extends AbstractCommand
                     if (\sha1($fileContent) === $rawData[EmsFields::CONTENT_FILE_HASH_FIELD]) {
                         $tempFile = TempFile::create();
                         $file = $tempFile->path;
-                        \file_put_contents($file, $fileContent);
+                        File::putContents($file, $fileContent);
                         try {
                             $this->fileService->uploadFile($rawData[EmsFields::CONTENT_FILE_NAME_FIELD] ?? 'filename.bin', $rawData[EmsFields::CONTENT_MIME_TYPE_FIELD] ?? 'application/bin', $file, self::SYSTEM_USERNAME);
                             $output->writeln(\sprintf('File restored from DB: %s', $rawData[EmsFields::CONTENT_FILE_HASH_FIELD]));
@@ -268,9 +282,11 @@ class IndexFileCommand extends AbstractCommand
         }
         $dbName = $connection->getDatabase();
 
-        if (\in_array($connection->getDriver()->getDatabasePlatform()->getName(), ['postgresql'])) {
+        $platform = $connection->getDatabasePlatform();
+
+        if ($platform instanceof PostgreSQLPlatform) {
             $query = "SELECT pg_size_pretty(pg_database_size('$dbName')) AS size";
-        } elseif (\in_array($connection->getDriver()->getDatabasePlatform()->getName(), ['mysql'])) {
+        } elseif ($platform instanceof MySQLPlatform) {
             $query = "SELECT SUM(data_length + index_length)/1024/1024 AS size FROM information_schema.TABLES WHERE table_schema='$dbName' GROUP BY table_schema";
         } else {
             throw new \RuntimeException('Not supported driver');

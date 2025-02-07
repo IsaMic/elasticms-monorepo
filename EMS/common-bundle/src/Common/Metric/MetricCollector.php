@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace EMS\CommonBundle\Common\Metric;
 
 use EMS\CommonBundle\Common\Cache\Cache;
-use EMS\CommonBundle\Common\Standard\DateTime;
+use EMS\Helpers\Standard\DateTime;
 use Prometheus\CollectorRegistry;
 use Prometheus\MetricFamilySamples;
 use Prometheus\Storage\Adapter;
@@ -14,12 +14,12 @@ use Prometheus\Storage\InMemory;
 use Prometheus\Storage\Redis;
 use Psr\Cache\CacheItemInterface;
 
-final class MetricCollector
+class MetricCollector
 {
     private ?CollectorRegistry $collectorRegistry = null;
     private ?Adapter $storageAdapter = null;
 
-    private const CACHE_VALIDITY = 'ems_metrics_validity';
+    private const string CACHE_VALIDITY = 'ems_metrics_validity';
 
     /**
      * @param iterable<MetricCollectorInterface> $collectors

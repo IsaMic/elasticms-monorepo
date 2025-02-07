@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Form\DataField;
 
 use EMS\CommonBundle\Helper\EmsFields;
@@ -27,14 +29,12 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
  */
 class AssetFieldType extends DataFieldType
 {
-    /**
-     * {@inheritDoc}
-     */
     public function __construct(AuthorizationCheckerInterface $authorizationChecker, FormRegistryInterface $formRegistry, ElasticsearchService $elasticsearchService, private readonly FileService $fileService)
     {
         parent::__construct($authorizationChecker, $formRegistry, $elasticsearchService);
     }
 
+    #[\Override]
     public static function getIcon(): string
     {
         return 'fa fa-file-o';
@@ -46,11 +46,11 @@ class AssetFieldType extends DataFieldType
     public static function loadFromDb(array &$data): void
     {
         foreach ([
-                     EmsFields::CONTENT_FILE_HASH_FIELD_ => EmsFields::CONTENT_FILE_HASH_FIELD,
-                     EmsFields::CONTENT_FILE_NAME_FIELD_ => EmsFields::CONTENT_FILE_NAME_FIELD,
-                     EmsFields::CONTENT_FILE_SIZE_FIELD_ => EmsFields::CONTENT_FILE_SIZE_FIELD,
-                     EmsFields::CONTENT_MIME_TYPE_FIELD_ => EmsFields::CONTENT_MIME_TYPE_FIELD,
-                 ] as $newField => $oldField) {
+            EmsFields::CONTENT_FILE_HASH_FIELD_ => EmsFields::CONTENT_FILE_HASH_FIELD,
+            EmsFields::CONTENT_FILE_NAME_FIELD_ => EmsFields::CONTENT_FILE_NAME_FIELD,
+            EmsFields::CONTENT_FILE_SIZE_FIELD_ => EmsFields::CONTENT_FILE_SIZE_FIELD,
+            EmsFields::CONTENT_MIME_TYPE_FIELD_ => EmsFields::CONTENT_MIME_TYPE_FIELD,
+        ] as $newField => $oldField) {
             if (!isset($data[$newField]) && isset($data[$oldField])) {
                 $data[$newField] = $data[$oldField];
             }
@@ -76,13 +76,13 @@ class AssetFieldType extends DataFieldType
      */
     public static function loadFromForm(array &$data, string $algo): void
     {
-        $data[EmsFields::CONTENT_FILE_ALGO_FIELD_] = $data[EmsFields::CONTENT_FILE_ALGO_FIELD_] ?? $algo;
+        $data[EmsFields::CONTENT_FILE_ALGO_FIELD_] ??= $algo;
         foreach ([
-                     EmsFields::CONTENT_FILE_HASH_FIELD_ => EmsFields::CONTENT_FILE_HASH_FIELD,
-                     EmsFields::CONTENT_FILE_NAME_FIELD_ => EmsFields::CONTENT_FILE_NAME_FIELD,
-                     EmsFields::CONTENT_FILE_SIZE_FIELD_ => EmsFields::CONTENT_FILE_SIZE_FIELD,
-                     EmsFields::CONTENT_MIME_TYPE_FIELD_ => EmsFields::CONTENT_MIME_TYPE_FIELD,
-                 ] as $newField => $oldField) {
+            EmsFields::CONTENT_FILE_HASH_FIELD_ => EmsFields::CONTENT_FILE_HASH_FIELD,
+            EmsFields::CONTENT_FILE_NAME_FIELD_ => EmsFields::CONTENT_FILE_NAME_FIELD,
+            EmsFields::CONTENT_FILE_SIZE_FIELD_ => EmsFields::CONTENT_FILE_SIZE_FIELD,
+            EmsFields::CONTENT_MIME_TYPE_FIELD_ => EmsFields::CONTENT_MIME_TYPE_FIELD,
+        ] as $newField => $oldField) {
             if (!isset($data[$oldField])) {
                 continue;
             }
@@ -91,19 +91,19 @@ class AssetFieldType extends DataFieldType
         $data = \array_filter($data, fn ($value) => null !== $value);
     }
 
+    #[\Override]
     public function getLabel(): string
     {
         return 'File field';
     }
 
+    #[\Override]
     public function getParent(): string
     {
         return AssetType::class;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function buildOptionsForm(FormBuilderInterface $builder, array $options): void
     {
         parent::buildOptionsForm($builder, $options);
@@ -116,13 +116,14 @@ class AssetFieldType extends DataFieldType
             'required' => false,
         ])
         ->add('icon', IconPickerType::class, [
-                'required' => false,
+            'required' => false,
         ])
         ->add('imageAssetConfigIdentifier', TextType::class, [
-                'required' => false,
+            'required' => false,
         ]);
     }
 
+    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         /* set the default option value for this kind of compound field */
@@ -133,50 +134,47 @@ class AssetFieldType extends DataFieldType
     }
 
     /**
-     * @param FormInterface<FormInterface> $form
-     * @param array<string, mixed>         $options
+     * @param FormInterface<mixed> $form
+     * @param array<string, mixed> $options
      */
+    #[\Override]
     public function buildView(FormView $view, FormInterface $form, array $options): void
     {
         parent::buildView($view, $form, $options);
         $view->vars['multiple'] = $options['multiple'];
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function generateMapping(FieldType $current): array
     {
         $mapping = parent::generateMapping($current);
 
         return [
             $current->getName() => \array_merge([
-                    'type' => 'nested',
-                    'properties' => [
-                        EmsFields::CONTENT_MIME_TYPE_FIELD => $this->elasticsearchService->getKeywordMapping(),
-                        EmsFields::CONTENT_MIME_TYPE_FIELD_ => $this->elasticsearchService->getKeywordMapping(),
-                        EmsFields::CONTENT_FILE_HASH_FIELD => $this->elasticsearchService->getKeywordMapping(),
-                        EmsFields::CONTENT_FILE_HASH_FIELD_ => $this->elasticsearchService->getKeywordMapping(),
-                        EmsFields::CONTENT_FILE_NAME_FIELD => $this->elasticsearchService->getIndexedStringMapping(),
-                        EmsFields::CONTENT_FILE_NAME_FIELD_ => $this->elasticsearchService->getIndexedStringMapping(),
-                        EmsFields::CONTENT_FILE_SIZE_FIELD => $this->elasticsearchService->getLongMapping(),
-                        EmsFields::CONTENT_FILE_SIZE_FIELD_ => $this->elasticsearchService->getLongMapping(),
-                        EmsFields::CONTENT_IMAGE_RESIZED_HASH_FIELD => $this->elasticsearchService->getKeywordMapping(),
-                        EmsFields::CONTENT_FILE_TITLE => $mapping[$current->getName()],
-                    ],
+                'type' => 'nested',
+                'properties' => [
+                    EmsFields::CONTENT_MIME_TYPE_FIELD => $this->elasticsearchService->getKeywordMapping(),
+                    EmsFields::CONTENT_MIME_TYPE_FIELD_ => $this->elasticsearchService->getKeywordMapping(),
+                    EmsFields::CONTENT_FILE_HASH_FIELD => $this->elasticsearchService->getKeywordMapping(),
+                    EmsFields::CONTENT_FILE_HASH_FIELD_ => $this->elasticsearchService->getKeywordMapping(),
+                    EmsFields::CONTENT_FILE_NAME_FIELD => $this->elasticsearchService->getIndexedStringMapping(),
+                    EmsFields::CONTENT_FILE_NAME_FIELD_ => $this->elasticsearchService->getIndexedStringMapping(),
+                    EmsFields::CONTENT_FILE_SIZE_FIELD => $this->elasticsearchService->getLongMapping(),
+                    EmsFields::CONTENT_FILE_SIZE_FIELD_ => $this->elasticsearchService->getLongMapping(),
+                    EmsFields::CONTENT_IMAGE_RESIZED_HASH_FIELD => $this->elasticsearchService->getKeywordMapping(),
+                    EmsFields::CONTENT_FILE_TITLE => $mapping[$current->getName()],
+                ],
             ], \array_filter($current->getMappingOptions())),
         ];
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function reverseViewTransform($data, FieldType $fieldType): DataField
     {
         $multiple = true === $fieldType->getDisplayOption('multiple', false);
         if (\is_array($data) && $multiple) {
             foreach ($data as &$file) {
-                if (!\is_array($data)) {
+                if (!\is_array($file)) {
                     throw new \RuntimeException('Unexpected non array item');
                 }
                 self::loadFromForm($file, $this->fileService->getAlgo());
@@ -193,7 +191,7 @@ class AssetFieldType extends DataFieldType
     private function testDataField(DataField $dataField): void
     {
         $fieldType = $dataField->getFieldType();
-        if (null === $fieldType || !$fieldType instanceof FieldType) {
+        if (null === $fieldType) {
             throw new \RuntimeException('Unexpected fieldType type');
         }
 
@@ -243,13 +241,11 @@ class AssetFieldType extends DataFieldType
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function viewTransform(DataField $dataField)
     {
         $fieldType = $dataField->getFieldType();
-        if (null === $fieldType || !$fieldType instanceof FieldType) {
+        if (null === $fieldType) {
             throw new \RuntimeException('Unexpected fieldType type');
         }
 
@@ -261,9 +257,7 @@ class AssetFieldType extends DataFieldType
         return $out;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function modelTransform($data, FieldType $fieldType): DataField
     {
         $out = parent::reverseViewTransform($data, $fieldType);

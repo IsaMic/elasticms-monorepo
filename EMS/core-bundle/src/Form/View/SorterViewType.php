@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Form\View;
 
 use EMS\CommonBundle\Elasticsearch\Response\Response as EmsResponse;
@@ -27,7 +29,7 @@ use Twig\Environment;
 
 class SorterViewType extends ViewType
 {
-    final public const SEARCH_SIZE = 100;
+    final public const int SEARCH_SIZE = 100;
 
     public function __construct(
         FormFactory $formFactory,
@@ -37,25 +39,28 @@ class SorterViewType extends ViewType
         LoggerInterface $logger,
         protected DataService $dataService,
         protected RouterInterface $router,
-        private readonly string $templateNamespace
+        private readonly string $templateNamespace,
     ) {
         parent::__construct($formFactory, $twig, $logger, $templateNamespace);
     }
 
+    #[\Override]
     public function getLabel(): string
     {
         return 'Sorter: order a sub set (based on a ES query)';
     }
 
+    #[\Override]
     public function getName(): string
     {
         return 'Sorter';
     }
 
     /**
-     * @param FormBuilderInterface<FormBuilderInterface> $builder
-     * @param array<string, mixed>                       $options
+     * @param FormBuilderInterface<mixed> $builder
+     * @param array<string, mixed>        $options
      */
+    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         parent::buildForm($builder, $options);
@@ -72,6 +77,7 @@ class SorterViewType extends ViewType
         ->add('body', CodeEditorType::class, [
             'label' => 'The Elasticsearch body query [JSON Twig]',
             'attr' => [],
+
             'slug' => 'sorter_query',
         ])
         ->add('size', IntegerType::class, [
@@ -88,16 +94,19 @@ class SorterViewType extends ViewType
             ], ]);
     }
 
+    #[\Override]
     public function getBlockPrefix(): string
     {
         return 'sorter_view';
     }
 
+    #[\Override]
     public function getParameters(View $view, FormFactoryInterface $formFactory, Request $request): array
     {
         return [];
     }
 
+    #[\Override]
     public function generateResponse(View $view, Request $request): Response
     {
         $options = $view->getOptions();
@@ -119,7 +128,10 @@ class SorterViewType extends ViewType
         }
 
         $body['sort'] = [
-            $options['field'] => ['order' => 'asc', 'missing' => '_last'],
+            $options['field'] => [
+                'order' => 'asc',
+                'missing' => '_last',
+            ],
         ];
 
         $searchQuery = [
@@ -158,10 +170,10 @@ class SorterViewType extends ViewType
             $items = $reorder['items'];
 
             foreach ($items as $itemKey => $value) {
-                if (!\str_starts_with($itemKey, ItemsType::PREFIX)) {
+                if (!\str_starts_with((string) $itemKey, ItemsType::PREFIX)) {
                     throw new \RuntimeException('Invalid item key: '.$itemKey);
                 }
-                $itemKey = \substr($itemKey, \strlen(ItemsType::PREFIX));
+                $itemKey = \substr((string) $itemKey, \strlen(ItemsType::PREFIX));
                 try {
                     $revision = $this->dataService->initNewDraft($view->getContentType()->getName(), $itemKey);
                     $data = $revision->getRawData();

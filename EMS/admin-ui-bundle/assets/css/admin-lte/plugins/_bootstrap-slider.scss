@@ -1,6 +1,6 @@
-//
 // Plugin: Bootstrap Slider
-//
+
+@use "sass:color";
 
 // Tooltip fix
 .slider .tooltip.in {
@@ -12,6 +12,7 @@
   &.slider-vertical {
     height: 100%;
   }
+
   &.slider-horizontal {
     width: 100%;
   }
@@ -34,9 +35,9 @@
   }
 }
 
-@include dark-mode () {
+@include dark-mode {
   .slider-track {
-    background-color: lighten($dark, 10%);
+    background-color: color.adjust($dark, $lightness: 10%);
     background-image: none;
   }
 

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Twig;
 
 use Caxy\HtmlDiff\HtmlDiff;
@@ -17,6 +19,7 @@ use EMS\CommonBundle\Storage\Processor\Config;
 use EMS\CommonBundle\Storage\Service\StorageInterface;
 use EMS\CommonBundle\Twig\AssetRuntime;
 use EMS\CommonBundle\Twig\RequestRuntime;
+use EMS\CommonBundle\Twig\TextRuntime;
 use EMS\CoreBundle\Core\ContentType\ContentTypeFields;
 use EMS\CoreBundle\Core\ContentType\ContentTypeRoles;
 use EMS\CoreBundle\Core\Mail\MailerService;
@@ -41,6 +44,7 @@ use EMS\CoreBundle\Service\Revision\RevisionService;
 use EMS\CoreBundle\Service\SearchService;
 use EMS\CoreBundle\Service\UserService;
 use EMS\Helpers\Standard\Color;
+use EMS\Helpers\Standard\Json;
 use EMS\Helpers\Standard\Type;
 use Psr\Log\LoggerInterface;
 use Ramsey\Uuid\Uuid;
@@ -78,32 +82,30 @@ class AppExtension extends AbstractExtension
         private readonly ElasticaService $elasticaService,
         private readonly SearchService $searchService,
         private readonly AssetRuntime $assetRuntime,
-        protected array $assetConfig
+        protected array $assetConfig,
     ) {
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function getFunctions(): array
     {
         return [
             new TwigFunction('emsco_cant_be_finalized', $this->cantBeFinalized(...)),
-            new TwigFunction('sequence', $this->getSequenceNextValue(...)),
-            new TwigFunction('diff_text', $this->diffText(...), ['is_safe' => ['html']]),
-            new TwigFunction('diff', $this->diff(...), ['is_safe' => ['html']]),
-            new TwigFunction('diff_html', $this->diffHtml(...), ['is_safe' => ['html']]),
-            new TwigFunction('diff_icon', $this->diffIcon(...), ['is_safe' => ['html']]),
-            new TwigFunction('diff_raw', $this->diffRaw(...), ['is_safe' => ['html']]),
-            new TwigFunction('diff_color', $this->diffColor(...), ['is_safe' => ['html']]),
-            new TwigFunction('diff_boolean', $this->diffBoolean(...), ['is_safe' => ['html']]),
-            new TwigFunction('diff_choice', $this->diffChoice(...), ['is_safe' => ['html']]),
-            new TwigFunction('diff_data_link', $this->diffDataLink(...), ['is_safe' => ['html']]),
-            new TwigFunction('diff_date', $this->diffDate(...), ['is_safe' => ['html']]),
-            new TwigFunction('diff_time', $this->diffTime(...), ['is_safe' => ['html']]),
-            new TwigFunction('is_super', $this->isSuper(...)),
+            new TwigFunction('emsco_sequence', $this->getSequenceNextValue(...)),
+            new TwigFunction('emsco_diff_text', $this->diffText(...), ['is_safe' => ['html']]),
+            new TwigFunction('emsco_diff', $this->diff(...), ['is_safe' => ['html']]),
+            new TwigFunction('emsco_diff_html', $this->diffHtml(...), ['is_safe' => ['html']]),
+            new TwigFunction('emsco_diff_icon', $this->diffIcon(...), ['is_safe' => ['html']]),
+            new TwigFunction('emsco_diff_raw', $this->diffRaw(...), ['is_safe' => ['html']]),
+            new TwigFunction('emsco_diff_color', $this->diffColor(...), ['is_safe' => ['html']]),
+            new TwigFunction('emsco_diff_boolean', $this->diffBoolean(...), ['is_safe' => ['html']]),
+            new TwigFunction('emsco_diff_choice', $this->diffChoice(...), ['is_safe' => ['html']]),
+            new TwigFunction('emsco_diff_data_link', $this->diffDataLink(...), ['is_safe' => ['html']]),
+            new TwigFunction('emsco_diff_date', $this->diffDate(...), ['is_safe' => ['html']]),
+            new TwigFunction('emsco_diff_time', $this->diffTime(...), ['is_safe' => ['html']]),
+            new TwigFunction('emsco_is_super', $this->isSuper(...)),
             new TwigFunction('emsco_asset_path', $this->assetPath(...), ['is_safe' => ['html']]),
-            new TwigFunction('call_user_func', $this->callUserFunc(...)),
+            new TwigFunction('emsco_call_user_func', $this->callUserFunc(...)),
             new TwigFunction('emsco_generate_email', $this->generateEmailMessage(...)),
             new TwigFunction('emsco_send_email', $this->sendEmail(...)),
             new TwigFunction('emsco_users_enabled', [UserRuntime::class, 'getUsersEnabled']),
@@ -129,64 +131,94 @@ class AppExtension extends AbstractExtension
             new TwigFunction('emsco_save_contents', $this->saveContents(...)),
             new TwigFunction('emsco_notice', $this->notice(...)),
             new TwigFunction('emsco_warning', $this->warning(...)),
+            new TwigFunction('emsco_get_revision_id', [RevisionRuntime::class, 'getRevisionId']),
+            new TwigFunction('emsco_search', $this->search(...)),
+            new TwigFunction('get_default_environments', [EnvironmentRuntime::class, 'getDefaultEnvironmentNames'], [
+                'deprecation_info' => new DeprecatedCallableInfo('elasticms/core-bundle', '5.0.0', 'emsco_get_default_environment_names'),
+            ]),
             new TwigFunction('emsco_uuid', [Uuid::class, 'uuid4'], [
                 'deprecation_info' => new DeprecatedCallableInfo('elasticms/core-bundle', '5.4.1', 'ems_uuid', 'elasticms/common-bundle', '5.4.1'),
             ]),
             new TwigFunction('cant_be_finalized', $this->cantBeFinalized(...), [
                 'deprecation_info' => new DeprecatedCallableInfo('elasticms/core-bundle', '5.7.0', 'emsco_cant_be_finalized'),
             ]),
-            new TwigFunction('get_default_environments', [EnvironmentRuntime::class, 'getDefaultEnvironmentNames'], [
-                'deprecation_info' => new DeprecatedCallableInfo('elasticms/core-bundle', '5.0.0', 'emsco_get_default_environment_names'),
-            ]),
             new TwigFunction('get_content_types', [ContentTypeRuntime::class, 'getContentTypes'], [
                 'deprecation_info' => new DeprecatedCallableInfo('elasticms/core-bundle', '5.19.0', 'emsco_get_content_types'),
+            ]),
+            new TwigFunction('sequence', $this->getSequenceNextValue(...), [
+                'deprecation_info' => new DeprecatedCallableInfo('elasticms/core-bundle', '6.0.0', 'emsco_sequence'),
+            ]),
+            new TwigFunction('diff_text', $this->diffText(...), [
+                'deprecation_info' => new DeprecatedCallableInfo('elasticms/core-bundle', '6.0.0', 'emsco_diff_text'),
+            ]),
+            new TwigFunction('diff', $this->diff(...), [
+                'deprecation_info' => new DeprecatedCallableInfo('elasticms/core-bundle', '6.0.0', 'emsco_diff'),
+            ]),
+            new TwigFunction('diff_html', $this->diffHtml(...), [
+                'deprecation_info' => new DeprecatedCallableInfo('elasticms/core-bundle', '6.0.0', 'emsco_diff_html'),
+            ]),
+            new TwigFunction('diff_icon', $this->diffIcon(...), [
+                'deprecation_info' => new DeprecatedCallableInfo('elasticms/core-bundle', '6.0.0', 'emsco_diff_icon'),
+            ]),
+            new TwigFunction('diff_raw', $this->diffRaw(...), [
+                'deprecation_info' => new DeprecatedCallableInfo('elasticms/core-bundle', '6.0.0', 'emsco_diff_raw'),
+            ]),
+            new TwigFunction('diff_color', $this->diffColor(...), [
+                'deprecation_info' => new DeprecatedCallableInfo('elasticms/core-bundle', '6.0.0', 'emsco_diff_color'),
+            ]),
+            new TwigFunction('diff_boolean', $this->diffBoolean(...), [
+                'deprecation_info' => new DeprecatedCallableInfo('elasticms/core-bundle', '6.0.0', 'emsco_diff_boolean'),
+            ]),
+            new TwigFunction('diff_choice', $this->diffChoice(...), [
+                'deprecation_info' => new DeprecatedCallableInfo('elasticms/core-bundle', '6.0.0', 'emsco_diff_choice'),
+            ]),
+            new TwigFunction('diff_data_link', $this->diffDataLink(...), [
+                'deprecation_info' => new DeprecatedCallableInfo('elasticms/core-bundle', '6.0.0', 'emsco_diff_data_link'),
+            ]),
+            new TwigFunction('diff_date', $this->diffDate(...), [
+                'deprecation_info' => new DeprecatedCallableInfo('elasticms/core-bundle', '6.0.0', 'emsco_diff_date'),
+            ]),
+            new TwigFunction('diff_time', $this->diffTime(...), [
+                'deprecation_info' => new DeprecatedCallableInfo('elasticms/core-bundle', '6.0.0', 'emsco_diff_time'),
+            ]),
+            new TwigFunction('is_super', $this->isSuper(...), [
+                'deprecation_info' => new DeprecatedCallableInfo('elasticms/core-bundle', '6.0.0', 'emsco_is_super'),
+            ]),
+            new TwigFunction('call_user_func', $this->callUserFunc(...), [
+                'deprecation_info' => new DeprecatedCallableInfo('elasticms/core-bundle', '6.0.0', 'emsco_call_user_func'),
             ]),
         ];
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function getFilters(): array
     {
         return [
-            new TwigFilter('inArray', $this->inArray(...)),
-            new TwigFilter('firstInArray', $this->firstInArray(...)),
-            new TwigFilter('md5', $this->md5(...)),
-            new TwigFilter('convertJavaDateFormat', $this->convertJavaDateFormat(...)),
-            new TwigFilter('convertJavascriptDateFormat', $this->convertJavascriptDateFormat(...)),
-            new TwigFilter('convertJavascriptDateRangeFormat', $this->convertJavascriptDateRangeFormat(...)),
-            new TwigFilter('getTimeFieldTimeFormat', $this->getTimeFieldTimeFormat(...)),
-            new TwigFilter('soapRequest', $this->soapRequest(...)),
-            new TwigFilter('luma', $this->relativeLuminance(...)),
-            new TwigFilter('contrastratio', $this->contrastRatio(...)),
-            new TwigFilter('all_granted', $this->allGranted(...)),
-            new TwigFilter('one_granted', $this->oneGranted(...)),
-            new TwigFilter('in_my_circles', $this->inMyCircles(...)),
-            new TwigFilter('data_link', $this->dataLink(...), ['is_safe' => ['html']]),
+            new TwigFilter('emsco_convert_java_date_format', $this->convertJavaDateFormat(...)),
+            new TwigFilter('emsco_convert_javascript_date_format', $this->convertJavascriptDateFormat(...)),
+            new TwigFilter('emsco_convert_javascript_date_range_format', $this->convertJavascriptDateRangeFormat(...)),
+            new TwigFilter('emsco_time_field_time_format', $this->getTimeFieldTimeFormat(...)),
+            new TwigFilter('emsco_soap_request', $this->soapRequest(...)),
+            new TwigFilter('emsco_all_granted', $this->allGranted(...)),
+            new TwigFilter('emsco_one_granted', $this->oneGranted(...)),
+            new TwigFilter('emsco_in_my_circles', $this->inMyCircles(...)),
+            new TwigFilter('emsco_data_link', $this->dataLink(...), ['is_safe' => ['html']]),
             new TwigFilter('emsco_get_environment', [EnvironmentRuntime::class, 'getEnvironment']),
-            new TwigFilter('generate_from_template', $this->generateFromTemplate(...)),
-            new TwigFilter('objectChoiceLoader', $this->objectChoiceLoader(...)),
-            new TwigFilter('groupedObjectLoader', $this->groupedObjectLoader(...)),
-            new TwigFilter('propertyPath', $this->propertyPath(...)),
-            new TwigFilter('is_super', $this->isSuper(...)),
-            new TwigFilter('i18n', [I18nRuntime::class, 'i18n']),
-            new TwigFilter('internal_links', $this->internalLinks(...)),
-            new TwigFilter('src_path', $this->srcPath(...)),
-            new TwigFilter('get_user', $this->getUser(...)),
-            new TwigFilter('displayname', $this->displayName(...)),
-            new TwigFilter('date_difference', $this->dateDifference(...)),
-            new TwigFilter('debug', $this->debug(...)),
-            new TwigFilter('search', $this->deprecatedSearch(...)),
+            new TwigFilter('emsco_generate_from_template', $this->generateFromTemplate(...)),
+            new TwigFilter('emsco_object_choice_loader', $this->objectChoiceLoader(...)),
+            new TwigFilter('emsco_grouped_object_loader', $this->groupedObjectLoader(...)),
+            new TwigFilter('emsco_property_path', $this->propertyPath(...)),
+            new TwigFilter('emsco_i18n', [I18nRuntime::class, 'i18n']),
+            new TwigFilter('emsco_internal_links', $this->internalLinks(...)),
+            new TwigFilter('emsco_get_user', $this->getUser(...)),
+            new TwigFilter('emsco_display_name', $this->displayName(...)),
+            new TwigFilter('emsco_date_difference', $this->dateDifference(...)),
+            new TwigFilter('emsco_debug', $this->debug(...)),
             new TwigFilter('emsco_search', $this->search(...)),
-            new TwigFilter('call_user_func', $this->callUserFunc(...)),
-            new TwigFilter('merge_recursive', $this->arrayMergeRecursive(...)),
-            new TwigFilter('array_intersect', $this->arrayIntersect(...)),
-            new TwigFilter('get_string', $this->getString(...)),
-            new TwigFilter('get_file', $this->getFile(...)),
-            new TwigFilter('get_field_by_path', $this->getFieldByPath(...)),
-            new TwigFilter('json_decode', $this->jsonDecode(...)),
-            new TwigFilter('get_revision_id', [RevisionRuntime::class, 'getRevisionId']),
+            new TwigFilter('emsco_search_query', $this->searchQuery(...)),
+            new TwigFilter('emsco_call_user_func', $this->callUserFunc(...)),
+            new TwigFilter('emsco_get_string', $this->getString(...)),
+            new TwigFilter('emsco_get_field_by_path', $this->getFieldByPath(...)),
             new TwigFilter('emsco_document_info', [RevisionRuntime::class, 'getDocumentInfo']),
             new TwigFilter('emsco_documents_info', [RevisionRuntime::class, 'getDocumentsInfo']),
             new TwigFilter('emsco_display', [RevisionRuntime::class, 'display']),
@@ -197,10 +229,6 @@ class AppExtension extends AbstractExtension
             new TwigFilter('emsco_asset_meta', [DataExtractorRuntime::class, 'assetMeta']),
             new TwigFilter('emsco_get', $this->get(...)),
             new TwigFilter('emsco_get_content_type', [ContentTypeRuntime::class, 'getContentType']),
-            // deprecated
-            new TwigFilter('data', $this->data(...), [
-                'deprecation_info' => new DeprecatedCallableInfo('elasticms/core-bundle', '5.8.0', 'emsco_get'),
-            ]),
             new TwigFilter('url_generator', Encoder::webalize(...), [
                 'deprecation_info' => new DeprecatedCallableInfo('elasticms/core-bundle', '5.0.0', 'ems_slug', 'elasticms/common-bundle', '5.17.1'),
             ]),
@@ -211,11 +239,98 @@ class AppExtension extends AbstractExtension
                 'deprecation_info' => new DeprecatedCallableInfo('elasticms/core-bundle', '5.0.0', 'emsco_get_environment'),
             ]),
             new TwigFilter('get_content_type', [ContentTypeRuntime::class, 'getContentType'], [
-                'deprecation_info' => new DeprecatedCallableInfo('elasticms/core-bundle', '5.0.0', 'emsco_get_contentType'),
+                'deprecation_info' => new DeprecatedCallableInfo('elasticms/core-bundle', '5.0.0', 'emsco_get_content_type'),
             ]),
             new TwigFilter('data_label', $this->dataLabel(...), [
                 'is_safe' => ['html'],
                 'deprecation_info' => new DeprecatedCallableInfo('elasticms/core-bundle', '5.4.0', 'emsco_display'),
+            ]),
+            new TwigFilter('data', $this->data(...), [
+                'deprecation_info' => new DeprecatedCallableInfo('elasticms/core-bundle', '5.8.0', 'emsco_get'),
+            ]),
+            new TwigFilter('json_decode', [TextRuntime::class, 'jsonDecode'], [
+                'deprecation_info' => new DeprecatedCallableInfo('elasticms/core-bundle', '6.0.0', 'ems_json_decode'),
+            ]),
+            new TwigFilter('search', $this->searchQuery(...), [
+                'deprecation_info' => new DeprecatedCallableInfo('elasticms/core-bundle', '6.0.0', 'emsco_search_query'),
+            ]),
+            new TwigFilter('convertJavaDateFormat', $this->convertJavaDateFormat(...), [
+                'deprecation_info' => new DeprecatedCallableInfo('elasticms/core-bundle', '6.0.0', 'emsco_convert_java_date_format'),
+            ]),
+            new TwigFilter('convertJavascriptDateFormat', $this->convertJavascriptDateFormat(...), [
+                'deprecation_info' => new DeprecatedCallableInfo('elasticms/core-bundle', '6.0.0', 'emsco_convert_javascript_date_format'),
+            ]),
+            new TwigFilter('convertJavascriptDateRangeFormat', $this->convertJavascriptDateRangeFormat(...), [
+                'deprecation_info' => new DeprecatedCallableInfo('elasticms/core-bundle', '6.0.0', 'emsco_convert_javascript_date_range_format'),
+            ]),
+            new TwigFilter('getTimeFieldTimeFormat', $this->getTimeFieldTimeFormat(...), [
+                'deprecation_info' => new DeprecatedCallableInfo('elasticms/core-bundle', '6.0.0', 'emsco_time_field_time_format'),
+            ]),
+            new TwigFilter('soapRequest', $this->soapRequest(...), [
+                'deprecation_info' => new DeprecatedCallableInfo('elasticms/core-bundle', '6.0.0', 'emsco_soap_request'),
+            ]),
+            new TwigFilter('all_granted', $this->allGranted(...), [
+                'deprecation_info' => new DeprecatedCallableInfo('elasticms/core-bundle', '6.0.0', 'emsco_all_granted'),
+            ]),
+            new TwigFilter('one_granted', $this->oneGranted(...), [
+                'deprecation_info' => new DeprecatedCallableInfo('elasticms/core-bundle', '6.0.0', 'emsco_one_granted'),
+            ]),
+            new TwigFilter('in_my_circles', $this->inMyCircles(...), [
+                'deprecation_info' => new DeprecatedCallableInfo('elasticms/core-bundle', '6.0.0', 'emsco_in_my_circles'),
+            ]),
+            new TwigFilter('data_link', $this->dataLink(...), [
+                'deprecation_info' => new DeprecatedCallableInfo('elasticms/core-bundle', '6.0.0', 'emsco_data_link'),
+            ]),
+            new TwigFilter('is_super', $this->isSuper(...), [
+                'deprecation_info' => new DeprecatedCallableInfo('elasticms/core-bundle', '6.0.0'),
+            ]),
+            new TwigFilter('generate_from_template', $this->generateFromTemplate(...), [
+                'deprecation_info' => new DeprecatedCallableInfo('elasticms/core-bundle', '6.0.0', 'emsco_generate_from_template'),
+            ]),
+            new TwigFilter('objectChoiceLoader', $this->objectChoiceLoader(...), [
+                'deprecation_info' => new DeprecatedCallableInfo('elasticms/core-bundle', '6.0.0', 'emsco_object_choice_loader'),
+            ]),
+            new TwigFilter('groupedObjectLoader', $this->groupedObjectLoader(...), [
+                'deprecation_info' => new DeprecatedCallableInfo('elasticms/core-bundle', '6.0.0', 'emsco_grouped_object_loader'),
+            ]),
+            new TwigFilter('propertyPath', $this->propertyPath(...), [
+                'deprecation_info' => new DeprecatedCallableInfo('elasticms/core-bundle', '6.0.0', 'emsco_property_path'),
+            ]),
+            new TwigFilter('i18n', [I18nRuntime::class, 'i18n'], [
+                'deprecation_info' => new DeprecatedCallableInfo('elasticms/core-bundle', '6.0.0', 'emsco_i18n'),
+            ]),
+            new TwigFilter('internal_links', $this->internalLinks(...), [
+                'deprecation_info' => new DeprecatedCallableInfo('elasticms/core-bundle', '6.0.0', 'emsco_internal_links'),
+            ]),
+            new TwigFilter('src_path', $this->srcPath(...), [
+                'deprecation_info' => new DeprecatedCallableInfo('elasticms/core-bundle', '6.0.0'),
+            ]),
+            new TwigFilter('get_user', $this->getUser(...), [
+                'deprecation_info' => new DeprecatedCallableInfo('elasticms/core-bundle', '6.0.0', 'emsco_get_user'),
+            ]),
+            new TwigFilter('displayname', $this->displayName(...), [
+                'deprecation_info' => new DeprecatedCallableInfo('elasticms/core-bundle', '6.0.0', 'emsco_display_name'),
+            ]),
+            new TwigFilter('date_difference', $this->dateDifference(...), [
+                'deprecation_info' => new DeprecatedCallableInfo('elasticms/core-bundle', '6.0.0', 'emsco_date_difference'),
+            ]),
+            new TwigFilter('debug', $this->debug(...), [
+                'deprecation_info' => new DeprecatedCallableInfo('elasticms/core-bundle', '6.0.0', 'emsco_debug'),
+            ]),
+            new TwigFilter('call_user_func', $this->callUserFunc(...), [
+                'deprecation_info' => new DeprecatedCallableInfo('elasticms/core-bundle', '6.0.0', 'emsco_call_user_func'),
+            ]),
+            new TwigFilter('get_string', $this->getString(...), [
+                'deprecation_info' => new DeprecatedCallableInfo('elasticms/core-bundle', '6.0.0', 'emsco_get_string'),
+            ]),
+            new TwigFilter('get_file', $this->getFile(...), [
+                'deprecation_info' => new DeprecatedCallableInfo('elasticms/core-bundle', '6.0.0'),
+            ]),
+            new TwigFilter('get_field_by_path', $this->getFieldByPath(...), [
+                'deprecation_info' => new DeprecatedCallableInfo('elasticms/core-bundle', '6.0.0', 'emsco_get_field_by_path'),
+            ]),
+            new TwigFilter('get_revision_id', [RevisionRuntime::class, 'getRevisionId'], [
+                'deprecation_info' => new DeprecatedCallableInfo('elasticms/core-bundle', '6.0.0', 'emsco_get_revision_id'),
             ]),
         ];
     }
@@ -260,16 +375,6 @@ class AppExtension extends AbstractExtension
         return $this->commonRequestRuntime->assetPath($fileField, $config, $route, $fileHashField, $filenameField, $mimeTypeField, $referenceType);
     }
 
-    /**
-     * @param int<1,512> $depth
-     *
-     * @return mixed
-     */
-    public function jsonDecode(string $json, bool $assoc = true, int $depth = 512, int $options = 0)
-    {
-        return \json_decode($json, $assoc, $depth, $options);
-    }
-
     public function getFieldByPath(ContentType $contentType, string $path, bool $skipVirtualFields = false): ?FieldType
     {
         $fieldType = $this->contentTypeService->getChildByPath($contentType->getFieldType(), $path, $skipVirtualFields);
@@ -311,7 +416,7 @@ class AppExtension extends AbstractExtension
         if (\is_string($rawData[$field])) {
             return $rawData[$field];
         }
-        $encoded = \json_encode($rawData[$field], JSON_THROW_ON_ERROR);
+        $encoded = Json::encode($rawData[$field]);
 
         return $encoded;
     }
@@ -376,18 +481,18 @@ class AppExtension extends AbstractExtension
     }
 
     /**
-     * @param mixed|null $rawData
-     * @param mixed|null $compareRawData
+     * @param mixed[]|null $compareRawData
      */
-    public function diffIcon($rawData, bool $compare, string $fieldName, $compareRawData): string
+    public function diffIcon(?string $rawData, bool $compare, string $fieldName, ?array $compareRawData): string
     {
         $b = $a = null;
-        if ($rawData) {
-            $a = '<i class="'.$rawData.'"></i> '.$rawData;
+        if (null !== $rawData) {
+            $a = \sprintf('<i class="%s"></i> %s', $rawData, $rawData);
         }
 
-        if (isset($compareRawData[$fieldName]) && $compareRawData[$fieldName]) {
-            $b = '<i class="'.$compareRawData[$fieldName].'"></i> '.$compareRawData[$fieldName];
+        $compareData = Type::getAsNullableString($compareRawData[$fieldName] ?? null);
+        if (null !== $compareData) {
+            $b = \sprintf('<i class="%s"></i> %s', $compareData, $compareData);
         }
 
         return $this->diff($a, $b, $compare);
@@ -395,7 +500,7 @@ class AppExtension extends AbstractExtension
 
     /**
      * @param mixed|null $rawData
-     * @param mixed|null$compareRawData
+     * @param mixed|null $compareRawData
      */
     public function diffTime($rawData, bool $compare, string $fieldName, $compareRawData, string $format1, string $format2): string
     {
@@ -406,7 +511,7 @@ class AppExtension extends AbstractExtension
      * @param mixed|null $rawData
      * @param mixed|null $compareRawData
      */
-    public function diffDate($rawData, bool $compare, string $fieldName, $compareRawData, string $format1, string $format2 = null, string $internalFormat = null): string
+    public function diffDate($rawData, bool $compare, string $fieldName, $compareRawData, string $format1, ?string $format2 = null, ?string $internalFormat = null): string
     {
         $b = $a = [];
         $out = '';
@@ -435,16 +540,21 @@ class AppExtension extends AbstractExtension
         $formatedA = [];
 
         foreach ($a as $item) {
-            if ($item instanceof \DateTime) {
-                $date = $item;
-            } elseif ($internalFormat) {
-                $date = \DateTime::createFromFormat($internalFormat, $item);
-            } else {
-                $date = new \DateTime($item);
+            try {
+                if ($item instanceof \DateTime) {
+                    $date = $item;
+                } elseif ($internalFormat) {
+                    $date = \DateTime::createFromFormat($internalFormat, $item);
+                } else {
+                    $date = new \DateTime($item);
+                }
+            } catch (\Throwable) {
+                $date = null;
             }
 
-            if (false === $date) {
-                throw new \RuntimeException('Unexpected date format');
+            if (!$date instanceof \DateTimeInterface) {
+                $out .= '<'.$tag.' class="text-red">'.\htmlentities((string) $item).'</'.$tag.'>';
+                continue;
             }
 
             $value = $date->format($format1);
@@ -625,20 +735,20 @@ class AppExtension extends AbstractExtension
     }
 
     /**
-     * @param mixed|null $rawData
-     * @param mixed|null $compareRawData
+     * @param mixed[]|null $compareRawData
      */
-    public function diffColor($rawData, bool $compare, string $fieldName, $compareRawData): string
+    public function diffColor(?string $rawData, bool $compare, string $fieldName, ?array $compareRawData): string
     {
         $b = $a = null;
-        if ($rawData) {
-            $color = $rawData;
-            $a = '<span style="background-color: '.$color.'; color: '.($this->contrastRatio($color, '#000000') > $this->contrastRatio($color, '#ffffff') ? '#000000' : '#ffffff').';">'.$color.'</span> ';
+        if (null !== $rawData) {
+            $color = new Color($rawData);
+            $a = \sprintf('<span style="background-color: %s; color: %s;">%s</span> ', $rawData, $color->bestContrast(...Color::EMS_COLORS)->getRGB(), $rawData);
         }
 
-        if (isset($compareRawData[$fieldName]) && $compareRawData[$fieldName]) {
-            $color = $compareRawData[$fieldName];
-            $b = '<span style="background-color: '.$color.'; color: '.($this->contrastRatio($color, '#000000') > $this->contrastRatio($color, '#ffffff') ? '#000000' : '#ffffff').';">'.$color.'</span> ';
+        $compareData = Type::getAsNullableString($compareRawData[$fieldName] ?? null);
+        if (null !== $compareData) {
+            $color = new Color($compareData);
+            $b = \sprintf('<span style="background-color: %s; color: %s;">%s</span> ', $compareData, $color->bestContrast(...Color::EMS_COLORS)->getRGB(), $compareData);
         }
 
         return $this->diff($a, $b, $compare, false, false, true);
@@ -650,31 +760,41 @@ class AppExtension extends AbstractExtension
      */
     public function diffRaw($rawData, bool $compare, string $fieldName, $compareRawData): string
     {
+        if (\is_array($rawData)) {
+            $a = Json::encode($rawData);
+        } else {
+            $a = Type::getAsNullableString($rawData);
+        }
         $b = $compareRawData[$fieldName] ?? null;
+        if (\is_array($b)) {
+            $b = Json::encode($b);
+        } else {
+            $b = Type::getAsNullableString($b);
+        }
 
-        return $this->diff($rawData, $b, $compare);
+        return $this->diff($a, $b, $compare);
     }
 
     /**
-     * @param mixed|null $rawData
-     * @param mixed|null $compareRawData
+     * @param mixed|null   $rawData
+     * @param mixed[]|null $compareRawData
      */
-    public function diffText($rawData, bool $compare, string $fieldName, $compareRawData): string
+    public function diffText($rawData, bool $compare, string $fieldName, ?array $compareRawData): string
     {
-        $b = $compareRawData[$fieldName] ?? null;
+        $b = Type::getAsNullableString($compareRawData[$fieldName] ?? null);
 
-        return $this->diff($rawData, $b, $compare, true, true);
+        return $this->diff(Type::getAsNullableString($rawData), $b, $compare, true, true);
     }
 
     /**
-     * @param mixed|null $rawData
-     * @param mixed|null $compareRawData
+     * @param mixed|null   $rawData
+     * @param mixed[]|null $compareRawData
      */
-    public function diffHtml($rawData, bool $compare, string $fieldName, $compareRawData): string
+    public function diffHtml($rawData, bool $compare, string $fieldName, ?array $compareRawData): string
     {
-        $b = $compareRawData[$fieldName] ?? null;
+        $b = Type::getAsNullableString($compareRawData[$fieldName] ?? null);
 
-        return $this->diff($rawData, $b, $compare, false, true, true);
+        return $this->diff(Type::getAsNullableString($rawData), $b, $compare, false, true, true);
     }
 
     public function getSequenceNextValue(string $name): int
@@ -688,28 +808,7 @@ class AppExtension extends AbstractExtension
         return $repo->nextValue($name);
     }
 
-    /**
-     * @param array<mixed> $array1
-     * @param array<mixed> $array2
-     *
-     * @return array<mixed>
-     */
-    public function arrayIntersect(array $array1, array $array2): array
-    {
-        return \array_intersect($array1, $array2);
-    }
-
-    /**
-     * @param array<mixed> ...$arrays
-     *
-     * @return array<mixed>
-     */
-    public function arrayMergeRecursive(array ...$arrays): array
-    {
-        return \array_merge_recursive(...$arrays);
-    }
-
-    public function cantBeFinalized(string $message = '', int $code = 0, \Throwable $previous = null): never
+    public function cantBeFinalized(string $message = '', int $code = 0, ?\Throwable $previous = null): never
     {
         throw new CantBeFinalizedException($message, $code, $previous);
     }
@@ -727,7 +826,7 @@ class AppExtension extends AbstractExtension
      *
      * @return array<mixed>
      */
-    public function deprecatedSearch(array $params): array
+    public function searchQuery(array $params): array
     {
         $search = $this->elasticaService->convertElasticsearchSearch($params);
 
@@ -735,16 +834,22 @@ class AppExtension extends AbstractExtension
     }
 
     /**
-     * @param string[]          $indexes
-     * @param array<mixed>      $body
-     * @param string[]          $contentTypes
-     * @param array<mixed>|null $sort
-     * @param string[]|null     $sources
+     * @param string|string[]     $indexes
+     * @param string|array<mixed> $body
+     * @param string|list<string> $contentTypes
+     * @param array<mixed>|null   $sort
+     * @param string[]|null       $sources
      */
-    public function search(array $indexes, array $body = [], array $contentTypes = [], ?int $size = null, int $from = 0, ?array $sort = null, ?array $sources = null): ResultSet
+    public function search(string|array $indexes, string|array $body = [], string|array $contentTypes = [], ?int $size = null, int $from = 0, ?array $sort = null, ?array $sources = null): ResultSet
     {
+        if (\is_string($contentTypes)) {
+            $contentTypes = [$contentTypes];
+        }
         $query = $this->elasticaService->filterByContentTypes(null, $contentTypes);
 
+        if (\is_string($body)) {
+            $body = Json::decode($body);
+        }
         $boolQuery = $this->elasticaService->getBoolQuery();
         if (!empty($body) && $query instanceof $boolQuery) {
             $query->addMust($body);
@@ -755,7 +860,7 @@ class AppExtension extends AbstractExtension
             $query = $boolQuery;
             $query->addMust($body);
         }
-        $search = new CommonSearch($indexes, $query);
+        $search = new CommonSearch(\is_array($indexes) ? $indexes : [$indexes], $query);
         if (null !== $size) {
             $search->setSize($size);
         }
@@ -793,7 +898,7 @@ class AppExtension extends AbstractExtension
             return $interval->format('%R%a days %h hours %i minutes');
         }
 
-        return (\intval($interval->format('%R%a')) + 1).' days';
+        return ((int) $interval->format('%R%a') + 1).' days';
     }
 
     public function getUser(string $username): ?UserInterface
@@ -805,7 +910,7 @@ class AppExtension extends AbstractExtension
     {
         return match ($username) {
             null, '' => 'N/A',
-            default => $this->userService->searchUser($username)?->getDisplayName() ?? $username
+            default => $this->userService->searchUser($username)?->getDisplayName() ?? $username,
         };
     }
 
@@ -825,17 +930,20 @@ class AppExtension extends AbstractExtension
                 $query = \html_entity_decode($matches['query'] ?? '');
                 \parse_str($query, $parameters);
                 if (\is_string($parameters['name'] ?? null) && \is_string($parameters['type'] ?? null)) {
-                    return $this->assetRuntime->assetPath([
-                        EmsFields::CONTENT_FILE_HASH_FIELD => $matches['hash'],
-                        EmsFields::CONTENT_FILE_NAME_FIELD => $parameters['name'],
-                        EmsFields::CONTENT_MIME_TYPE_FIELD => $parameters['type'],
-                    ], [
-                    ],
+                    return $this->assetRuntime->assetPath(
+                        [
+                            EmsFields::CONTENT_FILE_HASH_FIELD => $matches['hash'],
+                            EmsFields::CONTENT_FILE_NAME_FIELD => $parameters['name'],
+                            EmsFields::CONTENT_MIME_TYPE_FIELD => $parameters['type'],
+                        ],
+                        [
+                        ],
                         'ems_asset',
                         EmsFields::CONTENT_FILE_HASH_FIELD,
                         EmsFields::CONTENT_FILE_NAME_FIELD,
                         EmsFields::CONTENT_MIME_TYPE_FIELD,
-                        UrlGeneratorInterface::ABSOLUTE_PATH);
+                        UrlGeneratorInterface::ABSOLUTE_PATH
+                    );
                 }
 
                 return $path.$matches['hash'];
@@ -941,7 +1049,7 @@ class AppExtension extends AbstractExtension
         return $this->revisionService->display($key);
     }
 
-    public function dataLink(string $key, string $revisionId = null, string $diffMod = null): string
+    public function dataLink(string $key, ?string $revisionId = null, ?string $diffMod = null): string
     {
         $emsLink = EMSLink::fromText($key);
         if (!$emsLink->isValid() || !$contentType = $this->contentTypeService->getByName($emsLink->getContentType())) {
@@ -1001,7 +1109,7 @@ class AppExtension extends AbstractExtension
         );
     }
 
-    public function propertyPath(FormError $error): string
+    public static function propertyPath(FormError $error): string
     {
         $parent = $error->getOrigin();
         $out = '';
@@ -1066,33 +1174,12 @@ class AppExtension extends AbstractExtension
         return false;
     }
 
-    public function relativeLuminance(string $rgb): float
-    {
-        $color = new Color($rgb);
-
-        return $color->relativeLuminance();
-    }
-
-    public function contrastRatio(string $c1, string $c2): float
+    private function contrastRatio(string $c1, string $c2): float
     {
         $color1 = new Color($c1);
         $color2 = new Color($c2);
 
         return $color1->contrastRatio($color2);
-    }
-
-    public function md5(string $value): string
-    {
-        return \md5($value);
-    }
-
-    /**
-     * @deprecated
-     * @see https://twig.symfony.com/doc/1.x/functions/dump.html
-     */
-    public function dump(): void
-    {
-        \trigger_error('dump is now integrated by default in twig 1.5', E_USER_DEPRECATED);
     }
 
     public function convertJavaDateFormat(string $format): string
@@ -1119,36 +1206,13 @@ class AppExtension extends AbstractExtension
     }
 
     /**
-     * @param array<mixed> $haystack
-     */
-    public function inArray(mixed $needle, array $haystack): bool
-    {
-        return false !== \array_search($needle, $haystack);
-    }
-
-    /**
-     * @param array<mixed> $haystack
-     */
-    public function firstInArray(mixed $needle, array $haystack): bool
-    {
-        return 0 === \array_search($needle, $haystack);
-    }
-
-    /**
      * @param array{function: string, options?: array<mixed>, parameters?: mixed} $arguments
      *
      * @return mixed
      */
     public function soapRequest(mixed $wsdl, array $arguments)
     {
-        /** @var \SoapClient $soapClient */
-        $soapClient = null;
-        if (\array_key_exists('options', $arguments)) {
-            $soapClient = new \SoapClient($wsdl, $arguments['options']);
-        } else {
-            $soapClient = new \SoapClient($wsdl);
-        }
-
+        $soapClient = new \SoapClient($wsdl, $arguments['options'] ?? []);
         $function = $arguments['function'];
 
         if (\array_key_exists('parameters', $arguments)) {

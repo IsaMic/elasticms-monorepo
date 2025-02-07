@@ -15,11 +15,11 @@ use EMS\ClientHelperBundle\Helper\ContentType\ContentTypeHelper;
 use EMS\ClientHelperBundle\Helper\Environment\Environment;
 use EMS\ClientHelperBundle\Helper\Environment\EnvironmentHelper;
 use EMS\CommonBundle\Common\EMSLink;
-use EMS\CommonBundle\Common\Standard\Hash;
 use EMS\CommonBundle\Elasticsearch\Document\EMSSource;
 use EMS\CommonBundle\Elasticsearch\Exception\NotFoundException;
 use EMS\CommonBundle\Search\Search;
 use EMS\CommonBundle\Service\ElasticaService;
+use EMS\Helpers\Standard\Hash;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\Response;
@@ -27,7 +27,7 @@ use Symfony\Component\PropertyAccess\PropertyAccess;
 
 final class ClientRequest implements ClientRequestInterface
 {
-    private const CONTENT_TYPE_LIMIT = 500;
+    private const int CONTENT_TYPE_LIMIT = 500;
 
     /**
      * @param array<string, mixed> $options
@@ -68,6 +68,7 @@ final class ClientRequest implements ClientRequestInterface
     /**
      * @return array{_id: string, _type?: string, _source: array<mixed>}
      */
+    #[\Override]
     public function get(string $type, string $id): array
     {
         $this->logger->debug('ClientRequest : get {type}:{id}', ['type' => $type, 'id' => $id]);
@@ -108,6 +109,7 @@ final class ClientRequest implements ClientRequestInterface
      *
      * @return array<string, mixed>|false
      */
+    #[\Override]
     public function getByEmsKey(string $emsLink, array $sourceFields = []): array|false
     {
         $type = ClientRequest::getType($emsLink);
@@ -145,10 +147,11 @@ final class ClientRequest implements ClientRequestInterface
     }
 
     /**
-     * @param string[] $ouuids
+     * @param list<string> $ouuids
      *
      * @return array<mixed>
      */
+    #[\Override]
     public function getByOuuids(string $type, array $ouuids): array
     {
         $this->logger->debug('ClientRequest : getByOuuids {type}:{id}', ['type' => $type, 'id' => $ouuids]);
@@ -204,7 +207,7 @@ final class ClientRequest implements ClientRequestInterface
      * @param string[] $sourceFields
      * @param mixed[]  $cache
      */
-    public function getHierarchy(string $emsKey, string $childrenField, int $depth = null, array $sourceFields = [], EMSLink $activeChild = null, int $querySize = 1000, array $cache = []): ?HierarchicalStructure
+    public function getHierarchy(string $emsKey, string $childrenField, ?int $depth = null, array $sourceFields = [], ?EMSLink $activeChild = null, int $querySize = 1000, array $cache = []): ?HierarchicalStructure
     {
         $this->logger->debug('ClientRequest : getHierarchy for {emsKey}', ['emsKey' => $emsKey]);
         $emsLink = EMSLink::fromText($emsKey);
@@ -305,6 +308,7 @@ final class ClientRequest implements ClientRequestInterface
         return $settings;
     }
 
+    #[\Override]
     public function getContentType(string $name, ?Environment $environment = null): ?ContentType
     {
         if (null === $environment) {
@@ -367,6 +371,7 @@ final class ClientRequest implements ClientRequestInterface
      *
      * @return mixed|null
      */
+    #[\Override]
     public function getOption(string $propertyPath, $default = null)
     {
         $propertyAccessor = PropertyAccess::createPropertyAccessor();
@@ -400,7 +405,7 @@ final class ClientRequest implements ClientRequestInterface
      *
      * @return array<mixed>
      */
-    public function search(null|string|array $type, array $body, int $from = 0, int $size = 10, array $sourceExclude = [], ?string $regex = null, string $index = null)
+    public function search(string|array|null $type, array $body, int $from = 0, int $size = 10, array $sourceExclude = [], ?string $regex = null, ?string $index = null)
     {
         if (null === $type) {
             $types = [];
@@ -436,7 +441,7 @@ final class ClientRequest implements ClientRequestInterface
     }
 
     /**
-     * @param string[] $types
+     * @param list<string> $types
      */
     public function initializeCommonSearch(array $types, ?AbstractQuery $query = null): Search
     {
@@ -508,7 +513,7 @@ final class ClientRequest implements ClientRequestInterface
      *
      * @return array{_id: string, _type?: string, _source: array<mixed>}
      */
-    public function searchOne(null|string|array $type, array $body, ?string $indexRegex = null): array
+    public function searchOne(string|array|null $type, array $body, ?string $indexRegex = null): array
     {
         $this->logger->debug('ClientRequest : searchOne for {type}', ['type' => $type, 'body' => $body, 'indexRegex' => $indexRegex]);
         $search = $this->search($type, $body, 0, 2, [], $indexRegex);
@@ -545,7 +550,7 @@ final class ClientRequest implements ClientRequestInterface
      *
      * @return array<mixed>
      */
-    public function scroll(string $type, array $filter = [], int $size = 10, string $scrollId = null): array
+    public function scroll(string $type, array $filter = [], int $size = 10, ?string $scrollId = null): array
     {
         $scrollTimeout = '30s';
 
@@ -568,7 +573,7 @@ final class ClientRequest implements ClientRequestInterface
      *
      * @return \Generator<array<mixed>>
      */
-    public function scrollAll(array $params, string $timeout = '30s', string $index = null): iterable
+    public function scrollAll(array $params, string $timeout = '30s', ?string $index = null): iterable
     {
         if (null === $index) {
             $index = $this->getAlias();
@@ -589,7 +594,8 @@ final class ClientRequest implements ClientRequestInterface
         return $this->name;
     }
 
-    public function getCacheKey(string $prefix = '', string $environment = null): string
+    #[\Override]
+    public function getCacheKey(string $prefix = '', ?string $environment = null): string
     {
         if ($environment) {
             return $prefix.$environment;
@@ -664,7 +670,7 @@ final class ClientRequest implements ClientRequestInterface
     /**
      * @param AbstractQuery|array<mixed>|null $query
      */
-    public function getCommonSearch(array|AbstractQuery $query = null): Search
+    public function getCommonSearch(array|AbstractQuery|null $query = null): Search
     {
         return new Search([$this->getAlias()], $query);
     }

@@ -22,11 +22,12 @@ class ReleasePickDataTableType extends AbstractEntityTableType
     public function __construct(
         ReleaseService $releaseService,
         private readonly RevisionService $revisionService,
-        private readonly string $templateNamespace
+        private readonly string $templateNamespace,
     ) {
         parent::__construct($releaseService);
     }
 
+    #[\Override]
     public function build(EntityTable $table): void
     {
         /** @var Revision $revision */
@@ -37,14 +38,18 @@ class ReleasePickDataTableType extends AbstractEntityTableType
             titleKey: t('field.name', [], 'emsco-core'),
             attribute: 'name'
         );
-        $table->addColumnDefinition(new DatetimeTableColumn(
-            titleKey: t('field.date_execution', [], 'emsco-core'),
-            attribute: 'executionDate')
+        $table->addColumnDefinition(
+            new DatetimeTableColumn(
+                titleKey: t('field.date_execution', [], 'emsco-core'),
+                attribute: 'executionDate'
+            )
         );
-        $table->addColumnDefinition(new TemplateBlockTableColumn(
-            label: t('field.status', [], 'emsco-core'),
-            blockName: 'status',
-            template: "@$this->templateNamespace/release/columns/revisions.html.twig")
+        $table->addColumnDefinition(
+            new TemplateBlockTableColumn(
+                label: t('field.status', [], 'emsco-core'),
+                blockName: 'status',
+                template: "@$this->templateNamespace/release/columns/revisions.html.twig"
+            )
         );
         $table->addColumnDefinition(new TemplateBlockTableColumn('release.index.column.docs_count', 'docs_count', "@$this->templateNamespace/release/columns/revisions.html.twig"))->setCellClass('text-right');
 
@@ -52,16 +57,19 @@ class ReleasePickDataTableType extends AbstractEntityTableType
         $table->addItemPostAction(Routes::DATA_ADD_REVISION_TO_RELEASE, 'data.actions.add_to_release_unpublish', 'minus', 'data.actions.add_to_release_confirm', ['revision' => $revision->getId(), 'type' => 'unpublish'])->setButtonType('default');
     }
 
+    #[\Override]
     public function getRoles(): array
     {
         return [Roles::ROLE_PUBLISHER];
     }
 
+    #[\Override]
     public function getContext(array $options): Revision
     {
         return $this->revisionService->getByRevisionId($options['revision_id']);
     }
 
+    #[\Override]
     public function configureOptions(OptionsResolver $optionsResolver): void
     {
         $optionsResolver->setRequired(['revision_id']);

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Form\Field;
 
 use EMS\CoreBundle\EMSCoreBundle;
@@ -7,13 +9,14 @@ use EMS\CoreBundle\Roles;
 use EMS\CoreBundle\Service\UserService;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-class RolePickerType extends SelectPickerType
+class RolePickerType extends Select2Type
 {
     public function __construct(private readonly UserService $userService)
     {
         parent::__construct();
     }
 
+    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         $choices = [...['role.not-defined' => Roles::NOT_DEFINED], ...$this->userService->listUserRoles()];

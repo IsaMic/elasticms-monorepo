@@ -9,6 +9,7 @@ use EMS\ClientHelperBundle\Helper\Local\LocalHelper;
 use EMS\CommonBundle\Contracts\CoreApi\Endpoint\Admin\ConfigTypes;
 use EMS\CommonBundle\Helper\EmsFields;
 use EMS\CommonBundle\Storage\Archive;
+use EMS\Helpers\File\File;
 use EMS\Helpers\Html\MimeTypes;
 use EMS\Helpers\Standard\Json;
 use Symfony\Component\Console\Input\InputArgument;
@@ -18,13 +19,13 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 final class UploadAssetsCommand extends AbstractLocalCommand
 {
-    private const ARG_BASE_URL = 'base_url';
-    private const OPTION_FILENAME = 'filename';
-    private const OPTION_AS_STYLE_SET_ASSETS = 'as-style-set-assets';
-    private const OPTION_ARCHIVE_TYPE = 'archive';
-    private const ARCHIVE_ZIP = 'zip';
-    private const ARCHIVE_EMS = 'ems';
-    private ?string $filename;
+    private const string ARG_BASE_URL = 'base_url';
+    private const string OPTION_FILENAME = 'filename';
+    private const string OPTION_AS_STYLE_SET_ASSETS = 'as-style-set-assets';
+    private const string OPTION_ARCHIVE_TYPE = 'archive';
+    private const string ARCHIVE_ZIP = 'zip';
+    private const string ARCHIVE_EMS = 'ems';
+    private ?string $filename = null;
     private bool $updateStyleSets;
     private string $baseUrl;
     private string $archiveType;
@@ -34,6 +35,7 @@ final class UploadAssetsCommand extends AbstractLocalCommand
         parent::__construct($environmentHelper, $localHelper);
     }
 
+    #[\Override]
     protected function configure(): void
     {
         parent::configure();
@@ -45,6 +47,7 @@ final class UploadAssetsCommand extends AbstractLocalCommand
         ;
     }
 
+    #[\Override]
     protected function initialize(InputInterface $input, OutputInterface $output): void
     {
         parent::initialize($input, $output);
@@ -54,6 +57,7 @@ final class UploadAssetsCommand extends AbstractLocalCommand
         $this->archiveType = $this->getOptionString(self::OPTION_ARCHIVE_TYPE);
     }
 
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $this->io->title('Local development - Upload assets');
@@ -68,7 +72,7 @@ final class UploadAssetsCommand extends AbstractLocalCommand
             $hash = match ($this->archiveType) {
                 self::ARCHIVE_ZIP => $this->uploadZipArchive(),
                 self::ARCHIVE_EMS => $this->uploadEmsArchive(),
-                default => false
+                default => false,
             };
 
             if (!$hash) {
@@ -81,7 +85,7 @@ final class UploadAssetsCommand extends AbstractLocalCommand
             $this->io->success(\sprintf('Assets %s have been uploaded', $hash));
 
             if (null !== $this->filename) {
-                \file_put_contents($this->filename, $hash);
+                File::putContents($this->filename, $hash);
             }
 
             $this->updateStyleSets($hash);

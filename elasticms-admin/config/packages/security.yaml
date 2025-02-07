@@ -1,6 +1,4 @@
 security:
-    enable_authenticator_manager: true
-
     password_hashers:
         EMS\CoreBundle\Entity\UserInterface: bcrypt
 
@@ -11,7 +9,7 @@ security:
         ROLE_REVIEWER:        ROLE_AUTHOR
         ROLE_TRADUCTOR:       ROLE_REVIEWER
         ROLE_AUDITOR:         ROLE_REVIEWER
-        ROLE_COPYWRITER:      ROLE_TRADUCTOR
+        ROLE_COPYWRITER:      ROLE_AUDITOR
         ROLE_PUBLISHER:       ROLE_COPYWRITER
         ROLE_WEBMASTER:       ROLE_PUBLISHER
         ROLE_ADMIN:           [ROLE_WEBMASTER, ROLE_USER_MANAGEMENT]
@@ -79,6 +77,7 @@ security:
         - { path: ^/resetting, role: PUBLIC_ACCESS }
         - { path: ^/data/file, role: PUBLIC_ACCESS }
         - { path: ^/data/asset, role: PUBLIC_ACCESS }
+        - { path: ^/channel/.*/emsch/api, role: ROLE_USER }
         - { path: ^/channel/, role: PUBLIC_ACCESS }
         - { path: ^/bundles, role: PUBLIC_ACCESS }
         - { path: ^/api/user-profile, roles: IS_AUTHENTICATED_FULLY }

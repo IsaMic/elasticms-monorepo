@@ -11,6 +11,7 @@ use EMS\CoreBundle\Form\Data\TableAbstract;
 use EMS\CoreBundle\Form\Form\TableType;
 use EMS\CoreBundle\Service\Form\Submission\FormSubmissionService;
 use EMS\SubmissionBundle\Entity\FormSubmission;
+use GuzzleHttp\Psr7\Stream;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\Form;
@@ -23,22 +24,21 @@ use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Security\Core\User\UserInterface;
-use ZipStream\Stream;
 
 final class SubmissionController extends AbstractController
 {
-    final public const BUFFER_SIZE = 8192;
+    final public const int BUFFER_SIZE = 8192;
 
     public function __construct(
         private readonly FormSubmissionService $formSubmissionService,
         private readonly LoggerInterface $logger,
         private readonly SpreadsheetGeneratorServiceInterface $spreadsheetGeneratorService,
         private readonly DataTableFactory $dataTableFactory,
-        private readonly string $templateNamespace
+        private readonly string $templateNamespace,
     ) {
     }
 
-    public function indexAction(Request $request, UserInterface $user): Response
+    public function index(Request $request, UserInterface $user): Response
     {
         $table = $this->dataTableFactory->create(FormSubmissionDataTableType::class);
         $form = $this->createForm(TableType::class, $table);
@@ -132,9 +132,12 @@ final class SubmissionController extends AbstractController
         }
 
         $response->headers->set('Content-Type', 'application/zip');
-        $response->headers->set('Content-Disposition', $response->headers->makeDisposition(
-            ResponseHeaderBag::DISPOSITION_ATTACHMENT,
-            'submissions.zip')
+        $response->headers->set(
+            'Content-Disposition',
+            $response->headers->makeDisposition(
+                ResponseHeaderBag::DISPOSITION_ATTACHMENT,
+                'submissions.zip'
+            )
         );
 
         return $response;

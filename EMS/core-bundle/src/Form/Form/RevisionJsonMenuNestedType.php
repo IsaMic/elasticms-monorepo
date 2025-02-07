@@ -16,6 +16,9 @@ use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormRegistryInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
+/**
+ * @extends AbstractType<mixed>
+ */
 class RevisionJsonMenuNestedType extends AbstractType
 {
     public function __construct(private readonly FormRegistryInterface $formRegistry)
@@ -23,9 +26,10 @@ class RevisionJsonMenuNestedType extends AbstractType
     }
 
     /**
-     * @param FormBuilderInterface<FormBuilderInterface> $builder
-     * @param array<string, mixed>                       $options
+     * @param FormBuilderInterface<mixed> $builder
+     * @param array<string, mixed>        $options
      */
+    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         /** @var FieldType $fieldType */
@@ -60,6 +64,7 @@ class RevisionJsonMenuNestedType extends AbstractType
             ->addViewTransformer(new DataFieldViewTransformer($fieldType, $this->formRegistry));
     }
 
+    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver

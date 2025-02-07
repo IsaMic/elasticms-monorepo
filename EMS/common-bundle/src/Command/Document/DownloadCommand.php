@@ -7,6 +7,7 @@ namespace EMS\CommonBundle\Command\Document;
 use EMS\CommonBundle\Common\Admin\AdminHelper;
 use EMS\CommonBundle\Common\Command\AbstractCommand;
 use EMS\CommonBundle\Search\Search;
+use EMS\Helpers\File\File;
 use EMS\Helpers\Standard\Json;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -16,9 +17,9 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class DownloadCommand extends AbstractCommand
 {
-    private const CONTENT_TYPE = 'content-type';
-    private const FOLDER = 'folder';
-    public const DEFAULT_FOLDER = 'document';
+    private const string CONTENT_TYPE = 'content-type';
+    private const string FOLDER = 'folder';
+    final public const string DEFAULT_FOLDER = 'document';
     private string $contentType;
     private string $folder;
 
@@ -28,6 +29,7 @@ class DownloadCommand extends AbstractCommand
         $this->folder = $projectFolder.DIRECTORY_SEPARATOR.self::DEFAULT_FOLDER;
     }
 
+    #[\Override]
     public function initialize(InputInterface $input, OutputInterface $output): void
     {
         parent::initialize($input, $output);
@@ -39,6 +41,7 @@ class DownloadCommand extends AbstractCommand
         }
     }
 
+    #[\Override]
     protected function configure(): void
     {
         parent::configure();
@@ -46,6 +49,7 @@ class DownloadCommand extends AbstractCommand
         $this->addOption(self::FOLDER, null, InputOption::VALUE_OPTIONAL, 'Export folder');
     }
 
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $coreApi = $this->adminHelper->getCoreApi();
@@ -65,13 +69,13 @@ class DownloadCommand extends AbstractCommand
 
         $directory = \implode(DIRECTORY_SEPARATOR, [$this->folder, $this->contentType]);
         if (!\is_dir($directory)) {
-            \mkdir($directory, 0777, true);
+            \mkdir($directory, 0o777, true);
         }
 
         $this->io->progressStart($searchApi->count($search));
         foreach ($searchApi->scroll($search) as $hit) {
             $json = Json::encode($hit->getSource(true), true);
-            \file_put_contents(\implode(DIRECTORY_SEPARATOR, [$directory, $hit->getId().'.json']), $json);
+            File::putContents(\implode(DIRECTORY_SEPARATOR, [$directory, $hit->getId().'.json']), $json);
             $this->io->progressAdvance();
         }
         $this->io->progressFinish();

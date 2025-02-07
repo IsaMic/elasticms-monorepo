@@ -9,20 +9,21 @@ use Psr\Log\LoggerInterface;
 class SftpStorage extends AbstractUrlStorage
 {
     /** @var resource|null */
-    private $sftp = null;
+    private $sftp;
 
     public function __construct(LoggerInterface $logger, private readonly string $host, private readonly string $path, private readonly string $username, private readonly string $publicKeyFile, private readonly string $privateKeyFile, int $usage, int $hotSynchronizeLimit = 0, private readonly ?string $passwordPhrase = null, private readonly int $port = 22)
     {
         parent::__construct($logger, $usage, $hotSynchronizeLimit);
     }
 
+    #[\Override]
     protected function getBaseUrl(): string
     {
         if (null === $this->sftp) {
             $this->connect();
         }
 
-        return 'ssh2.sftp://'.\intval($this->sftp).$this->path;
+        return 'ssh2.sftp://'.(int) $this->sftp.$this->path;
     }
 
     private function connect(): void
@@ -50,6 +51,7 @@ class SftpStorage extends AbstractUrlStorage
         $this->sftp = $sftp;
     }
 
+    #[\Override]
     public function __toString(): string
     {
         return SftpStorage::class." ($this->host)";
@@ -58,6 +60,7 @@ class SftpStorage extends AbstractUrlStorage
     /**
      * @return null
      */
+    #[\Override]
     protected function getContext()
     {
         return null;

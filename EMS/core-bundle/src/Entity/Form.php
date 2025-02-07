@@ -4,65 +4,37 @@ declare(strict_types=1);
 
 namespace EMS\CoreBundle\Entity;
 
-use Doctrine\ORM\Mapping as ORM;
 use EMS\CommonBundle\Entity\CreatedModifiedTrait;
 use EMS\CoreBundle\Entity\Helper\JsonClass;
 use EMS\CoreBundle\Entity\Helper\JsonDeserializer;
 use EMS\CoreBundle\Form\DataField\HolderFieldType;
-use EMS\Helpers\Standard\DateTime;
-use Ramsey\Uuid\Doctrine\UuidGenerator;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 
-/**
- * @ORM\Table(name="form")
- * @ORM\Entity()
- * @ORM\HasLifecycleCallbacks()
- */
 class Form extends JsonDeserializer implements \JsonSerializable, EntityInterface
 {
     use CreatedModifiedTrait;
-    /**
-     * @ORM\Id
-     * @ORM\Column(type="uuid", unique=true)
-     * @ORM\GeneratedValue(strategy="CUSTOM")
-     * @ORM\CustomIdGenerator(class=UuidGenerator::class)
-     */
+
     private UuidInterface $id;
-
-    /**
-     * @ORM\Column(name="name", type="string", length=255, unique=true)
-     */
     protected string $name;
-
-    /**
-     * @ORM\Column(name="label", type="string", length=255)
-     */
     protected string $label;
-
-    /**
-     * @ORM\Column(name="order_key", type="integer")
-     */
     protected int $orderKey;
-
-    /**
-     * @ORM\OneToOne(targetEntity="FieldType", cascade={"persist"})
-     * @ORM\JoinColumn(name="field_types_id", referencedColumnName="id")
-     */
-    protected ?FieldType $fieldType;
+    protected ?FieldType $fieldType = null;
 
     public function __construct()
     {
         $this->id = Uuid::uuid4();
-        $this->created = DateTime::create('now');
-        $this->modified = DateTime::create('now');
+        $this->created = new \DateTime();
+        $this->modified = new \DateTime();
     }
 
+    #[\Override]
     public function getId(): string
     {
         return $this->id->toString();
     }
 
+    #[\Override]
     public function getName(): string
     {
         return $this->name;
@@ -109,6 +81,7 @@ class Form extends JsonDeserializer implements \JsonSerializable, EntityInterfac
         $this->fieldType = $fieldType;
     }
 
+    #[\Override]
     public function jsonSerialize(): JsonClass
     {
         $json = new JsonClass(\get_object_vars($this), self::class);

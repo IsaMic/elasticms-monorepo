@@ -1,10 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Form\DataField;
 
 use EMS\CoreBundle\Entity\DataField;
 use EMS\CoreBundle\Entity\FieldType;
 use EMS\CoreBundle\Form\Field\ColorPickerFullType;
+use EMS\Helpers\Standard\Json;
 
 /**
  * Defined a Container content type.
@@ -14,41 +17,40 @@ use EMS\CoreBundle\Form\Field\ColorPickerFullType;
  */
 class ColorPickerFieldType extends DataFieldType
 {
+    #[\Override]
     public function getLabel(): string
     {
         return 'Color picker field';
     }
 
+    #[\Override]
     public static function getIcon(): string
     {
         return 'fa fa-paint-brush';
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function getDefaultOptions(string $name): array
     {
         $out = parent::getDefaultOptions($name);
 
-        $out['mappingOptions']['index'] = 'not_analyzed';
+        $out['mappingOptions']['analyzer'] = 'keyword';
 
         return $out;
     }
 
+    #[\Override]
     public function getParent(): string
     {
         return ColorPickerFullType::class;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function modelTransform($data, FieldType $fieldType): DataField
     {
         $dataField = parent::modelTransform($data, $fieldType);
         if (null !== $data && !\is_string($data)) {
-            $dataField->addMessage('Not able to import data from the database:'.\json_encode($data, JSON_THROW_ON_ERROR));
+            $dataField->addMessage('Not able to import data from the database:'.Json::encode($data));
             $dataField->setRawData(null);
         }
 

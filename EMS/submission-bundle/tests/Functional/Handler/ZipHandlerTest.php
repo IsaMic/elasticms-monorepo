@@ -8,16 +8,18 @@ use EMS\FormBundle\Submission\AbstractHandler;
 use EMS\Helpers\File\TempFile;
 use EMS\SubmissionBundle\Response\ZipHandleResponse;
 
-final class ZipHandlerTest extends AbstractHandlerTest
+final class ZipHandlerTest extends AbstractHandlerTestCase
 {
     private TempFile $tempFile;
 
+    #[\Override]
     protected function setUp(): void
     {
         parent::setUp();
         $this->tempFile = TempFile::create();
     }
 
+    #[\Override]
     protected function getHandler(): AbstractHandler
     {
         return $this->container->get('functional_test.emss.handler.zip');

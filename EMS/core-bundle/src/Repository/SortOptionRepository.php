@@ -10,13 +10,14 @@ use EMS\CoreBundle\Entity\SortOption;
 /**
  * @extends EntityRepository<SortOption>
  *
- * @method SortOption[] findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+ * @method SortOption[] findBy(mixed[] $criteria, mixed[] $orderBy = null, $limit = null, $offset = null)
  */
 class SortOptionRepository extends EntityRepository
 {
     /**
      * @return SortOption[]
      */
+    #[\Override]
     public function findAll(): array
     {
         return parent::findBy([], ['orderKey' => 'asc']);

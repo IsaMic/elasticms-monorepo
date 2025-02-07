@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Exception;
 
 use EMS\CoreBundle\Entity\Revision;
@@ -17,6 +19,7 @@ class NotLockedException extends \Exception implements \Stringable
         return $this->revision;
     }
 
+    #[\Override]
     public function __toString(): string
     {
         return parent::getMessage();

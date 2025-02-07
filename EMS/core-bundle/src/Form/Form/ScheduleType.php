@@ -13,12 +13,16 @@ use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Translation\TranslatableMessage;
 
+/**
+ * @extends AbstractType<mixed>
+ */
 class ScheduleType extends AbstractType
 {
     /**
-     * @param FormBuilderInterface<FormBuilderInterface> $builder
-     * @param array<string, mixed>                       $options
+     * @param FormBuilderInterface<mixed> $builder
+     * @param array<string, mixed>        $options
      */
+    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $schedule = $builder->getData();
@@ -60,12 +64,12 @@ class ScheduleType extends AbstractType
             ]);
         } else {
             $builder->add('save', SubmitEmsType::class, [
-                    'attr' => [
-                        'class' => 'btn-primary btn-sm',
-                        'data-ajax-save-url' => $options['ajax-save-url'],
-                    ],
-                    'icon' => 'fa fa-save',
-                ])
+                'attr' => [
+                    'class' => 'btn-primary btn-sm',
+                    'data-ajax-save-url' => $options['ajax-save-url'],
+                ],
+                'icon' => 'fa fa-save',
+            ])
                 ->add('saveAndClose', SubmitEmsType::class, [
                     'attr' => [
                         'class' => 'btn-primary btn-sm',
@@ -75,6 +79,7 @@ class ScheduleType extends AbstractType
         }
     }
 
+    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([

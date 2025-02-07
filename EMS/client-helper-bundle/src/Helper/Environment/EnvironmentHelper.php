@@ -20,16 +20,14 @@ final class EnvironmentHelper implements EnvironmentHelperInterface
         private readonly EnvironmentFactory $environmentFactory,
         private readonly RequestStack $requestStack,
         private readonly string $emschEnv,
-        array $environments
+        array $environments,
     ) {
         foreach ($environments as $name => $config) {
             $this->addEnvironment($name, $config);
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function addEnvironment(string $name, array $config): void
     {
         if ($this->emschEnv && !isset($config[Environment::DEFAULT])) {

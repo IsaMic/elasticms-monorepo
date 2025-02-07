@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace EMS\Helpers\Tests\Unit\Standard;
 
 use EMS\Helpers\Standard\Type;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 class TypeTest extends TestCase
@@ -23,7 +24,7 @@ class TypeTest extends TestCase
         Type::string(11);
     }
 
-    public function providerString(): array
+    public static function providerString(): array
     {
         return [
             ['test', null],
@@ -36,9 +37,7 @@ class TypeTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider providerString
-     */
+    #[DataProvider('providerString')]
     public function testTypeString($value, ?string $error = null): void
     {
         if ($error) {
@@ -49,7 +48,7 @@ class TypeTest extends TestCase
         $this->assertEquals($value, Type::string($value));
     }
 
-    public function providerInteger(): array
+    public static function providerInteger(): array
     {
         return [
             [99, null],
@@ -62,9 +61,7 @@ class TypeTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider providerInteger
-     */
+    #[DataProvider('providerInteger')]
     public function testTypeInteger($value, ?string $error = null): void
     {
         if ($error) {
@@ -73,5 +70,15 @@ class TypeTest extends TestCase
         }
 
         $this->assertEquals($value, Type::integer($value));
+    }
+
+    public function testGetAsNullableString(): void
+    {
+        $this->assertEquals(null, Type::getAsNullableString(null));
+        $this->assertEquals('foobar', Type::getAsNullableString('foobar'));
+        $this->assertEquals('42', Type::getAsNullableString(42));
+        $this->assertEquals('42.123', Type::getAsNullableString(42.123));
+        $this->assertEquals('1', Type::getAsNullableString(true));
+        $this->assertEquals('', Type::getAsNullableString(false));
     }
 }

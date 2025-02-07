@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Entity\Helper;
 
 use Doctrine\ORM\PersistentCollection;
@@ -8,10 +10,10 @@ use EMS\Helpers\Standard\Json;
 
 class JsonClass implements \JsonSerializable
 {
-    final public const CLASS_INDEX = 'class';
-    final public const CONSTRUCTOR_ARGUMENTS_INDEX = 'arguments';
-    final public const PROPERTIES_INDEX = 'properties';
-    final public const REPLACED_FIELDS = 'replaced';
+    final public const string CLASS_INDEX = 'class';
+    final public const string CONSTRUCTOR_ARGUMENTS_INDEX = 'arguments';
+    final public const string PROPERTIES_INDEX = 'properties';
+    final public const string REPLACED_FIELDS = 'replaced';
 
     /**
      * @param array<string, mixed> $properties
@@ -23,7 +25,7 @@ class JsonClass implements \JsonSerializable
         private array $properties,
         private readonly string $class,
         private readonly array $constructorArguments = [],
-        private array $replacedFields = []
+        private array $replacedFields = [],
     ) {
         $proxyFields = ['__initializer__', '__cloner__', '__isInitialized__'];
         $this->properties = \array_filter(
@@ -35,7 +37,7 @@ class JsonClass implements \JsonSerializable
 
     public static function fromJsonString(string $jsonString): self
     {
-        $arguments = \json_decode($jsonString, true, 512, JSON_THROW_ON_ERROR);
+        $arguments = Json::decode($jsonString);
 
         return new self(
             $arguments[self::PROPERTIES_INDEX],
@@ -97,6 +99,7 @@ class JsonClass implements \JsonSerializable
     /**
      * @return array<string, mixed>
      */
+    #[\Override]
     public function jsonSerialize(): array
     {
         return [
@@ -107,7 +110,7 @@ class JsonClass implements \JsonSerializable
         ];
     }
 
-    public function jsonDeserialize(object $object = null): ?object
+    public function jsonDeserialize(?object $object = null): ?object
     {
         $reflectionClass = new \ReflectionClass($this->class);
         $instance = $object;

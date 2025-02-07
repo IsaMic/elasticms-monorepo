@@ -1,6 +1,6 @@
-//
 // Mixins: Cards Variant
-//
+
+@use "sass:color";
 
 @mixin cards-variant($name, $color) {
   .card-#{$name} {
@@ -28,6 +28,7 @@
         a:hover{
           border-top: 3px solid $nav-tabs-border-color;
         }
+
         a.active,
         a.active:hover{
           border-top: 3px solid $color;
@@ -63,7 +64,7 @@
       table td.hour:hover,
       table td.minute:hover,
       table td.second:hover {
-        background-color: darken($color, 8%);
+        background-color: color.adjust($color, $lightness: -8%);
         color: color-contrast($color);
       }
 
@@ -73,7 +74,7 @@
 
       table td.active,
       table td.active:hover {
-        background-color: lighten($color, 10%);
+        background-color: color.adjust($color, $lightness: 10%);
         color: color-contrast($color);
       }
     }

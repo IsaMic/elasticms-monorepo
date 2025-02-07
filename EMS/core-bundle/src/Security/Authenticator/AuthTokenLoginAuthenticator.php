@@ -20,20 +20,17 @@ use Symfony\Component\Security\Http\Authenticator\Passport\Passport;
 
 final class AuthTokenLoginAuthenticator extends AbstractAuthenticator
 {
-    private AuthTokenRepository $authTokenRepository;
-    private bool $ldapEnabled;
-
-    public function __construct(AuthTokenRepository $authTokenRepository, bool $ldapEnabled)
+    public function __construct(private readonly AuthTokenRepository $authTokenRepository, private readonly bool $ldapEnabled)
     {
-        $this->authTokenRepository = $authTokenRepository;
-        $this->ldapEnabled = $ldapEnabled;
     }
 
+    #[\Override]
     public function supports(Request $request): bool
     {
         return Routes::AUTH_TOKEN_LOGIN === $request->attributes->get('_route') && $request->isMethod('POST');
     }
 
+    #[\Override]
     public function authenticate(Request $request): Passport
     {
         $content = $request->getContent();
@@ -49,7 +46,8 @@ final class AuthTokenLoginAuthenticator extends AbstractAuthenticator
         return new Passport(new UserBadge($username), new PasswordCredentials($password));
     }
 
-    public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response
+    #[\Override]
+    public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): Response
     {
         $user = $token->getUser();
         if (!$user instanceof CoreUserInterface) {
@@ -63,6 +61,7 @@ final class AuthTokenLoginAuthenticator extends AbstractAuthenticator
         ]);
     }
 
+    #[\Override]
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception): ?Response
     {
         if ($this->ldapEnabled) {

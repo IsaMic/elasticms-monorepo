@@ -54,6 +54,10 @@ class Image
         $rotatedWidth = Type::integer(\imagesx($image));
         $rotatedHeight = Type::integer(\imagesy($image));
 
+        /**
+         * @var int<1, max> $width
+         * @var int<1, max> $height
+         */
         [$width, $height] = $this->getWidthHeight($rotatedWidth, $rotatedHeight);
         $this->applyColor($image);
 
@@ -103,7 +107,7 @@ class Image
 
         if (0 === $width && 0 === $height) {
             // unable to calculate ratio, silently return original size (backward compatibility)
-            return [\intval($originalWidth), \intval($originalHeight)];
+            return [(int) $originalWidth, (int) $originalHeight];
         }
 
         if (0 === $width || 0 === $height) {
@@ -122,7 +126,7 @@ class Image
             }
         }
 
-        return [\intval($width), \intval($height)];
+        return [(int) $width, (int) $height];
     }
 
     private function fillBackgroundColor(\GdImage $temp): void
@@ -132,6 +136,10 @@ class Image
         \imagefill($temp, 0, 0, $solidColour);
     }
 
+    /**
+     * @param int<1, max> $width
+     * @param int<1, max> $height
+     */
     private function applyResizeAndBackground(\GdImage $image, int $width, int $height, int $originalWidth, int $originalHeight): \GdImage
     {
         $resize = $this->config->getResize();
@@ -141,7 +149,19 @@ class Image
             if (null === $res['topCrop']) {
                 $resize = 'fillArea';
             } else {
-                $smartCrop->crop($res['topCrop']['x'], $res['topCrop']['y'], $res['topCrop']['width'], $res['topCrop']['height']);
+                /**
+                 * @var int<1, max> $x
+                 * @var int<1, max> $y
+                 * @var int<1, max> $cropWidth
+                 * @var int<1, max> $cropHeight
+                 */
+                [$x, $y, $cropWidth, $cropHeight] = [
+                    $res['topCrop']['x'],
+                    $res['topCrop']['y'],
+                    $res['topCrop']['width'],
+                    $res['topCrop']['height'],
+                ];
+                $smartCrop->crop($x, $y, $cropWidth, $cropHeight);
 
                 return $smartCrop->get();
             }
@@ -153,32 +173,34 @@ class Image
 
         if ('fillArea' == $resize) {
             if (($originalHeight / $height) < ($originalWidth / $width)) {
-                $cal_width = \intval($originalHeight * $width / $height);
+                $cal_width = (int) ($originalHeight * $width / $height);
                 if (false !== \stripos($gravity, 'west')) {
                     $this->imageCopyResized($temp, $image, 0, 0, 0, 0, $width, $height, $cal_width, $originalHeight);
                 } elseif (false !== \stripos($gravity, 'east')) {
                     $this->imageCopyResized($temp, $image, 0, 0, $originalWidth - $cal_width, 0, $width, $height, $cal_width, $originalHeight);
                 } else {
-                    $this->imageCopyResized($temp, $image, 0, 0, \intval(($originalWidth - $cal_width) / 2), 0, $width, $height, $cal_width, $originalHeight);
+                    $this->imageCopyResized($temp, $image, 0, 0, (int) (($originalWidth - $cal_width) / 2), 0, $width, $height, $cal_width, $originalHeight);
                 }
             } else {
-                $cal_height = \intval($originalWidth / $width * $height);
+                $cal_height = (int) ($originalWidth / $width * $height);
                 if (false !== \stripos($gravity, 'north')) {
                     $this->imageCopyResized($temp, $image, 0, 0, 0, 0, $width, $height, $originalWidth, $cal_height);
                 } elseif (false !== \stripos($gravity, 'south')) {
                     $this->imageCopyResized($temp, $image, 0, 0, 0, $originalHeight - $cal_height, $width, $height, $originalWidth, $cal_height);
                 } else {
-                    $this->imageCopyResized($temp, $image, 0, 0, 0, \intval(($originalHeight - $cal_height) / 2), $width, $height, $originalWidth, $cal_height);
+                    $this->imageCopyResized($temp, $image, 0, 0, 0, (int) (($originalHeight - $cal_height) / 2), $width, $height, $originalWidth, $cal_height);
                 }
             }
         } elseif ('fill' == $resize) {
             if (($originalHeight / $height) < ($originalWidth / $width)) {
-                $thumb_height = \intval($width * $originalHeight / $originalWidth);
-                $this->imageCopyResized($temp, $image, 0, \intval(($height - $thumb_height) / 2), 0, 0, $width, $thumb_height, $originalWidth, $originalHeight);
+                $thumb_height = (int) ($width * $originalHeight / $originalWidth);
+                $this->imageCopyResized($temp, $image, 0, (int) (($height - $thumb_height) / 2), 0, 0, $width, $thumb_height, $originalWidth, $originalHeight);
             } else {
-                $thumb_width = \intval(($originalWidth * $height) / $originalHeight);
-                $this->imageCopyResized($temp, $image, \intval(($width - $thumb_width) / 2), 0, 0, 0, $thumb_width, $height, $originalWidth, $originalHeight);
+                $thumb_width = (int) (($originalWidth * $height) / $originalHeight);
+                $this->imageCopyResized($temp, $image, (int) (($width - $thumb_width) / 2), 0, 0, 0, $thumb_width, $height, $originalWidth, $originalHeight);
             }
+        } elseif ('crop' == $resize) {
+            $this->imageCopyResized($temp, $image, 0, 0, $this->config->getX(), $this->config->getY(), $width, $height, $width, $height);
         } else {
             $this->imageCopyResized($temp, $image, 0, 0, 0, 0, $width, $height, $originalWidth, $originalHeight);
         }
@@ -186,6 +208,10 @@ class Image
         return $temp;
     }
 
+    /**
+     * @param int<1, max> $width
+     * @param int<1, max> $height
+     */
     private function applyBackground(\GdImage $image, int $width, int $height): \GdImage
     {
         $temp = $this->imageCreate($width, $height);
@@ -223,22 +249,22 @@ class Image
                 }
                 $centerX = $radius - 1;
                 $centerY = $radius - 1;
-                if ($topLeft && $x < $centerX && $y < $centerY && \pow(\abs($x - $centerX), 2) + \pow(\abs($y - $centerY), 2) > \pow($radius, 2)) {
+                if ($topLeft && $x < $centerX && $y < $centerY && \abs($x - $centerX) ** 2 + \abs($y - $centerY) ** 2 > $radius ** 2) {
                     \imagesetpixel($image, $x, $y, $colorId);
                 }
                 $centerX = $radius - 1;
                 $centerY = $height - $radius;
-                if ($bottomLeft && $x < $centerX && $y > $centerY && \pow(\abs($x - $centerX), 2) + \pow(\abs($y - $centerY), 2) > \pow($radius, 2)) {
+                if ($bottomLeft && $x < $centerX && $y > $centerY && \abs($x - $centerX) ** 2 + \abs($y - $centerY) ** 2 > $radius ** 2) {
                     \imagesetpixel($image, $x, $y, $colorId);
                 }
                 $centerX = $width - $radius;
                 $centerY = $height - $radius;
-                if ($bottomRight && $x > $centerX && $y > $centerY && \pow(\abs($x - $centerX), 2) + \pow(\abs($y - $centerY), 2) > \pow($radius, 2)) {
+                if ($bottomRight && $x > $centerX && $y > $centerY && \abs($x - $centerX) ** 2 + \abs($y - $centerY) ** 2 > $radius ** 2) {
                     \imagesetpixel($image, $x, $y, $colorId);
                 }
                 $centerX = $width - $radius;
                 $centerY = $radius - 1;
-                if ($topRight && $x > $centerX && $y < $centerY && \pow(\abs($x - $centerX), 2) + \pow(\abs($y - $centerY), 2) > \pow($radius, 2)) {
+                if ($topRight && $x > $centerX && $y < $centerY && \abs($x - $centerX) ** 2 + \abs($y - $centerY) ** 2 > $radius ** 2) {
                     \imagesetpixel($image, $x, $y, $colorId);
                 }
             }
@@ -256,7 +282,7 @@ class Image
         }
         $sx = Type::integer(\imagesx($stamp));
         $sy = Type::integer(\imagesy($stamp));
-        \imagecopy($image, $stamp, \intval(($width - $sx) / 2), \intval(($height - $sy) / 2), 0, 0, $sx, $sy);
+        \imagecopy($image, $stamp, (int) (($width - $sx) / 2), (int) (($height - $sy) / 2), 0, 0, $sx, $sy);
 
         return $image;
     }
@@ -291,18 +317,8 @@ class Image
     {
         $background = $this->config->getBackground();
         $parsedColor = new Color($background);
-        $solidColour = \imagecolorallocatealpha(
-            $temp,
-            $parsedColor->getRed(),
-            $parsedColor->getGreen(),
-            $parsedColor->getBlue(),
-            $parsedColor->getAlpha(),
-        );
-        if (false === $solidColour) {
-            throw new \RuntimeException('Unexpected false imagecolorallocatealpha');
-        }
 
-        return $solidColour;
+        return $parsedColor->getColorId($temp);
     }
 
     /**
@@ -367,6 +383,10 @@ class Image
         return $image;
     }
 
+    /**
+     * @param int<1, max> $width
+     * @param int<1, max> $height
+     */
     private function imageCreate(int $width, int $height): \GdImage
     {
         if (!\function_exists('imagecreatetruecolor') || false === ($image = \imagecreatetruecolor($width, $height))) {
@@ -403,7 +423,7 @@ class Image
         $color = new Color($colorString);
         $colors = [];
         for ($i = 0; $i < 128; ++$i) {
-            $color->setAlpha($i);
+            $color->setAlphaGdValue($i);
             $colors[$i] = $color->getColorId($image);
         }
         for ($x = 0; $x < $width; ++$x) {

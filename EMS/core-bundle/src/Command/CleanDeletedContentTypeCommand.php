@@ -1,9 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Command;
 
 use Doctrine\Bundle\DoctrineBundle\Registry;
 use Doctrine\ORM\EntityManager;
+use EMS\CoreBundle\Commands;
 use EMS\CoreBundle\Entity\ContentType;
 use EMS\CoreBundle\Entity\FieldType;
 use EMS\CoreBundle\Entity\Revision;
@@ -16,25 +19,26 @@ use EMS\CoreBundle\Repository\TemplateRepository;
 use EMS\CoreBundle\Repository\ViewRepository;
 use EMS\CoreBundle\Service\Mapping;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
+#[AsCommand(
+    name: Commands::CONTENT_TYPE_CLEAN,
+    description: 'Clean all deleted content types.',
+    hidden: false,
+    aliases: ['ems:contenttype:clean']
+)]
 class CleanDeletedContentTypeCommand extends Command
 {
-    protected static $defaultName = 'ems:contenttype:clean';
-
     public function __construct(protected Registry $doctrine, protected LoggerInterface $logger, protected Mapping $mapping, protected ContainerInterface $container)
     {
         parent::__construct();
     }
 
-    protected function configure(): void
-    {
-        $this->setDescription('Clean all deleted content types');
-    }
-
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         /** @var EntityManager $em */
@@ -58,7 +62,7 @@ class CleanDeletedContentTypeCommand extends Command
         $em->flush();
 
         $contentTypes = $ctRepo->findBy([
-                'deleted' => true,
+            'deleted' => true,
         ]);
 
         foreach ($contentTypes as $contentType) {
@@ -66,7 +70,7 @@ class CleanDeletedContentTypeCommand extends Command
             if ($contentType->hasFieldType()) {
                 $contentType->unsetFieldType();
                 $em->persist($contentType);
-                $em->flush($contentType);
+                $em->flush();
             }
             $fields = $fieldRepo->findBy([
                 'contentType' => $contentType,
@@ -75,14 +79,14 @@ class CleanDeletedContentTypeCommand extends Command
             $output->writeln('Remove '.\count($fields).' assosiated fields');
             foreach ($fields as $field) {
                 $em->remove($field);
-                $em->flush($field);
+                $em->flush();
             }
 
             $revisions = $revisionRepo->findBy(['contentType' => $contentType]);
             $output->writeln('Remove '.\count($revisions).' assosiated revisions');
             foreach ($revisions as $revision) {
                 $em->remove($revision);
-                $em->flush($revision);
+                $em->flush();
             }
 
             $templates = $templateRepo->findBy(['contentType' => $contentType]);
@@ -90,24 +94,24 @@ class CleanDeletedContentTypeCommand extends Command
             /** @var Template $template */
             foreach ($templates as $template) {
                 $em->remove($template);
-                $em->flush($template);
+                $em->flush();
             }
 
             $views = $viewRepo->findBy(['contentType' => $contentType]);
             $output->writeln('Remove '.\count($views).' assosiated views');
             foreach ($views as $view) {
                 $em->remove($view);
-                $em->flush($view);
+                $em->flush();
             }
 
             $em->remove($contentType);
-            $em->flush($contentType);
+            $em->flush();
         }
 
         $output->writeln('Remove deleted revisions');
         /** @var Revision $revision */
         $revisions = $revisionRepo->findBy([
-                'deleted' => true,
+            'deleted' => true,
         ]);
         foreach ($revisions as $revision) {
             $em->remove($revision);

@@ -13,7 +13,7 @@ class Folder
             return $realPath;
         }
 
-        if (false === \mkdir($path, 0777, true)) {
+        if (false === \mkdir($path, 0o777, true)) {
             throw new \RuntimeException(\sprintf('The path %s can\'t be created', $path));
         }
 
@@ -39,6 +39,6 @@ class Folder
         $path = \implode(DIRECTORY_SEPARATOR, $slugs);
         $path = self::getRealPath($path);
 
-        return \join(DIRECTORY_SEPARATOR, [$path, $basename]);
+        return \implode(DIRECTORY_SEPARATOR, [$path, $basename]);
     }
 }

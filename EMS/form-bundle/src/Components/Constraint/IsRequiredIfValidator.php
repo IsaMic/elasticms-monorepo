@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\FormBundle\Components\Constraint;
 
 use Psr\Log\LoggerInterface;
@@ -14,6 +16,7 @@ class IsRequiredIfValidator extends ConstraintValidator
     {
     }
 
+    #[\Override]
     public function validate(mixed $value, Constraint $constraint): void
     {
         if (!$this->isEmpty($value) || !$constraint instanceof IsRequiredIf) {
@@ -31,7 +34,7 @@ class IsRequiredIfValidator extends ConstraintValidator
             return true;
         }
 
-        /** @var FormInterface<FormInterface> $form */
+        /** @var FormInterface<mixed> $form */
         $form = $this->context->getRoot();
         $values = ['data' => $form->getData()];
 

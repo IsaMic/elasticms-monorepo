@@ -24,14 +24,14 @@ final class TableItemAction
         private readonly string $icon,
         private readonly ?TranslatableMessage $messageKey,
         private readonly array $routeParameters,
-        private bool $dynamic = false
+        private bool $dynamic = false,
     ) {
     }
 
     /**
      * @param array<string, mixed> $routeParameters
      */
-    public static function postAction(string $route, string|TranslatableMessage $labelKey, string $icon, null|string|TranslatableMessage $messageKey, array $routeParameters = []): TableItemAction
+    public static function postAction(string $route, string|TranslatableMessage $labelKey, string $icon, string|TranslatableMessage|null $messageKey, array $routeParameters = []): TableItemAction
     {
         $labelKey = $labelKey instanceof TranslatableMessage ? $labelKey : new TranslatableMessage($labelKey, [], EMSCoreBundle::TRANS_DOMAIN);
         if (null !== $messageKey) {
@@ -54,7 +54,7 @@ final class TableItemAction
     /**
      * @param array<string, string|int> $routeParameters
      */
-    public static function postDynamicAction(string $route, string|TranslatableMessage $labelKey, string $icon, null|string|TranslatableMessage $messageKey, array $routeParameters = []): TableItemAction
+    public static function postDynamicAction(string $route, string|TranslatableMessage $labelKey, string $icon, string|TranslatableMessage|null $messageKey, array $routeParameters = []): TableItemAction
     {
         $labelKey = $labelKey instanceof TranslatableMessage ? $labelKey : new TranslatableMessage($labelKey, [], EMSCoreBundle::TRANS_DOMAIN);
         if (null !== $messageKey) {

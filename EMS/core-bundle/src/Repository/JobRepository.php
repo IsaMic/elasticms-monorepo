@@ -4,14 +4,17 @@ declare(strict_types=1);
 
 namespace EMS\CoreBundle\Repository;
 
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\ORM\EntityRepository;
+use Doctrine\ORM\Query\Parameter;
 use Doctrine\ORM\QueryBuilder;
 use EMS\CoreBundle\Entity\Job;
 
 /**
  * @extends EntityRepository<Job>
  *
- * @method Job|null findOneBy(array $criteria, array $orderBy = null)
+ * @method Job|null findOneBy(mixed[] $criteria, mixed[] $orderBy = null)
  */
 class JobRepository extends EntityRepository
 {
@@ -29,21 +32,20 @@ class JobRepository extends EntityRepository
         $qb = $this->createQueryBuilder('job');
         $this->addSearchFilters($qb, $searchValue);
 
-        return \intval(
+        return (int)
             $qb->select('COUNT(job)')
             ->getQuery()
-            ->getSingleScalarResult());
+            ->getSingleScalarResult()
+        ;
     }
 
     public function countPendingJobs(): int
     {
         $qb = $this->createQueryBuilder('job')->select('COUNT(job)');
         $qb->where($qb->expr()->eq('job.done', ':false'));
-        $qb->setParameters([
-            ':false' => false,
-        ]);
+        $qb->setParameters(new ArrayCollection([new Parameter('false', false)]));
 
-        return \intval($qb->getQuery()->getSingleScalarResult());
+        return (int) $qb->getQuery()->getSingleScalarResult();
     }
 
     /**
@@ -54,7 +56,7 @@ class JobRepository extends EntityRepository
         $qb = $this->createQueryBuilder('j');
         $qb
             ->andWhere($qb->expr()->in('j.id', ':ids'))
-            ->setParameter('ids', $ids);
+            ->setParameter('ids', $ids, ArrayParameterType::INTEGER);
 
         return $qb->getQuery()->getResult();
     }
@@ -77,13 +79,13 @@ class JobRepository extends EntityRepository
         $qb->where($qb->expr()->eq('job.done', ':true'));
         $qb->andWhere($qb->expr()->eq('job.user', ':username'));
         $qb->andWhere($qb->expr()->lt('job.modified', ':olderDate'));
-        $qb->setParameters([
-            ':true' => true,
-            ':olderDate' => $olderDate,
-            ':username' => $username,
-        ]);
+        $qb->setParameters(new ArrayCollection([
+            new Parameter('true', true),
+            new Parameter('olderDate', $olderDate),
+            new Parameter('username', $username),
+        ]));
 
-        return \intval($qb->getQuery()->execute());
+        return (int) $qb->getQuery()->execute();
     }
 
     /**

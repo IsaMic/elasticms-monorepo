@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Form\DataField;
 
 use EMS\CoreBundle\Entity\DataField;
@@ -19,15 +21,17 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  */
 class TextStringFieldType extends DataFieldType
 {
+    #[\Override]
     public function getLabel(): string
     {
         return 'Text field';
     }
 
     /**
-     * @param FormInterface<FormInterface> $form
-     * @param array<string, mixed>         $options
+     * @param FormInterface<mixed> $form
+     * @param array<string, mixed> $options
      */
+    #[\Override]
     public function buildView(FormView $view, FormInterface $form, array $options): void
     {
         parent::buildView($view, $form, $options);
@@ -35,45 +39,46 @@ class TextStringFieldType extends DataFieldType
         $view->vars['attr']['placeholder'] = $options['placeholder'];
     }
 
-//     /**
-//      *
-//      * {@inheritDoc}
-//      * @see \EMS\CoreBundle\Form\DataField\DataFieldType::viewTransform()
-//      */
-//     public function viewTransform(DataField $data){
-//         $out = parent::viewTransform($data);
-//         if(empty($out)) {
-//             return "";
-//         }
-//         return $out;
-//     }
+    //     /**
+    //      *
+    //      * {@inheritDoc}
+    //      * @see \EMS\CoreBundle\Form\DataField\DataFieldType::viewTransform()
+    //      */
+    //     public function viewTransform(DataField $data){
+    //         $out = parent::viewTransform($data);
+    //         if(empty($out)) {
+    //             return "";
+    //         }
+    //         return $out;
+    //     }
 
+    #[\Override]
     public static function getIcon(): string
     {
         return 'fa fa-pencil-square-o';
     }
 
+    #[\Override]
     public function getParent(): string
     {
         return IconTextType::class;
     }
 
+    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         /* set the default option value for this kind of compound field */
         parent::configureOptions($resolver);
         $resolver->setDefaults([
-                'prefixIcon' => null,
-                'prefixText' => null,
-                'suffixIcon' => null,
-                'suffixText' => null,
-                'placeholder' => null,
+            'prefixIcon' => null,
+            'prefixText' => null,
+            'suffixIcon' => null,
+            'suffixText' => null,
+            'placeholder' => null,
         ]);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function buildOptionsForm(FormBuilderInterface $builder, array $options): void
     {
         parent::buildOptionsForm($builder, $options);
@@ -81,19 +86,19 @@ class TextStringFieldType extends DataFieldType
 
         // String specific display options
         $optionsForm->get('displayOptions')->add('icon', IconPickerType::class, [
-                'required' => false,
+            'required' => false,
         ])->add('prefixIcon', IconPickerType::class, [
-                'required' => false,
+            'required' => false,
         ])->add('prefixText', IconTextType::class, [
-                'required' => false,
-                'prefixIcon' => 'fa fa-hand-o-left',
+            'required' => false,
+            'prefixIcon' => 'fa fa-hand-o-left',
         ])->add('suffixIcon', IconPickerType::class, [
-                'required' => false,
+            'required' => false,
         ])->add('suffixText', IconTextType::class, [
-                'required' => false,
-                'prefixIcon' => 'fa fa-hand-o-right',
+            'required' => false,
+            'prefixIcon' => 'fa fa-hand-o-right',
         ])->add('placeholder', TextType::class, [
-                'required' => false,
+            'required' => false,
         ]);
 
         if ($optionsForm->has('mappingOptions')) {

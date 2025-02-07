@@ -1,69 +1,30 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Entity;
 
-use Doctrine\ORM\Mapping as ORM;
 use EMS\CommonBundle\Entity\CreatedModifiedTrait;
+use EMS\CommonBundle\Entity\IdentifierIntegerTrait;
 use EMS\CoreBundle\Entity\Helper\JsonClass;
 use EMS\CoreBundle\Entity\Helper\JsonDeserializer;
-use EMS\Helpers\Standard\DateTime;
 
-/**
- * DataField.
- *
- * @ORM\Table(name="wysiwyg_profile")
- *
- * @ORM\Entity()
- *
- * @ORM\HasLifecycleCallbacks()
- */
-class WysiwygProfile extends JsonDeserializer implements \JsonSerializable, EntityInterface
+class WysiwygProfile extends JsonDeserializer implements \JsonSerializable, EntityInterface, \Stringable
 {
     use CreatedModifiedTrait;
-    /**
-     * @ORM\Column(name="id", type="integer")
-     *
-     * @ORM\Id
-     *
-     * @ORM\GeneratedValue(strategy="AUTO")
-     */
-    private int $id;
+    use IdentifierIntegerTrait;
 
-    /**
-     * @ORM\Column(name="name", type="string", length=255)
-     */
+    public const string CKEDITOR4 = 'ckeditor4';
+    public const string CKEDITOR5 = 'ckeditor5';
     protected string $name = '';
-
-    /**
-     * @ORM\Column(name="config", type="text", nullable=true)
-     */
+    protected string $editor = self::CKEDITOR4;
     protected ?string $config = null;
-
-    /**
-     * @ORM\Column(name="orderKey", type="integer")
-     */
     protected int $orderKey = 0;
 
     public function __construct()
     {
-        $this->created = DateTime::create('now');
-        $this->modified = DateTime::create('now');
-    }
-
-    /******************************************************************
-     *
-     * Generated functions
-     *
-     *******************************************************************/
-
-    /**
-     * Get id.
-     *
-     * @return int
-     */
-    public function getId()
-    {
-        return $this->id;
+        $this->created = new \DateTime();
+        $this->modified = new \DateTime();
     }
 
     public function setName(string $name): WysiwygProfile
@@ -73,6 +34,7 @@ class WysiwygProfile extends JsonDeserializer implements \JsonSerializable, Enti
         return $this;
     }
 
+    #[\Override]
     public function getName(): string
     {
         return $this->name;
@@ -112,6 +74,7 @@ class WysiwygProfile extends JsonDeserializer implements \JsonSerializable, Enti
         return $this->orderKey;
     }
 
+    #[\Override]
     public function jsonSerialize(): JsonClass
     {
         $json = new JsonClass(\get_object_vars($this), self::class);
@@ -133,8 +96,19 @@ class WysiwygProfile extends JsonDeserializer implements \JsonSerializable, Enti
         return $profile;
     }
 
+    #[\Override]
     public function __toString(): string
     {
         return $this->getName();
+    }
+
+    public function getEditor(): string
+    {
+        return $this->editor;
+    }
+
+    public function setEditor(string $editor): void
+    {
+        $this->editor = $editor;
     }
 }

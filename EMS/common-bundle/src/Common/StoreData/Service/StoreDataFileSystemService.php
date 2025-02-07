@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace EMS\CommonBundle\Common\StoreData\Service;
 
 use EMS\CommonBundle\Common\StoreData\StoreDataHelper;
+use EMS\Helpers\File\File;
 use EMS\Helpers\File\Folder;
 use EMS\Helpers\Standard\Json;
 
@@ -14,14 +15,14 @@ class StoreDataFileSystemService implements StoreDataServiceInterface
     {
     }
 
+    #[\Override]
     public function save(StoreDataHelper $data): void
     {
         $filename = $this->filename($data->getKey());
-        if (false === \file_put_contents($filename, Json::encode($data->getData(), true))) {
-            throw new \RuntimeException(\sprintf('Error while saving data at %s', $filename));
-        }
+        File::putContents($filename, Json::encode($data->getData(), true));
     }
 
+    #[\Override]
     public function read(string $key): ?StoreDataHelper
     {
         $filename = $this->filename($key);
@@ -35,6 +36,7 @@ class StoreDataFileSystemService implements StoreDataServiceInterface
         return new StoreDataHelper($key, Json::decode($json));
     }
 
+    #[\Override]
     public function delete(string $key): void
     {
         $filename = $this->filename($key);
@@ -57,6 +59,7 @@ class StoreDataFileSystemService implements StoreDataServiceInterface
         return Folder::createFileDirectories(\sprintf('%s%s%s.json', $realPath, DIRECTORY_SEPARATOR, $key));
     }
 
+    #[\Override]
     public function gc(): void
     {
     }

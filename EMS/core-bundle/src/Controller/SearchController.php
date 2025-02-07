@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Controller;
 
 use EMS\CoreBundle\DependencyInjection\EMSCoreExtension;
@@ -28,11 +30,11 @@ class SearchController extends AbstractController
         private readonly AggregateOptionService $aggregateOptionService,
         private readonly SearchFieldOptionService $searchFieldOptionService,
         private readonly TranslatorInterface $translator,
-        private readonly string $templateNamespace)
-    {
+        private readonly string $templateNamespace
+    ) {
     }
 
-    public function indexAction(Request $request): Response
+    public function index(Request $request): Response
     {
         $reorderSortOptionForm = $this->createForm(ReorderType::class);
         $reorderSortOptionForm->handleRequest($request);
@@ -59,16 +61,16 @@ class SearchController extends AbstractController
         }
 
         return $this->render("@$this->templateNamespace/search-options/index.html.twig", [
-                'sortOptions' => $this->sortOptionService->getAll(),
-                'aggregateOptions' => $this->aggregateOptionService->getAll(),
-                'searchFieldOptions' => $this->searchFieldOptionService->getAll(),
-                'sortOptionReorderForm' => $reorderSortOptionForm->createView(),
-                'aggregateOptionReorderForm' => $reorderAggregateOptionForm->createView(),
-                'searchFieldOptionReorderForm' => $searchFieldOptionForm->createView(),
+            'sortOptions' => $this->sortOptionService->getAll(),
+            'aggregateOptions' => $this->aggregateOptionService->getAll(),
+            'searchFieldOptions' => $this->searchFieldOptionService->getAll(),
+            'sortOptionReorderForm' => $reorderSortOptionForm->createView(),
+            'aggregateOptionReorderForm' => $reorderAggregateOptionForm->createView(),
+            'searchFieldOptionReorderForm' => $searchFieldOptionForm->createView(),
         ]);
     }
 
-    public function newSortOptionAction(Request $request): Response
+    public function newSortOption(Request $request): Response
     {
         $sortOption = new SortOption();
         $form = $this->createForm(SortOptionType::class, $sortOption, [
@@ -88,7 +90,7 @@ class SearchController extends AbstractController
         ]);
     }
 
-    public function newSearchFieldOptionAction(Request $request): Response
+    public function newSearchFieldOption(Request $request): Response
     {
         $searchFieldOption = new SearchFieldOption();
         $form = $this->createForm(SearchFieldOptionType::class, $searchFieldOption, [
@@ -108,11 +110,11 @@ class SearchController extends AbstractController
         ]);
     }
 
-    public function newAggregateOptionAction(Request $request): Response
+    public function newAggregateOption(Request $request): Response
     {
         $aggregateOption = new AggregateOption();
         $form = $this->createForm(AggregateOptionType::class, $aggregateOption, [
-                'createform' => true,
+            'createform' => true,
         ]);
         $form->handleRequest($request);
 
@@ -123,12 +125,12 @@ class SearchController extends AbstractController
         }
 
         return $this->render("@$this->templateNamespace/entity/new.html.twig", [
-                'entity_name' => $this->translator->trans('search.aggregate_option_label', [], EMSCoreExtension::TRANS_DOMAIN),
-                'form' => $form->createView(),
+            'entity_name' => $this->translator->trans('search.aggregate_option_label', [], EMSCoreExtension::TRANS_DOMAIN),
+            'form' => $form->createView(),
         ]);
     }
 
-    public function editSortOptionAction(Request $request, SortOption $sortOption): Response
+    public function editSortOption(Request $request, SortOption $sortOption): Response
     {
         $form = $this->createForm(SortOptionType::class, $sortOption);
         $form->handleRequest($request);
@@ -149,12 +151,12 @@ class SearchController extends AbstractController
         }
 
         return $this->render("@$this->templateNamespace/entity/edit.html.twig", [
-                'entity_name' => $this->translator->trans('search.sort_option_label', [], EMSCoreExtension::TRANS_DOMAIN),
-                'form' => $form->createView(),
+            'entity_name' => $this->translator->trans('search.sort_option_label', [], EMSCoreExtension::TRANS_DOMAIN),
+            'form' => $form->createView(),
         ]);
     }
 
-    public function editSearchFieldOptionAction(Request $request, SearchFieldOption $searchFieldOption): Response
+    public function editSearchFieldOption(Request $request, SearchFieldOption $searchFieldOption): Response
     {
         $form = $this->createForm(SearchFieldOptionType::class, $searchFieldOption);
         $form->handleRequest($request);
@@ -175,12 +177,12 @@ class SearchController extends AbstractController
         }
 
         return $this->render("@$this->templateNamespace/entity/edit.html.twig", [
-                'entity_name' => $this->translator->trans('search.search_field_option_label', [], EMSCoreExtension::TRANS_DOMAIN),
-                'form' => $form->createView(),
+            'entity_name' => $this->translator->trans('search.search_field_option_label', [], EMSCoreExtension::TRANS_DOMAIN),
+            'form' => $form->createView(),
         ]);
     }
 
-    public function editAggregagteOptionAction(Request $request, AggregateOption $option): Response
+    public function editAggregagteOption(Request $request, AggregateOption $option): Response
     {
         $form = $this->createForm(AggregateOptionType::class, $option);
         $form->handleRequest($request);
@@ -201,8 +203,8 @@ class SearchController extends AbstractController
         }
 
         return $this->render("@$this->templateNamespace/entity/edit.html.twig", [
-                'entity_name' => $this->translator->trans('search.aggregate_option_label', [], EMSCoreExtension::TRANS_DOMAIN),
-                'form' => $form->createView(),
+            'entity_name' => $this->translator->trans('search.aggregate_option_label', [], EMSCoreExtension::TRANS_DOMAIN),
+            'form' => $form->createView(),
         ]);
     }
 }

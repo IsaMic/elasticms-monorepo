@@ -1,30 +1,40 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Command;
 
+use EMS\CoreBundle\Commands;
 use EMS\CoreBundle\Entity\ManagedAlias;
 use EMS\CoreBundle\Service\AliasService;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
+#[AsCommand(
+    name: Commands::MANAGED_ALIAS_LIST,
+    description: 'List managed aliases.',
+    hidden: false,
+    aliases: ['ems:managedalias:list']
+)]
 class ManagedAliases extends Command
 {
-    protected static $defaultName = 'ems:managedalias:list';
-
     public function __construct(protected LoggerInterface $logger, protected AliasService $aliasService)
     {
         parent::__construct();
     }
 
+    #[\Override]
     protected function configure(): void
     {
-        $this->setDescription('List managed aliases')
+        $this->setDescription('')
             ->addOption('detailed', null, InputOption::VALUE_NONE, 'List all indexes in each managed alias');
     }
 
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $this->aliasService->build();

@@ -10,29 +10,31 @@ use EMS\CoreBundle\Entity\Revision;
 
 class JsonMenuNestedConfig implements ConfigInterface
 {
-    public ?string $template;
-    public ?string $locale;
+    public ?string $template = null;
+    public ?string $locale = null;
     /** @var array<string, mixed> */
     public array $context = [];
-    public ?string $contextBlock;
+    public ?string $contextBlock = null;
     /** @var JsonMenuNestedColumn[] */
     public array $columns = [];
-    public ?string $activeItemId;
+    public ?string $activeItemId = null;
 
     public function __construct(
         private readonly string $hash,
         private readonly string $id,
         public readonly Revision $revision,
         public readonly JsonMenuNested $jsonMenuNested,
-        public readonly JsonMenuNestedNodes $nodes
+        public readonly JsonMenuNestedNodes $nodes,
     ) {
     }
 
+    #[\Override]
     public function getId(): string
     {
         return $this->id;
     }
 
+    #[\Override]
     public function getHash(): string
     {
         return $this->hash;

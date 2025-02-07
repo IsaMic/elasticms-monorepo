@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Form\View;
 
 use EMS\CoreBundle\Entity\Form\CriteriaUpdateConfig;
@@ -24,20 +26,23 @@ class CriteriaViewType extends ViewType
         parent::__construct($formFactory, $twig, $logger, $templateNamespace);
     }
 
+    #[\Override]
     public function getLabel(): string
     {
         return 'Criteria: a view where we can massively edit content types having criteria';
     }
 
+    #[\Override]
     public function getName(): string
     {
         return 'Criteria';
     }
 
     /**
-     * @param FormBuilderInterface<FormBuilderInterface> $builder
-     * @param array<string, mixed>                       $options
+     * @param FormBuilderInterface<mixed> $builder
+     * @param array<string, mixed>        $options
      */
+    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         parent::buildForm($builder, $options);
@@ -59,36 +64,35 @@ class CriteriaViewType extends ViewType
             ->add('criteriaField', TextType::class, [
                 'label' => 'The collection field containing the list of criteria (internal collection mode)',
             ])->add('criteriaFieldPaths', TextareaType::class, [
-                    'attr' => [
-                        'rows' => 6,
-                    ],
+                'attr' => [
+                    'rows' => 6,
+                ],
             ]);
     }
 
+    #[\Override]
     public function getBlockPrefix(): string
     {
         return 'criteria_view';
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function getParameters(View $view, FormFactoryInterface $formFactory, Request $request): array
     {
         $criteriaUpdateConfig = new CriteriaUpdateConfig($view, $this->logger);
 
         $form = $formFactory->create(CriteriaFilterType::class, $criteriaUpdateConfig, [
-                'view' => $view,
-                'action' => $this->router->generate('views.criteria.table', [
-                    'view' => $view->getId(),
-                ], UrlGeneratorInterface::RELATIVE_PATH),
+            'view' => $view,
+            'action' => $this->router->generate('views.criteria.table', [
+                'view' => $view->getId(),
+            ], UrlGeneratorInterface::RELATIVE_PATH),
         ]);
 
         $form->handleRequest($request);
 
         $categoryField = false;
         if ($view->getContentType()->getCategoryField()) {
-            $categoryField = $view->getContentType()->getFieldType()->__get('ems_'.$view->getContentType()->getCategoryField());
+            $categoryField = $view->getContentType()->getFieldType()->get('ems_'.$view->getContentType()->getCategoryField());
         }
 
         return [
@@ -97,7 +101,7 @@ class CriteriaViewType extends ViewType
             'view' => $view,
             'contentType' => $view->getContentType(),
             'environment' => $view->getContentType()->getEnvironment(),
-            'criterionList' => $view->getContentType()->getFieldType()->__get('ems_'.$view->getOptions()['criteriaField']),
+            'criterionList' => $view->getContentType()->getFieldType()->get('ems_'.$view->getOptions()['criteriaField']),
             'form' => $form->createView(),
         ];
     }

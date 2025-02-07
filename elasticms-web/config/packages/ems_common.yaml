@@ -18,7 +18,6 @@ parameters:
     env(EMS_BACKEND_API_VERIFY): true
     env(EMS_BACKEND_API_TIMEOUT): '30'
     env(EMS_CORE_API_HEADERS): '{}'
-    env(EMS_CORE_API_MAX_CONNECTIONS): '6'
     env(EMS_ELASTICSEARCH_PROXY_API): false
 
     env(EMS_CACHE): 'file_system'
@@ -33,6 +32,7 @@ parameters:
     env(EMS_EXCLUDED_CONTENT_TYPES): '[]'
     env(EMS_SLUG_SYMBOL_MAP): ~
     env(EMS_TRUSTED_IPS): '[]'
+    env(EMS_VITE_DEV_SERVER): ~
 
 ems_common:
     hash_algo: '%env(string:EMS_HASH_ALGO)%'
@@ -48,7 +48,6 @@ ems_common:
     slug_symbol_map: '%env(json:EMS_SLUG_SYMBOL_MAP)%'
     core_api:
         headers: '%env(json:EMS_CORE_API_HEADERS)%'
-        max_connections: '%env(int:EMS_CORE_API_MAX_CONNECTIONS)%'
         verify: '%env(bool:EMS_BACKEND_API_VERIFY)%'
         timeout: '%env(int:EMS_BACKEND_API_TIMEOUT)%'
     webalize:
@@ -70,3 +69,4 @@ ems_common:
 when@dev:
     ems_common:
         profiler: true
+        vite_dev_server: '%env(resolve:EMS_VITE_DEV_SERVER)%'

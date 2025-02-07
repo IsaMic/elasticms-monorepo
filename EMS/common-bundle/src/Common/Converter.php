@@ -1,6 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CommonBundle\Common;
+
+use EMS\Helpers\Standard\Json;
 
 class Converter
 {
@@ -40,13 +44,13 @@ class Converter
     public static function stringify(mixed $var, string $defaultValue = ''): string
     {
         if (!\is_array($var) && !\is_object($var)) {
-            return \strval($var);
+            return (string) $var;
         }
         if (\is_object($var) && \method_exists($var, 'toString')) {
             return $var->toString();
         }
         try {
-            return \json_encode($var, JSON_THROW_ON_ERROR);
+            return Json::encode($var);
         } catch (\Throwable) {
             return $defaultValue;
         }

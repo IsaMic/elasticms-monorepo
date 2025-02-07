@@ -6,12 +6,12 @@ namespace EMS\CommonBundle\Common\Composer;
 
 use EMS\Helpers\Standard\Json;
 
-final class ComposerInfo
+class ComposerInfo
 {
     /** @var array<string, string> */
     private array $versionPackages = [];
 
-    public const PACKAGES = [
+    public const array PACKAGES = [
         'elasticms/core-bundle' => 'core',
         'elasticms/client-helper-bundle' => 'client',
         'elasticms/common-bundle' => 'common',

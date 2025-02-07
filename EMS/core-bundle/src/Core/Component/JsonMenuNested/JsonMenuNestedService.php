@@ -21,14 +21,14 @@ use Symfony\Component\PropertyAccess\PropertyAccessor;
 
 class JsonMenuNestedService
 {
-    private const SESSION_COPY_KEY = 'jmn_copy';
+    private const string SESSION_COPY_KEY = 'jmn_copy';
 
     public function __construct(
         private readonly JsonMenuNestedTemplateFactory $jsonMenuNestedTemplateFactory,
         private readonly RevisionService $revisionService,
         private readonly UserService $userService,
         private readonly ElasticaService $elasticaService,
-        private readonly RequestStack $requestStack
+        private readonly RequestStack $requestStack,
     ) {
     }
 

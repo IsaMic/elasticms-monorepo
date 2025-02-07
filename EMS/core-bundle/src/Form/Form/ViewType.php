@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Form\Form;
 
 use EMS\CoreBundle\EMSCoreBundle;
@@ -16,6 +18,9 @@ use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
+/**
+ * @extends AbstractType<mixed>
+ */
 class ViewType extends AbstractType
 {
     public function __construct(private readonly ContainerInterface $container)
@@ -23,9 +28,10 @@ class ViewType extends AbstractType
     }
 
     /**
-     * @param FormBuilderInterface<FormBuilderInterface> $builder
-     * @param array<string, mixed>                       $options
+     * @param FormBuilderInterface<mixed> $builder
+     * @param array<string, mixed>        $options
      */
+    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $view = $builder->getData();
@@ -78,11 +84,11 @@ class ViewType extends AbstractType
             ]);
         } else {
             $builder->add('options', Type::string($this->container->get($view->getType())::class), [
-                    'view' => $view,
-                    'row_attr' => [
-                        'class' => 'col-md-12',
-                    ],
-                ])
+                'view' => $view,
+                'row_attr' => [
+                    'class' => 'col-md-12',
+                ],
+            ])
                 ->add('save', SubmitEmsType::class, [
                     'attr' => [
                         'class' => 'btn-primary btn-sm',
@@ -99,6 +105,7 @@ class ViewType extends AbstractType
         }
     }
 
+    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([

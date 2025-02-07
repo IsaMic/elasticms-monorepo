@@ -20,6 +20,10 @@ But there is 2 more possible values, specific to elasticms:
 A secret seed.
  - Example `APP_SECRET=7b19a4a6e37b9303e4f6bca1dc6691ed`
 
+### HTTP_CLIENT_MAX_CONNECTIONS
+
+Define the max connections to the API client, when using async calls. By default it is set to `4`.
+
 ### LOG_OUTPUT
 
 Default `php://stdout` for local development you can change to `%kernel.logs_dir%/%kernel.environment%.log`
@@ -275,6 +279,21 @@ Define the default bulk size for commands such as the `ems:environment:rebuild` 
 EMSCO_DEFAULT_BULK_SIZE=500
 ``` 
  
+### EMSCO_DYNAMIC_MAPPING
+Define the default [dynamic mapping mode](https://www.elastic.co/guide/en/elasticsearch/reference/current/dynamic.html#dynamic-parameters) for the elasticsearch managed indexes. Default value: `'false'`.
+
+This parameter has been introduced in version 6.0.0. Prior version were then using the elasticsearch default value `'false'`.
+
+```dotenv
+EMSCO_DYNAMIC_MAPPING='false'
+``` 
+Possible values are:
+- `true`: New fields are added to the mapping.
+- `runtime`: New fields are added to the mapping as [runtime fields](https://www.elastic.co/guide/en/elasticsearch/reference/current/runtime.html). These fields are not indexed, and are loaded from _source at query time.
+- `false`: New fields are ignored. These fields will not be indexed or searchable, but will still appear in the _source field of returned hits. These fields will not be added to the mapping, and new fields must be added explicitly.
+- `strict`: If new fields are detected, an exception is thrown and the document is rejected. New fields must be explicitly added to the mapping.
+
+ 
 ### EMSCO_IMAGE_MAX_SIZE
 Define the limit where a resized image, with that max limit, will be generated on the client side in order to limit the memory consumption.
 The resized image's hash will be available in a `_image_resized_hash` attribute in the file field array (in case of a file field).
@@ -409,10 +428,6 @@ Define extra headers for the API client, helpful for adding cookie header for xd
 EMS_CORE_API_HEADERS='{"Cookie":"XDEBUG_SESSION=PHPSTORM"}'
 ```
 
-### EMS_CORE_API_MAX_CONNECTIONS
-
-Define the max connections to the API client, when using async calls. By default it is set to `6`.
-
 ### EMS_BACKEND_API_TIMEOUT
 
 Adjust the API client's timeout. By default is set to `30` seconds, if you API request may take longueur (e.g. during migration) you can increase the timeout :
@@ -466,6 +481,16 @@ Important the route `/metrics` is not filtered.
 ### EMS_EXCLUDED_CONTENT_TYPES
 
 Define (JSON format) a list of content type names to exclude from admin backup/restore commands. Example: `["route","template","template_ems","label"]`. Default value `[]`
+
+
+### EMS_VITE_DEV_SERVER
+
+Only use this variable for local development with vite dev server.
+
+```dotenv 
+EMS_VITE_DEV_SERVER=http://localhost:5173 #admin ui bundle
+EMS_VITE_DEV_SERVER=http://localhost:5174 #demo vite
+```
 
 ## Elasticms Form Bundle variables
 

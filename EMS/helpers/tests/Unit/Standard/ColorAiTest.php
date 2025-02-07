@@ -33,34 +33,6 @@ class ColorAiTest extends TestCase
         $this->assertEquals(51, $color->getBlue());
     }
 
-    public function testGetSetRed()
-    {
-        $color = new Color('#000000');
-        $color->setRed(123);
-        $this->assertEquals(123, $color->getRed());
-    }
-
-    public function testGetSetGreen()
-    {
-        $color = new Color('#000000');
-        $color->setGreen(123);
-        $this->assertEquals(123, $color->getGreen());
-    }
-
-    public function testGetSetBlue()
-    {
-        $color = new Color('#000000');
-        $color->setBlue(123);
-        $this->assertEquals(123, $color->getBlue());
-    }
-
-    public function testGetSetAlpha()
-    {
-        $color = new Color('#000000');
-        $color->setAlpha(123);
-        $this->assertEquals(123, $color->getAlpha());
-    }
-
     public function testGetColorId()
     {
         $color = new Color('#000000');
@@ -73,14 +45,14 @@ class ColorAiTest extends TestCase
     public function testRelativeLuminance()
     {
         $color = new Color('#FFFFFF');
-        $this->assertEquals(1.0, $color->relativeLuminance(), '', 0.01);
+        $this->assertEquals(1.0, $color->relativeLuminance(), '');
     }
 
     public function testContrastRatio()
     {
         $color1 = new Color('#FFFFFF');
         $color2 = new Color('#000000');
-        $this->assertEquals(21, $color1->contrastRatio($color2), '', 0.01);
+        $this->assertEquals(21, $color1->contrastRatio($color2), '');
     }
 
     public function testGetComplementary()
@@ -101,7 +73,7 @@ class ColorAiTest extends TestCase
     public function testGetRGBA()
     {
         $color = new Color('#FF5733');
-        $color->setAlpha(127);
-        $this->assertEquals('#FF57337F', $color->getRGBA());
+        $color->setAlphaGdValue(127);
+        $this->assertEquals('#FF5733FF', $color->getRGBA());
     }
 }

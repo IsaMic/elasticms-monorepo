@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Service;
 
 use Elastica\Aggregation\Terms;
@@ -18,7 +20,7 @@ use Psr\Log\LoggerInterface;
 
 class AliasService
 {
-    private const COUNTER_AGGREGATION = 'counter_aggregation';
+    private const string COUNTER_AGGREGATION = 'counter_aggregation';
     /** @var array<string, array{name: string, total: int, indexes: Index[], environment: string, managed: bool}> */
     private array $aliases = [];
     /** @var Index[] */
@@ -32,7 +34,7 @@ class AliasService
         private readonly Client $elasticaClient,
         private readonly EnvironmentRepository $envRepo,
         private readonly ManagedAliasRepository $managedAliasRepo,
-        private readonly ElasticaService $elasticaService
+        private readonly ElasticaService $elasticaService,
     ) {
     }
 

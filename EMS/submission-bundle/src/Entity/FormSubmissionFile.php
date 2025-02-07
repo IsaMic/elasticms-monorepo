@@ -4,85 +4,40 @@ declare(strict_types=1);
 
 namespace EMS\SubmissionBundle\Entity;
 
-use Doctrine\ORM\Mapping as ORM;
+use EMS\CommonBundle\Entity\CreatedModifiedTrait;
 use EMS\CommonBundle\Entity\EntityInterface;
-use Ramsey\Uuid\Doctrine\UuidGenerator;
+use EMS\Helpers\Standard\Base64;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 
-/**
- * @ORM\Table(name="form_submission_file")
- *
- * @ORM\Entity()
- *
- * @ORM\HasLifecycleCallbacks()
- */
 class FormSubmissionFile implements EntityInterface, \JsonSerializable
 {
-    /**
-     * @ORM\Id
-     *
-     * @ORM\Column(type="uuid", unique=true)
-     *
-     * @ORM\GeneratedValue(strategy="CUSTOM")
-     *
-     * @ORM\CustomIdGenerator(class=UuidGenerator::class)
-     */
-    private UuidInterface $id;
+    use CreatedModifiedTrait;
+
+    private readonly UuidInterface $id;
 
     /**
-     * @ORM\Column(name="created", type="datetime")
-     */
-    private \DateTime $created;
-
-    /**
-     * @ORM\Column(name="modified", type="datetime")
-     */
-    private \DateTime $modified;
-
-    /**
-     * @var string|resource
-     *
-     * @ORM\Column(name="file", type="blob")
+     * @var resource|string
+     * @phpstan-ignore-next-line
      */
     private $file;
-
-    /**
-     * @ORM\Column(name="filename", type="string")
-     */
-    private string $filename;
-
-    /**
-     * @ORM\Column(name="form_field", type="string")
-     */
-    private string $formField;
-
-    /**
-     * @ORM\Column(name="mime_type", type="string", length=1024)
-     */
-    private string $mimeType;
-
-    /**
-     * @ORM\Column(name="size", type="bigint")
-     */
-    private string $size;
+    private readonly string $filename;
+    private readonly string $formField;
+    private readonly string $mimeType;
+    private readonly string $size;
 
     /**
      * @param array<string, string> $file
      */
-    public function __construct(/**
-     * @ORM\ManyToOne(targetEntity="EMS\SubmissionBundle\Entity\FormSubmission", inversedBy="files")
-     *
-     * @ORM\JoinColumn(name="form_submission_id", referencedColumnName="id")
-     */
-    private FormSubmission $formSubmission, array $file)
-    {
-        $now = new \DateTime();
-
+    public function __construct(
+        private readonly FormSubmission $formSubmission,
+        array $file,
+    ) {
         $this->id = Uuid::uuid4();
-        $this->created = $now;
-        $this->modified = $now;
-        $this->file = \base64_decode($file['base64']);
+        $this->created = new \DateTime();
+        $this->modified = new \DateTime();
+
+        $this->file = Base64::decode($file['base64']);
         $this->filename = $file['filename'];
         $this->formField = $file['form_field'];
         $this->mimeType = $file['mimeType'];
@@ -92,6 +47,7 @@ class FormSubmissionFile implements EntityInterface, \JsonSerializable
     /**
      * @return array<string, mixed>
      */
+    #[\Override]
     public function jsonSerialize(): array
     {
         return $this->toArray();
@@ -112,16 +68,6 @@ class FormSubmissionFile implements EntityInterface, \JsonSerializable
     }
 
     /**
-     * @ORM\PrePersist
-     *
-     * @ORM\PreUpdate
-     */
-    public function updateModified(): void
-    {
-        $this->modified = new \DateTime();
-    }
-
-    /**
      * @return resource|null
      */
     public function getFile()
@@ -139,19 +85,10 @@ class FormSubmissionFile implements EntityInterface, \JsonSerializable
         return \sprintf('%s:%s', $this->getFormSubmission()->getName(), $this->filename);
     }
 
+    #[\Override]
     public function getId(): string
     {
         return $this->id->toString();
-    }
-
-    public function getCreated(): \DateTime
-    {
-        return $this->created;
-    }
-
-    public function getModified(): \DateTime
-    {
-        return $this->modified;
     }
 
     public function getFormSubmission(): FormSubmission
@@ -169,10 +106,7 @@ class FormSubmissionFile implements EntityInterface, \JsonSerializable
         return $this->mimeType;
     }
 
-    /**
-     * @return mixed|string
-     */
-    public function getSize()
+    public function getSize(): string
     {
         return $this->size;
     }

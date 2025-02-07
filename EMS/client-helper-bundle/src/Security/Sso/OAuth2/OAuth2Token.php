@@ -17,21 +17,22 @@ class OAuth2Token extends PostAuthenticationToken
         private readonly AccessTokenInterface $accessToken,
         UserInterface $user,
         string $firewallName,
-        array $roles
+        array $roles,
     ) {
         parent::__construct($user, $firewallName, $roles);
     }
 
-    public function getAccessToken(string $service = null): AccessTokenInterface
+    public function getAccessToken(?string $service = null): AccessTokenInterface
     {
         return $service ? $this->serviceTokens[$service] : $this->accessToken;
     }
 
-    public function getToken(string $service = null): string
+    public function getToken(?string $service = null): string
     {
         return $service ? $this->serviceTokens[$service]->getToken() : $this->accessToken->getToken();
     }
 
+    #[\Override]
     public function __serialize(): array
     {
         return [$this->accessToken, $this->serviceTokens, parent::__serialize()];
@@ -40,6 +41,7 @@ class OAuth2Token extends PostAuthenticationToken
     /**
      * @param array<mixed> $data
      */
+    #[\Override]
     public function __unserialize(array $data): void
     {
         [$this->accessToken, $this->serviceTokens, $parentData] = $data;

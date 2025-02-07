@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CommonBundle\Common\StoreData\Factory;
 
 use EMS\CommonBundle\Common\Cache\Cache;
@@ -9,19 +11,21 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class StoreDataCacheFactory implements StoreDataFactoryInterface
 {
-    public const TYPE_CACHE = 'cache';
+    final public const string TYPE_CACHE = 'cache';
     public const TTL = 'ttl';
 
     public function __construct(
-        private readonly Cache $cache
+        private readonly Cache $cache,
     ) {
     }
 
+    #[\Override]
     public function getType(): string
     {
         return self::TYPE_CACHE;
     }
 
+    #[\Override]
     public function createService(array $parameters): StoreDataServiceInterface
     {
         $resolver = new OptionsResolver();

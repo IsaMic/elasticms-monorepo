@@ -11,34 +11,38 @@ use EMS\CoreBundle\Core\ContentType\Transformer\ContentTransformerInterface;
 use EMS\CoreBundle\Core\Revision\Search\RevisionSearcher;
 use EMS\CoreBundle\Entity\ContentType;
 use EMS\CoreBundle\Service\ContentTypeService;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
+#[AsCommand(
+    name: Commands::CONTENT_TYPE_TRANSFORM,
+    hidden: false
+)]
 final class TransformCommand extends AbstractCommand
 {
     private ContentType $contentType;
     private string $searchQuery;
     private string $user = 'SYSTEM_CONTENT_TRANSFORM';
 
-    public const ARGUMENT_CONTENT_TYPE = 'content-type';
-    public const OPTION_SCROLL_SIZE = 'scroll-size';
-    public const OPTION_SCROLL_TIMEOUT = 'scroll-timeout';
-    public const OPTION_SEARCH_QUERY = 'search-query';
-    public const OPTION_DRY_RUN = 'dry-run';
-    public const OPTION_USER = 'user';
-
-    protected static $defaultName = Commands::CONTENT_TYPE_TRANSFORM;
+    public const string ARGUMENT_CONTENT_TYPE = 'content-type';
+    public const string OPTION_SCROLL_SIZE = 'scroll-size';
+    public const string OPTION_SCROLL_TIMEOUT = 'scroll-timeout';
+    public const string OPTION_SEARCH_QUERY = 'search-query';
+    public const string OPTION_DRY_RUN = 'dry-run';
+    public const string OPTION_USER = 'user';
 
     public function __construct(
         private readonly RevisionSearcher $revisionSearcher,
         private readonly ContentTypeService $contentTypeService,
-        private readonly ContentTransformer $contentTransformer
+        private readonly ContentTransformer $contentTransformer,
     ) {
         parent::__construct();
     }
 
+    #[\Override]
     protected function configure(): void
     {
         $this
@@ -51,6 +55,7 @@ final class TransformCommand extends AbstractCommand
         ;
     }
 
+    #[\Override]
     protected function initialize(InputInterface $input, OutputInterface $output): void
     {
         parent::initialize($input, $output);
@@ -69,6 +74,7 @@ final class TransformCommand extends AbstractCommand
         $this->contentType = $this->contentTypeService->giveByName($this->getArgumentString(self::ARGUMENT_CONTENT_TYPE));
     }
 
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $transformerDefinitions = $this->contentTransformer->getTransformerDefinitions($this->contentType);

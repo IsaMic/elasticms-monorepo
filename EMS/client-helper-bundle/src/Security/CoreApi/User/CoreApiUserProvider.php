@@ -4,21 +4,25 @@ declare(strict_types=1);
 
 namespace EMS\ClientHelperBundle\Security\CoreApi\User;
 
-use EMS\ClientHelperBundle\Security\CoreApi\CoreApiFactory;
+use EMS\CommonBundle\Contracts\CoreApi\CoreApiInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationException;
 use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
 
-class CoreApiUserProvider implements UserProviderInterface
+/**
+ * @implements UserProviderInterface<CoreApiUser>
+ */
+readonly class CoreApiUserProvider implements UserProviderInterface
 {
     public function __construct(
-        private readonly CoreApiFactory $coreApiFactory,
-        private readonly LoggerInterface $logger
+        private CoreApiInterface $coreApi,
+        private LoggerInterface $logger,
     ) {
     }
 
+    #[\Override]
     public function refreshUser(UserInterface $user): UserInterface
     {
         if (!$user instanceof CoreApiUser) {
@@ -28,6 +32,7 @@ class CoreApiUserProvider implements UserProviderInterface
         return $user;
     }
 
+    #[\Override]
     public function supportsClass(string $class): bool
     {
         return CoreApiUser::class === $class;
@@ -38,13 +43,12 @@ class CoreApiUserProvider implements UserProviderInterface
         return $this->loadUserByIdentifier($username);
     }
 
+    #[\Override]
     public function loadUserByIdentifier(string $identifier): UserInterface
     {
-        $coreApi = $this->coreApiFactory->create();
-        $coreApi->setToken($identifier);
-
         try {
-            $profile = $coreApi->user()->getProfileAuthenticated();
+            $this->coreApi->setToken($identifier);
+            $profile = $this->coreApi->user()->getProfileAuthenticated();
 
             return new CoreApiUser($profile, $identifier);
         } catch (\Throwable $e) {

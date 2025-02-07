@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Form\DataField;
 
 use EMS\CommonBundle\Helper\EmsFields;
@@ -28,29 +30,30 @@ class IndexedAssetFieldType extends DataFieldType
         AuthorizationCheckerInterface $authorizationChecker,
         FormRegistryInterface $formRegistry,
         ElasticsearchService $elasticsearchService,
-        private readonly FileService $fileService
+        private readonly FileService $fileService,
     ) {
         parent::__construct($authorizationChecker, $formRegistry, $elasticsearchService);
     }
 
+    #[\Override]
     public static function getIcon(): string
     {
         return 'fa fa-file-text-o';
     }
 
+    #[\Override]
     public function getLabel(): string
     {
         return 'Indexed file field';
     }
 
+    #[\Override]
     public function getParent(): string
     {
         return FileType::class;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function buildOptionsForm(FormBuilderInterface $builder, array $options): void
     {
         parent::buildOptionsForm($builder, $options);
@@ -60,19 +63,20 @@ class IndexedAssetFieldType extends DataFieldType
             $optionsForm->get('mappingOptions')
             ->add('analyzer', AnalyzerPickerType::class)
             ->add('copy_to', TextType::class, [
-                    'required' => false,
+                'required' => false,
             ]);
         }
 
         $optionsForm->get('displayOptions')
         ->add('icon', IconPickerType::class, [
-                'required' => false,
+            'required' => false,
         ])
         ->add('imageAssetConfigIdentifier', TextType::class, [
-                'required' => false,
+            'required' => false,
         ]);
     }
 
+    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         /* set the default option value for this kind of compound field */
@@ -81,40 +85,33 @@ class IndexedAssetFieldType extends DataFieldType
         $resolver->setDefault('imageAssetConfigIdentifier', null);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function generateMapping(FieldType $current): array
     {
         $mapping = parent::generateMapping($current);
 
         return [
             $current->getName() => [
-                    'type' => 'nested',
-                    'properties' => [
-                            EmsFields::CONTENT_MIME_TYPE_FIELD => $this->elasticsearchService->getKeywordMapping(),
-                            EmsFields::CONTENT_MIME_TYPE_FIELD_ => $this->elasticsearchService->getKeywordMapping(),
-                            EmsFields::CONTENT_FILE_HASH_FIELD => $this->elasticsearchService->getKeywordMapping(),
-                            EmsFields::CONTENT_FILE_HASH_FIELD_ => $this->elasticsearchService->getKeywordMapping(),
-                            EmsFields::CONTENT_FILE_NAME_FIELD => $this->elasticsearchService->getIndexedStringMapping(),
-                            EmsFields::CONTENT_FILE_NAME_FIELD_ => $this->elasticsearchService->getIndexedStringMapping(),
-                            EmsFields::CONTENT_FILE_SIZE_FIELD => $this->elasticsearchService->getLongMapping(),
-                            EmsFields::CONTENT_FILE_SIZE_FIELD_ => $this->elasticsearchService->getLongMapping(),
-                            EmsFields::CONTENT_FILE_ALGO_FIELD_ => $this->elasticsearchService->getKeywordMapping(),
-                            EmsFields::CONTENT_IMAGE_RESIZED_HASH_FIELD => $this->elasticsearchService->getKeywordMapping(),
-                            EmsFields::CONTENT_FILE_CONTENT => $mapping[$current->getName()],
-                            EmsFields::CONTENT_FILE_AUTHOR => $mapping[$current->getName()],
-                            EmsFields::CONTENT_FILE_TITLE => $mapping[$current->getName()],
-                            EmsFields::CONTENT_FILE_DATE => $this->elasticsearchService->getDateTimeMapping(),
-                            EmsFields::CONTENT_FILE_LANGUAGE => $this->elasticsearchService->getKeywordMapping(),
-                    ],
+                'type' => 'nested',
+                'properties' => [
+                    EmsFields::CONTENT_MIME_TYPE_FIELD => $this->elasticsearchService->getKeywordMapping(),
+                    EmsFields::CONTENT_MIME_TYPE_FIELD_ => $this->elasticsearchService->getKeywordMapping(), EmsFields::CONTENT_FILE_HASH_FIELD => $this->elasticsearchService->getKeywordMapping(),
+                    EmsFields::CONTENT_FILE_HASH_FIELD_ => $this->elasticsearchService->getKeywordMapping(),
+                    EmsFields::CONTENT_FILE_NAME_FIELD => $this->elasticsearchService->getIndexedStringMapping(),
+                    EmsFields::CONTENT_FILE_NAME_FIELD_ => $this->elasticsearchService->getIndexedStringMapping(),
+                    EmsFields::CONTENT_FILE_SIZE_FIELD => $this->elasticsearchService->getLongMapping(),
+                    EmsFields::CONTENT_FILE_SIZE_FIELD_ => $this->elasticsearchService->getLongMapping(),
+                    EmsFields::CONTENT_FILE_ALGO_FIELD_ => $this->elasticsearchService->getKeywordMapping(), EmsFields::CONTENT_IMAGE_RESIZED_HASH_FIELD => $this->elasticsearchService->getKeywordMapping(), EmsFields::CONTENT_FILE_CONTENT => $mapping[$current->getName()],
+                    EmsFields::CONTENT_FILE_AUTHOR => $mapping[$current->getName()],
+                    EmsFields::CONTENT_FILE_TITLE => $mapping[$current->getName()],
+                    EmsFields::CONTENT_FILE_DATE => $this->elasticsearchService->getDateTimeMapping(),
+                    EmsFields::CONTENT_FILE_LANGUAGE => $this->elasticsearchService->getKeywordMapping(),
+                ],
             ],
         ];
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function reverseViewTransform($data, FieldType $fieldType): DataField
     {
         if (\is_array($data)) {
@@ -159,9 +156,7 @@ class IndexedAssetFieldType extends DataFieldType
         $dataField->setRawData($raw);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function viewTransform(DataField $dataField)
     {
         $out = parent::viewTransform($dataField);
@@ -173,6 +168,7 @@ class IndexedAssetFieldType extends DataFieldType
         return $out;
     }
 
+    #[\Override]
     public function modelTransform($data, FieldType $fieldType): DataField
     {
         if (!\is_array($data)) {

@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Form\Field;
 
 use EMS\CoreBundle\Form\Factory\ContentTypeFieldChoiceListFactory;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-class ContentTypeFieldPickerType extends SelectPickerType
+class ContentTypeFieldPickerType extends Select2Type
 {
     private readonly ContentTypeFieldChoiceListFactory $choiceListFactory;
 
@@ -16,6 +18,7 @@ class ContentTypeFieldPickerType extends SelectPickerType
         $this->choiceListFactory = $factory;
     }
 
+    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         parent::configureOptions($resolver);

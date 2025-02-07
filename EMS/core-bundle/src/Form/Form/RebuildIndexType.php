@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Form\Form;
 
 use EMS\CoreBundle\Form\Field\SubmitEmsType;
@@ -7,12 +9,16 @@ use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\FormBuilderInterface;
 
+/**
+ * @extends AbstractType<mixed>
+ */
 class RebuildIndexType extends AbstractType
 {
     /**
-     * @param FormBuilderInterface<FormBuilderInterface> $builder
-     * @param array<string, mixed>                       $options
+     * @param FormBuilderInterface<mixed> $builder
+     * @param array<string, mixed>        $options
      */
+    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $options = [
@@ -21,14 +27,14 @@ class RebuildIndexType extends AbstractType
         ];
         $builder
         ->add('option', ChoiceType::class, [
-                'choices' => $options,
-                'expanded' => true,
+            'choices' => $options,
+            'expanded' => true,
         ])
          ->add('rebuild', SubmitEmsType::class, [
-                'attr' => [
-                        'class' => 'btn btn-primary btn-sm ',
-                ],
-                'icon' => 'fa fa-recycle',
+             'attr' => [
+                 'class' => 'btn btn-primary btn-sm ',
+             ],
+             'icon' => 'fa fa-recycle',
          ]);
     }
 }

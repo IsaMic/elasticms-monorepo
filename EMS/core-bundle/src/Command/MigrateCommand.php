@@ -1,10 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Command;
 
 use Doctrine\Bundle\DoctrineBundle\Registry;
 use EMS\CommonBundle\Common\Command\AbstractCommand;
-use EMS\CommonBundle\Common\Standard\DateTime;
 use EMS\CommonBundle\Service\ElasticaService;
 use EMS\CoreBundle\Command\Revision\ArchiveCommand;
 use EMS\CoreBundle\Commands;
@@ -14,19 +15,25 @@ use EMS\CoreBundle\Exception\CantBeFinalizedException;
 use EMS\CoreBundle\Exception\NotLockedException;
 use EMS\CoreBundle\Repository\ContentTypeRepository;
 use EMS\CoreBundle\Service\DocumentService;
+use EMS\Helpers\Standard\DateTime;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
+#[AsCommand(
+    name: Commands::CONTENT_TYPE_MIGRATE,
+    description: 'Migrate a content type from an elasticsearch index.',
+    hidden: false,
+    aliases: ['ems:contenttype:migrate']
+)]
 class MigrateCommand extends AbstractCommand
 {
-    protected static $defaultName = 'ems:contenttype:migrate';
-
     private string $elasticsearchIndex;
     private string $contentTypeNameFrom;
     private string $contentTypeNameTo;
-    private int  $scrollSize;
+    private int $scrollSize;
     private string $scrollTimeout;
     private bool $indexInDefaultEnv;
 
@@ -42,26 +49,26 @@ class MigrateCommand extends AbstractCommand
     private bool $dontFinalize;
     private readonly ContentTypeRepository $contentTypeRepository;
 
-    private const ARGUMENT_CONTENTTYPE_NAME_FROM = 'contentTypeNameFrom';
-    private const ARGUMENT_CONTENTTYPE_NAME_TO = 'contentTypeNameTo';
-    private const ARGUMENT_SCROLL_SIZE = 'scrollSize';
-    private const ARGUMENT_SCROLL_TIMEOUT = 'scrollTimeout';
-    private const ARGUMENT_ELASTICSEARCH_INDEX = 'elasticsearchIndex';
+    private const string ARGUMENT_CONTENTTYPE_NAME_FROM = 'contentTypeNameFrom';
+    private const string ARGUMENT_CONTENTTYPE_NAME_TO = 'contentTypeNameTo';
+    private const string ARGUMENT_SCROLL_SIZE = 'scrollSize';
+    private const string ARGUMENT_SCROLL_TIMEOUT = 'scrollTimeout';
+    private const string ARGUMENT_ELASTICSEARCH_INDEX = 'elasticsearchIndex';
 
-    private const OPTION_ARCHIVE = 'archive';
-    private const OPTION_CHANGED = 'changed';
-    private const OPTION_DONT_FINALIZE = 'dont-finalize';
-    private const OPTION_FORCE = 'force';
-    private const OPTION_BULK_SIZE = 'bulkSize';
-    private const OPTION_RAW = 'raw';
-    private const OPTION_SIGN_DATA = 'sign-data';
-    private const OPTION_SEARCH_QUERY = 'searchQuery';
+    private const string OPTION_ARCHIVE = 'archive';
+    private const string OPTION_CHANGED = 'changed';
+    private const string OPTION_DONT_FINALIZE = 'dont-finalize';
+    private const string OPTION_FORCE = 'force';
+    private const string OPTION_BULK_SIZE = 'bulkSize';
+    private const string OPTION_RAW = 'raw';
+    private const string OPTION_SIGN_DATA = 'sign-data';
+    private const string OPTION_SEARCH_QUERY = 'searchQuery';
 
     public function __construct(
         protected Registry $doctrine,
         private readonly ElasticaService $elasticaService,
-        private readonly DocumentService $documentService)
-    {
+        private readonly DocumentService $documentService
+    ) {
         $em = $this->doctrine->getManager();
         $contentTypeRepository = $em->getRepository(ContentType::class);
         if (!$contentTypeRepository instanceof ContentTypeRepository) {
@@ -72,10 +79,10 @@ class MigrateCommand extends AbstractCommand
         parent::__construct();
     }
 
+    #[\Override]
     protected function configure(): void
     {
         $this
-            ->setDescription('Migrate a content type from an elasticsearch index')
             ->addArgument(
                 self::ARGUMENT_ELASTICSEARCH_INDEX,
                 InputArgument::REQUIRED,
@@ -156,6 +163,7 @@ class MigrateCommand extends AbstractCommand
         ;
     }
 
+    #[\Override]
     protected function interact(InputInterface $input, OutputInterface $output): int
     {
         $this->io->title('Start migration');
@@ -179,7 +187,7 @@ class MigrateCommand extends AbstractCommand
             throw new \RuntimeException('Unexpected Content type To name');
         }
         $this->contentTypeNameTo = $contentTypeNameTo;
-        $this->scrollSize = \intval($input->getArgument(self::ARGUMENT_SCROLL_SIZE));
+        $this->scrollSize = (int) $input->getArgument(self::ARGUMENT_SCROLL_SIZE);
         if (0 === $this->scrollSize) {
             throw new \RuntimeException('Unexpected scroll size argument');
         }
@@ -198,7 +206,7 @@ class MigrateCommand extends AbstractCommand
         $this->onlyChanged = (bool) $input->getOption(self::OPTION_CHANGED);
 
         $contentTypeTo = $this->contentTypeRepository->findByName($this->contentTypeNameTo);
-        if (null === $contentTypeTo || !$contentTypeTo instanceof ContentType) {
+        if (null === $contentTypeTo) {
             $this->io->error(\sprintf('Content type "%s" not found', $this->contentTypeNameTo));
 
             return -1;
@@ -226,7 +234,7 @@ class MigrateCommand extends AbstractCommand
             $this->indexInDefaultEnv = false;
         }
 
-        $archive = \boolval($input->getOption(self::OPTION_ARCHIVE));
+        $archive = (bool) $input->getOption(self::OPTION_ARCHIVE);
         if ($archive) {
             $this->archiveModifiedBefore = DateTime::create('now');
             $this->io->note(\sprintf('Will archive not updated revisions before %s', $this->archiveModifiedBefore->format(\DateTimeInterface::ATOM)));
@@ -235,6 +243,7 @@ class MigrateCommand extends AbstractCommand
         return 0;
     }
 
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $this->io->section(\sprintf('Start migration of %s', $this->contentTypeTo->getPluralName()));
@@ -258,7 +267,7 @@ class MigrateCommand extends AbstractCommand
                 try {
                     $this->documentService->importDocument($importerContext, $result->getId(), $result->getSource());
                 } catch (NotLockedException|CantBeFinalizedException $e) {
-                    $this->io->error($e);
+                    $this->io->error($e->getMessage());
                 }
                 $progress->advance();
             }

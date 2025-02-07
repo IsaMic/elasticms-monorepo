@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace EMS\CoreBundle\Controller\Revision;
 
-use EMS\CommonBundle\Common\Standard\Base64;
 use EMS\CommonBundle\Json\JsonMenuNested;
 use EMS\CoreBundle\Core\Revision\Json\JsonMenuRenderer;
 use EMS\CoreBundle\Core\Revision\RawDataTransformer;
@@ -19,6 +18,7 @@ use EMS\CoreBundle\Service\DataService;
 use EMS\CoreBundle\Service\Revision\RevisionService;
 use EMS\CoreBundle\Service\UserService;
 use EMS\Helpers\ArrayHelper\ArrayHelper;
+use EMS\Helpers\Standard\Base64;
 use EMS\Helpers\Standard\Json;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -33,14 +33,14 @@ final class JsonMenuNestedController extends AbstractController
         private readonly RevisionService $revisionService,
         private readonly DataService $dataService,
         private readonly UserService $userService,
-        private readonly string $templateNamespace)
-    {
+        private readonly string $templateNamespace
+    ) {
     }
 
     public function modal(Request $request, Revision $revision, FieldType $fieldType): JsonResponse
     {
         $requestData = $this->getRequestData($request);
-        $level = \intval($requestData['level']);
+        $level = (int) $requestData['level'];
 
         $newLevel = $level + 1;
         $maxDepth = $fieldType->getRestrictionOption('json_nested_max_depth', 0);
@@ -72,7 +72,9 @@ final class JsonMenuNestedController extends AbstractController
             $isValid = $this->dataService->isValid($formDataField, null, $objectArray);
 
             if ($isValid || $form->isValid()) {
-                $this->dataService->getPostProcessing()->jsonMenuNested($formDataField, $revision->giveContentType(), $objectArray);
+                if (\is_array($objectArray)) {
+                    $this->dataService->getPostProcessing()->jsonMenuNested($formDataField, $revision->giveContentType(), $objectArray);
+                }
 
                 return $this->getAjaxModal()->getSuccessResponse([
                     'html' => $this->jsonMenuRenderer->generateNestedItem($requestData['config'], [
@@ -175,7 +177,7 @@ final class JsonMenuNestedController extends AbstractController
                 $item->setChildren($updateJsonMenuNested->getChildren());
             }
 
-            return JSON::encode($currentJsonMenuNested->toArrayStructure());
+            return Json::encode($currentJsonMenuNested->toArrayStructure());
         });
 
         $username = $this->userService->getCurrentUser()->getUsername();
@@ -195,7 +197,7 @@ final class JsonMenuNestedController extends AbstractController
      */
     private function getRequestData(Request $request): array
     {
-        if ('json' === $request->getContentType()) {
+        if ('json' === $request->getContentTypeFormat()) {
             $requestContent = $request->getContent();
             $decoded = \is_string($requestContent) && \strlen($requestContent) > 0 ? Json::decode($requestContent) : [];
 

@@ -1,11 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Command;
 
 use Doctrine\Bundle\DoctrineBundle\Registry;
 use Doctrine\ORM\EntityManager;
 use EMS\CommonBundle\Common\Command\AbstractCommand;
 use EMS\CommonBundle\Helper\EmsFields;
+use EMS\CoreBundle\Commands;
 use EMS\CoreBundle\Elasticsearch\Bulker;
 use EMS\CoreBundle\Entity\ContentType;
 use EMS\CoreBundle\Entity\Environment;
@@ -17,15 +20,21 @@ use EMS\CoreBundle\Service\DataService;
 use EMS\CoreBundle\Service\Mapping;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
+#[AsCommand(
+    name: Commands::ENVIRONMENT_REINDEX,
+    description: 'Reindex an environment in it\'s existing index.',
+    hidden: false,
+    aliases: ['ems:environment:reindex']
+)]
 class ReindexCommand extends AbstractCommand
 {
-    protected static $defaultName = 'ems:environment:reindex';
     private int $count = 0;
     private int $deleted = 0;
     private int $reloaded = 0;
@@ -36,9 +45,10 @@ class ReindexCommand extends AbstractCommand
         parent::__construct();
     }
 
+    #[\Override]
     protected function configure(): void
     {
-        $this->setDescription('Reindex an environment in it\'s existing index')
+        $this
             ->addArgument(
                 'name',
                 InputArgument::REQUIRED,
@@ -75,6 +85,7 @@ class ReindexCommand extends AbstractCommand
             );
     }
 
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $name = $input->getArgument('name');
@@ -102,7 +113,7 @@ class ReindexCommand extends AbstractCommand
             $contentTypes = $ctRepo->findBy(['deleted' => false]);
         }
 
-        $bulkSize = \intval($input->getOption('bulk-size'));
+        $bulkSize = (int) $input->getOption('bulk-size');
         if (0 === $bulkSize) {
             throw new \RuntimeException('Unexpected bulk size argument');
         }
@@ -125,8 +136,6 @@ class ReindexCommand extends AbstractCommand
 
         /** @var EntityManager $em */
         $em = $this->doctrine->getManager();
-
-        $em->getConnection()->getConfiguration()->setSQLLogger(null);
 
         /** @var EnvironmentRepository $envRepo */
         $envRepo = $em->getRepository(Environment::class);

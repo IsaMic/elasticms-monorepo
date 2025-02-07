@@ -5,25 +5,28 @@ declare(strict_types=1);
 namespace EMS\CommonBundle\Common\Metric;
 
 use EMS\CommonBundle\Common\Composer\ComposerInfo;
-use EMS\CommonBundle\Common\Standard\DateTime;
+use EMS\Helpers\Standard\DateTime;
 use Prometheus\CollectorRegistry;
 
-final class EmsInfoMetricCollector implements MetricCollectorInterface
+final readonly class EmsInfoMetricCollector implements MetricCollectorInterface
 {
-    public function __construct(private readonly ComposerInfo $composerInfo)
+    public function __construct(private ComposerInfo $composerInfo)
     {
     }
 
+    #[\Override]
     public function getName(): string
     {
         return 'ems_info';
     }
 
+    #[\Override]
     public function validUntil(): int
     {
         return DateTime::create('+1 day')->getTimestamp();
     }
 
+    #[\Override]
     public function collect(CollectorRegistry $collectorRegistry): void
     {
         $versionPackages = $this->composerInfo->getVersionPackages();

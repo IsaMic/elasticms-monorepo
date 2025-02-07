@@ -6,6 +6,7 @@ namespace EMS\CoreBundle\Repository;
 
 use Doctrine\Bundle\DoctrineBundle\Registry;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\ORM\QueryBuilder;
@@ -31,7 +32,7 @@ class LogRepository extends ServiceEntityRepository
         $this->addSearchFilters($qb, $context);
 
         try {
-            return \intval($qb->getQuery()->getSingleScalarResult());
+            return (int) $qb->getQuery()->getSingleScalarResult();
         } catch (NonUniqueResultException) {
             return 0;
         }
@@ -58,7 +59,7 @@ class LogRepository extends ServiceEntityRepository
     {
         $queryBuilder = $this->createQueryBuilder('log');
         $queryBuilder->where('log.id IN (:ids)')
-            ->setParameter('ids', $ids);
+            ->setParameter('ids', $ids, ArrayParameterType::STRING);
 
         return $queryBuilder->getQuery()->getResult();
     }

@@ -18,13 +18,18 @@ use EMS\CoreBundle\Service\FileService;
 use EMS\CoreBundle\Service\Revision\RevisionService;
 use EMS\Helpers\Html\MimeTypes;
 use EMS\Helpers\Standard\Json;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
+#[AsCommand(
+    name: Commands::ASSET_REFRESH_FILE_FIELD,
+    description: 'Refresh file field and regenerate resized images base on the EMSCO_IMAGE_MAX_SIZE environment variable.',
+    hidden: false
+)]
 class RefreshFileFieldCommand extends AbstractCommand
 {
-    private const USER = 'SYSTEM_REFRESH_FILE_FIELDS';
-    protected static $defaultName = Commands::ASSET_REFRESH_FILE_FIELD;
+    private const string USER = 'SYSTEM_REFRESH_FILE_FIELDS';
     private User $fakeUser;
 
     public function __construct(private readonly RevisionService $revisionService, private readonly StorageManager $storageManager, private readonly FileService $fileService, private readonly int $imageMaxSize)
@@ -32,11 +37,7 @@ class RefreshFileFieldCommand extends AbstractCommand
         parent::__construct();
     }
 
-    protected function configure(): void
-    {
-        $this->setDescription('Refresh file field and regenerate resized images base on the EMSCO_IMAGE_MAX_SIZE environment variable.');
-    }
-
+    #[\Override]
     protected function initialize(InputInterface $input, OutputInterface $output): void
     {
         parent::initialize($input, $output);
@@ -44,6 +45,7 @@ class RefreshFileFieldCommand extends AbstractCommand
         $this->fakeUser->setUsername(self::USER);
     }
 
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $revisions = $this->revisionService->search([]);
@@ -73,13 +75,13 @@ class RefreshFileFieldCommand extends AbstractCommand
             }
             $fileField[EmsFields::CONTENT_FILE_HASH_FIELD_] = $hash;
             $fileField[EmsFields::CONTENT_FILE_NAME_FIELD_] = $filename;
-            $type = \strval($fileField[EmsFields::CONTENT_MIME_TYPE_FIELD] ?? $fileField[EmsFields::CONTENT_MIME_TYPE_FIELD_] ?? MimeTypes::APPLICATION_OCTET_STREAM->value);
+            $type = (string) ($fileField[EmsFields::CONTENT_MIME_TYPE_FIELD] ?? $fileField[EmsFields::CONTENT_MIME_TYPE_FIELD_] ?? MimeTypes::APPLICATION_OCTET_STREAM->value);
             $fileField[EmsFields::CONTENT_MIME_TYPE_FIELD_] = $type;
             $size = $fileField[EmsFields::CONTENT_FILE_SIZE_FIELD] ?? $fileField[EmsFields::CONTENT_FILE_SIZE_FIELD_] ?? null;
             if (null === $size) {
                 unset($fileField[EmsFields::CONTENT_FILE_SIZE_FIELD_]);
             } else {
-                $fileField[EmsFields::CONTENT_FILE_SIZE_FIELD_] = \intval($size);
+                $fileField[EmsFields::CONTENT_FILE_SIZE_FIELD_] = (int) $size;
             }
             $fileField[EmsFields::CONTENT_FILE_ALGO_FIELD_] ??= 'sha1';
             $resizedHash = $this->refreshImageField($hash, $filename, $type);
@@ -88,7 +90,6 @@ class RefreshFileFieldCommand extends AbstractCommand
             } else {
                 $fileField[EmsFields::CONTENT_IMAGE_RESIZED_HASH_FIELD] = $resizedHash;
             }
-            $fileField = \array_filter($fileField, fn ($value) => null !== $value);
             $propertyAccessor->setValue($rawData, $propertyPath, $fileField);
         }
         if (!$fieldsFound) {

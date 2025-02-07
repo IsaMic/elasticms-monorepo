@@ -17,7 +17,7 @@ class File
     public string $mimeType;
     public int $size;
 
-    public const DEFAULT_CHUNK_SIZE = 5 * 1024 * 1024;
+    final public const DEFAULT_CHUNK_SIZE = 5 * 1024 * 1024;
 
     public function __construct(private readonly \SplFileInfo $file)
     {
@@ -29,6 +29,10 @@ class File
 
     public static function fromFilename(string $filename): self
     {
+        if (!\file_exists($filename)) {
+            throw new \RuntimeException(\sprintf('File "%s" does not exits', $filename));
+        }
+
         return new self(new \SplFileInfo($filename));
     }
 

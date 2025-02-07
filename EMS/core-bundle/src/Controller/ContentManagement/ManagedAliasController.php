@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Controller\ContentManagement;
 
 use EMS\CoreBundle\Entity\ManagedAlias;
@@ -20,11 +22,11 @@ class ManagedAliasController extends AbstractController
         private readonly AliasService $aliasService,
         private readonly ManagedAliasRepository $managedAliasRepository,
         private readonly string $instanceId,
-        private readonly string $templateNamespace
+        private readonly string $templateNamespace,
     ) {
     }
 
-    public function addAction(Request $request): Response
+    public function add(Request $request): Response
     {
         $managedAlias = new ManagedAlias();
         $form = $this->createForm(ManagedAliasType::class, $managedAlias);
@@ -46,7 +48,7 @@ class ManagedAliasController extends AbstractController
         ]);
     }
 
-    public function editAction(Request $request, ManagedAlias $managedAlias): Response
+    public function edit(Request $request, ManagedAlias $managedAlias): Response
     {
         $managedAlias = $this->aliasService->getManagedAliasByName($managedAlias->getName());
 
@@ -68,7 +70,7 @@ class ManagedAliasController extends AbstractController
         ]);
     }
 
-    public function removeAction(ManagedAlias $managedAlias): Response
+    public function remove(ManagedAlias $managedAlias): Response
     {
         $managedAlias = $this->aliasService->getManagedAliasByName($managedAlias->getAlias());
 
@@ -92,7 +94,7 @@ class ManagedAliasController extends AbstractController
     }
 
     /**
-     * @param FormInterface<FormInterface> $form
+     * @param FormInterface<mixed> $form
      *
      * @return array<mixed>
      */

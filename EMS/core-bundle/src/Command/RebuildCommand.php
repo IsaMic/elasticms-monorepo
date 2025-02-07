@@ -1,11 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Command;
 
 use Doctrine\Bundle\DoctrineBundle\Registry;
 use Doctrine\Persistence\ObjectManager;
 use EMS\CommonBundle\Common\Command\AbstractCommand;
 use EMS\CommonBundle\Service\ElasticaService;
+use EMS\CoreBundle\Commands;
 use EMS\CoreBundle\Entity\ContentType;
 use EMS\CoreBundle\Entity\Environment;
 use EMS\CoreBundle\Repository\ContentTypeRepository;
@@ -15,16 +18,21 @@ use EMS\CoreBundle\Service\ContentTypeService;
 use EMS\CoreBundle\Service\EnvironmentService;
 use EMS\CoreBundle\Service\Mapping;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
+#[AsCommand(
+    name: Commands::ENVIRONMENT_REBUILD,
+    description: 'Rebuild an environment in a brand new index.',
+    hidden: false,
+    aliases: ['ems:environment:rebuild']
+)]
 class RebuildCommand extends AbstractCommand
 {
-    public const ALL = 'all';
-    protected static $defaultName = self::COMMAND;
-    final public const COMMAND = 'ems:environment:rebuild';
+    final public const string ALL = 'all';
     private bool $signData;
     private int $bulkSize;
     private ObjectManager $em;
@@ -36,9 +44,10 @@ class RebuildCommand extends AbstractCommand
         parent::__construct();
     }
 
+    #[\Override]
     protected function configure(): void
     {
-        $this->setDescription('Rebuild an environment in a brand new index')
+        $this
             ->addArgument(
                 'name',
                 InputArgument::OPTIONAL,
@@ -78,6 +87,7 @@ class RebuildCommand extends AbstractCommand
         ;
     }
 
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $this->aliasService->build();
@@ -85,7 +95,7 @@ class RebuildCommand extends AbstractCommand
         $this->all = true === $input->getOption(self::ALL);
         $this->waitFor($this->yellowOk, $output);
 
-        $this->bulkSize = \intval($input->getOption('bulk-size'));
+        $this->bulkSize = (int) $input->getOption('bulk-size');
         if ($this->bulkSize <= 0) {
             throw new \RuntimeException('Unexpected bulk size option');
         }

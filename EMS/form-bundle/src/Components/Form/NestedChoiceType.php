@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\FormBundle\Components\Form;
 
 use EMS\FormBundle\Components\EventSubscriber\NestedChoiceEventSubscriber;
@@ -15,9 +17,10 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 class NestedChoiceType extends Form
 {
     /**
-     * @param FormBuilderInterface<FormBuilderInterface> $builder
-     * @param array<string, mixed>                       $options
+     * @param FormBuilderInterface<mixed> $builder
+     * @param array<string, mixed>        $options
      */
+    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         /** @var FieldConfig $config */
@@ -40,14 +43,16 @@ class NestedChoiceType extends Form
     }
 
     /**
-     * @param FormInterface<FormInterface> $form
-     * @param array<string, mixed>         $options
+     * @param FormInterface<mixed> $form
+     * @param array<string, mixed> $options
      */
+    #[\Override]
     public function buildView(FormView $view, FormInterface $form, array $options): void
     {
         $view->vars['field_config'] = $options['field_config'];
     }
 
+    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver
@@ -66,11 +71,13 @@ class NestedChoiceType extends Form
         throw new \Exception('Could not build form, nested choice field config missing!');
     }
 
+    #[\Override]
     public function getParent(): ?string
     {
         return FormType::class;
     }
 
+    #[\Override]
     public function getBlockPrefix(): ?string
     {
         return 'ems_nested_choice';

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Service;
 
 use Doctrine\Bundle\DoctrineBundle\Registry;
@@ -31,7 +33,7 @@ class FileService implements EntityServiceInterface
         private readonly Registry $doctrine,
         private readonly StorageManager $storageManager,
         private readonly Processor $processor,
-        private readonly UploadedAssetRepository $uploadedAssetRepository
+        private readonly UploadedAssetRepository $uploadedAssetRepository,
     ) {
     }
 
@@ -107,7 +109,7 @@ class FileService implements EntityServiceInterface
         $files = $this->uploadedAssetRepository->findByIds($fileIds);
 
         $response = new StreamedResponse(function () use ($files) {
-            $zip = new ZipStream('archive.zip');
+            $zip = new ZipStream(outputName: 'archive.zip');
             $filenames = [];
 
             foreach ($files as $file) {
@@ -128,9 +130,12 @@ class FileService implements EntityServiceInterface
         });
 
         $response->headers->set('Content-Type', 'application/zip');
-        $response->headers->set('Content-Disposition', $response->headers->makeDisposition(
-            ResponseHeaderBag::DISPOSITION_ATTACHMENT,
-            'archive.zip')
+        $response->headers->set(
+            'Content-Disposition',
+            $response->headers->makeDisposition(
+                ResponseHeaderBag::DISPOSITION_ATTACHMENT,
+                'archive.zip'
+            )
         );
 
         return $response;
@@ -180,7 +185,7 @@ class FileService implements EntityServiceInterface
         /** @var EntityManager $em */
         $em = $this->doctrine->getManager();
         $em->persist($uploadedAsset);
-        $em->flush($uploadedAsset);
+        $em->flush();
 
         return $uploadedAsset;
     }
@@ -236,7 +241,7 @@ class FileService implements EntityServiceInterface
         }
 
         $em->persist($uploadedAsset);
-        $em->flush($uploadedAsset);
+        $em->flush();
 
         return $uploadedAsset;
     }
@@ -290,7 +295,7 @@ class FileService implements EntityServiceInterface
         $uploadedAsset->setUploaded($uploadedAsset->getUploaded() + \strlen($chunk));
 
         $em->persist($uploadedAsset);
-        $em->flush($uploadedAsset);
+        $em->flush();
 
         if ($uploadedAsset->getUploaded() === $uploadedAsset->getSize()) {
             try {
@@ -298,13 +303,13 @@ class FileService implements EntityServiceInterface
                 $uploadedAsset->setAvailable(true);
             } catch (\Throwable) {
                 $em->remove($uploadedAsset);
-                $em->flush($uploadedAsset);
+                $em->flush();
                 throw new \Exception('Was not able to finalize or confirmed the upload in at least one storage service');
             }
         }
 
         $em->persist($uploadedAsset);
-        $em->flush($uploadedAsset);
+        $em->flush();
 
         return $uploadedAsset;
     }
@@ -337,12 +342,14 @@ class FileService implements EntityServiceInterface
         }
     }
 
+    #[\Override]
     public function isSortable(): bool
     {
         return false;
     }
 
-    public function get(int $from, int $size, ?string $orderField, string $orderDirection, string $searchValue, $context = null): array
+    #[\Override]
+    public function get(int $from, int $size, ?string $orderField, string $orderDirection, string $searchValue, mixed $context = null): array
     {
         $qb = $this->uploadedAssetRepository->makeQueryBuilder(searchValue: $searchValue);
         $qb->setFirstResult($from)->setMaxResults($size);
@@ -354,6 +361,7 @@ class FileService implements EntityServiceInterface
         return $qb->getQuery()->execute();
     }
 
+    #[\Override]
     public function getEntityName(): string
     {
         return 'UploadedAsset';
@@ -362,12 +370,14 @@ class FileService implements EntityServiceInterface
     /**
      * @return string[]
      */
+    #[\Override]
     public function getAliasesName(): array
     {
         return [];
     }
 
-    public function count(string $searchValue = '', $context = null): int
+    #[\Override]
+    public function count(string $searchValue = '', mixed $context = null): int
     {
         return (int) $this->uploadedAssetRepository->makeQueryBuilder(searchValue: $searchValue)
             ->select('count(ua.id)')
@@ -403,21 +413,25 @@ class FileService implements EntityServiceInterface
         return $this->uploadedAssetRepository->hashesToIds($hashes);
     }
 
+    #[\Override]
     public function getByItemName(string $name): ?EntityInterface
     {
         return $this->uploadedAssetRepository->find($name);
     }
 
+    #[\Override]
     public function updateEntityFromJson(EntityInterface $entity, string $json): EntityInterface
     {
         throw new \RuntimeException('updateEntityFromJson method not yet implemented');
     }
 
+    #[\Override]
     public function createEntityFromJson(string $json, ?string $name = null): EntityInterface
     {
         throw new \RuntimeException('createEntityFromJson method not yet implemented');
     }
 
+    #[\Override]
     public function deleteByItemName(string $name): string
     {
         throw new \RuntimeException('deleteByItemName method not yet implemented');

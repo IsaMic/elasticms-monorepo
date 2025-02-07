@@ -23,16 +23,21 @@ use EMS\CoreBundle\Service\SearchService;
 use EMS\Helpers\Standard\Json;
 use EMS\Helpers\Standard\Type;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Form\FormFactoryInterface;
 
+#[AsCommand(
+    name: Commands::CONTENT_TYPE_RECOMPUTE,
+    description: 'Recompute a content type.',
+    hidden: false,
+    aliases: ['ems:contenttype:recompute']
+)]
 final class RecomputeCommand extends AbstractCommand
 {
-    protected static $defaultName = Commands::CONTENT_TYPE_RECOMPUTE;
-
     private EntityManager $em;
     private Connection $conn;
     private ContentType $contentType;
@@ -46,18 +51,18 @@ final class RecomputeCommand extends AbstractCommand
     private ?string $ouuid = null;
     private string $query;
 
-    private const ARGUMENT_CONTENT_TYPE = 'contentType';
-    private const OPTION_CHANGED = 'changed';
-    private const OPTION_FORCE = 'force';
-    private const OPTION_MISSING = 'missing';
-    private const OPTION_CONTINUE = 'continue';
-    private const OPTION_NO_ALIGN = 'no-align';
-    private const OPTION_CRON = 'cron';
-    private const OPTION_OUUID = 'ouuid';
-    private const OPTION_DEEP = 'deep';
-    private const OPTION_QUERY = 'query';
+    private const string ARGUMENT_CONTENT_TYPE = 'contentType';
+    private const string OPTION_CHANGED = 'changed';
+    private const string OPTION_FORCE = 'force';
+    private const string OPTION_MISSING = 'missing';
+    private const string OPTION_CONTINUE = 'continue';
+    private const string OPTION_NO_ALIGN = 'no-align';
+    private const string OPTION_CRON = 'cron';
+    private const string OPTION_OUUID = 'ouuid';
+    private const string OPTION_DEEP = 'deep';
+    private const string OPTION_QUERY = 'query';
 
-    private const LOCK_BY = 'SYSTEM_RECOMPUTE';
+    private const string LOCK_BY = 'SYSTEM_RECOMPUTE';
 
     public function __construct(
         private readonly DataService $dataService,
@@ -68,15 +73,16 @@ final class RecomputeCommand extends AbstractCommand
         private readonly ContentTypeService $contentTypeService,
         private readonly RevisionRepository $revisionRepository,
         private readonly IndexService $indexService,
-        private readonly SearchService $searchService
+        private readonly SearchService $searchService,
     ) {
         parent::__construct();
     }
 
+    #[\Override]
     protected function configure(): void
     {
         $this
-            ->setDescription('Recompute a content type')
+
             ->addArgument(self::ARGUMENT_CONTENT_TYPE, InputArgument::REQUIRED, 'content type to recompute')
             ->addOption(self::OPTION_CHANGED, null, InputOption::VALUE_NONE, 'only create new revision if the hash changed after recompute')
             ->addOption(self::OPTION_FORCE, null, InputOption::VALUE_NONE, 'do not check for already locked revisions')
@@ -90,6 +96,7 @@ final class RecomputeCommand extends AbstractCommand
         ;
     }
 
+    #[\Override]
     protected function initialize(InputInterface $input, OutputInterface $output): void
     {
         parent::initialize($input, $output);
@@ -114,11 +121,12 @@ final class RecomputeCommand extends AbstractCommand
         $this->ouuid = $this->getOptionStringNull(self::OPTION_OUUID);
 
         if (null !== $input->getOption(self::OPTION_QUERY)) {
-            $this->query = \strval($input->getOption('query'));
+            $this->query = (string) $input->getOption('query');
             Json::decode($this->query, 'Invalid json query');
         }
     }
 
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $this->conn->setAutoCommit(false);
@@ -209,7 +217,7 @@ final class RecomputeCommand extends AbstractCommand
                     $notification->setStatus(Notification::PENDING);
                     $notification->setRevision($newRevision);
                     $this->em->persist($notification);
-                    $this->em->flush($notification);
+                    $this->em->flush();
                 }
 
                 if (!$this->isAlign) {

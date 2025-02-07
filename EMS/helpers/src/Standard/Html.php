@@ -9,11 +9,8 @@ use Symfony\Component\HtmlSanitizer\HtmlSanitizer;
 
 class Html implements \Stringable
 {
-    private string $html;
-
-    public function __construct(string $html)
+    public function __construct(private readonly string $html)
     {
-        $this->html = $html;
     }
 
     /**
@@ -36,6 +33,7 @@ class Html implements \Stringable
         return new Html($sanitized);
     }
 
+    #[\Override]
     public function __toString(): string
     {
         return $this->html;
@@ -56,10 +54,12 @@ class Html implements \Stringable
             'drop-empty-elements' => false,
         ], $settings));
 
-        return new Html(\trim(\str_replace(
-            ["<body>\n  ", "\n</body>", "\n  ", '<body>'],
-            ['', '', "\n", ''],
-            $formatter->body()->value)
+        return new Html(\trim(
+            \str_replace(
+                ["<body>\n  ", "\n</body>", "\n  ", '<body>'],
+                ['', '', "\n", ''],
+                $formatter->body()->value
+            )
         ));
     }
 }

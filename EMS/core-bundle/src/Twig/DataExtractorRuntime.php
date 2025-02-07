@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Twig;
 
 use EMS\CommonBundle\Storage\StorageManager;
@@ -22,7 +24,7 @@ class DataExtractorRuntime implements RuntimeExtensionInterface
         return $this->extractorService->getMetaFromText($text)->getLocale();
     }
 
-    public function assetMeta(string $hash, string $file = null, bool $forced = false): ExtractedData
+    public function assetMeta(string $hash, ?string $file = null, bool $forced = false): ExtractedData
     {
         return $this->extractorService->extractMetaData($hash, $file, $forced);
     }

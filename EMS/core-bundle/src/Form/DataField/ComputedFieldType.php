@@ -1,10 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Form\DataField;
 
 use EMS\CoreBundle\Entity\DataField;
 use EMS\CoreBundle\Entity\FieldType;
 use EMS\CoreBundle\Form\Field\CodeEditorType;
+use EMS\Helpers\Standard\Json;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
@@ -13,19 +16,18 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class ComputedFieldType extends DataFieldType
 {
+    #[\Override]
     public function getLabel(): string
     {
         return 'Computed from the raw-data';
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function generateMapping(FieldType $current): array
     {
         if (!empty($current->getMappingOptions()) && !empty($current->getMappingOptions()['mappingOptions'])) {
             try {
-                $mapping = \json_decode((string) $current->getMappingOptions()['mappingOptions'], true, 512, JSON_THROW_ON_ERROR);
+                $mapping = Json::mixedDecode((string) $current->getMappingOptions()['mappingOptions']);
 
                 return [$current->getName() => $this->elasticsearchService->updateMapping($mapping)];
             } catch (\Exception) {
@@ -36,14 +38,13 @@ class ComputedFieldType extends DataFieldType
         return [];
     }
 
+    #[\Override]
     public static function getIcon(): string
     {
         return 'fa fa-gears';
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function buildObjectArray(DataField $data, array &$out): void
     {
         if (!$data->giveFieldType()->getDeleted()) {
@@ -55,9 +56,7 @@ class ComputedFieldType extends DataFieldType
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function buildOptionsForm(FormBuilderInterface $builder, array $options): void
     {
         parent::buildOptionsForm($builder, $options);
@@ -67,8 +66,8 @@ class ComputedFieldType extends DataFieldType
             'required' => false,
             'language' => 'ace/mode/twig',
         ])->add('json', CheckboxType::class, [
-                'required' => false,
-                'label' => 'Try to JSON decode',
+            'required' => false,
+            'label' => 'Try to JSON decode',
         ])->add('displayTemplate', CodeEditorType::class, [
             'required' => false,
             'language' => 'ace/mode/twig',
@@ -76,12 +75,12 @@ class ComputedFieldType extends DataFieldType
 
         if ($optionsForm->has('mappingOptions')) {
             $optionsForm
-                ->get('mappingOptions')->remove('index')->remove('analyzer')->add('mappingOptions', CodeEditorType::class, [
+                ->get('mappingOptions')->remove('analyzer')->add('mappingOptions', CodeEditorType::class, [
                     'required' => false,
                     'language' => 'ace/mode/json',
                 ])
             ->add('copy_to', TextType::class, [
-                    'required' => false,
+                'required' => false,
             ]);
         }
 
@@ -90,9 +89,10 @@ class ComputedFieldType extends DataFieldType
     }
 
     /**
-     * @param FormBuilderInterface<FormBuilderInterface> $builder
-     * @param array<string, mixed>                       $options
+     * @param FormBuilderInterface<mixed> $builder
+     * @param array<string, mixed>        $options
      */
+    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->add('value', HiddenType::class, [
@@ -100,26 +100,23 @@ class ComputedFieldType extends DataFieldType
         ]);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function viewTransform(DataField $dataField)
     {
         $out = parent::viewTransform($dataField);
 
-        return ['value' => \json_encode($out, JSON_THROW_ON_ERROR)];
+        return ['value' => Json::encode($out)];
     }
 
     /**
-     * {@inheritDoc}
-     *
      * @param array<mixed> $data
      */
+    #[\Override]
     public function reverseViewTransform($data, FieldType $fieldType): DataField
     {
         $dataField = parent::reverseViewTransform($data, $fieldType);
         try {
-            $value = \json_decode((string) $data['value'], null, 512, JSON_THROW_ON_ERROR);
+            $value = Json::mixedDecode((string) $data['value']);
             $dataField->setRawData($value);
         } catch (\Exception) {
             $dataField->setRawData(null);
@@ -129,6 +126,7 @@ class ComputedFieldType extends DataFieldType
         return $dataField;
     }
 
+    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         /* set the default option value for this kind of compound field */

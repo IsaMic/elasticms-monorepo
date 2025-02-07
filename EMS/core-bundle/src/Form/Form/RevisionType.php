@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Form\Form;
 
 use EMS\CoreBundle\Core\User\UserManager;
@@ -18,6 +20,9 @@ use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormRegistryInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
+/**
+ * @extends AbstractType<mixed>
+ */
 class RevisionType extends AbstractType
 {
     public function __construct(private readonly FormRegistryInterface $formRegistry, private readonly UserManager $userManager)
@@ -25,9 +30,10 @@ class RevisionType extends AbstractType
     }
 
     /**
-     * @param FormBuilderInterface<FormBuilderInterface> $builder
-     * @param array<string, mixed>                       $options
+     * @param FormBuilderInterface<mixed> $builder
+     * @param array<string, mixed>        $options
      */
+    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         /** @var Revision|null $revision */
@@ -69,7 +75,7 @@ class RevisionType extends AbstractType
                             '%environment%' => \implode(', ', $publishedEnvironmentLabels->toArray()),
                         ],
                         'attr' => ['class' => 'btn btn-primary btn-sm'],
-                        'icon' => 'glyphicon glyphicon-open',
+                        'icon' => 'fa fa-upload',
                     ]);
                 } else {
                     $builder->add('save', SubmitEmsType::class, [
@@ -98,11 +104,11 @@ class RevisionType extends AbstractType
 
             if ($options['has_copy']) {
                 $builder->add('copy', SubmitEmsType::class, [
-                        'label' => 'form.form.revision-type.copy-label',
-                        'attr' => [
-                            'class' => '',
-                        ],
-                        'icon' => 'fa fa-copy',
+                    'label' => 'form.form.revision-type.copy-label',
+                    'attr' => [
+                        'class' => '',
+                    ],
+                    'icon' => 'fa fa-copy',
                 ]);
             }
         }
@@ -121,31 +127,33 @@ class RevisionType extends AbstractType
                     'attr' => [
                         'class' => 'btn btn-primary btn-sm ',
                     ],
-                    'icon' => 'glyphicon glyphicon-open',
+                    'icon' => 'fa fa-upload',
                 ]);
             }
         }
         $builder->add('allFieldsAreThere', HiddenType::class, [
-                 'data' => true,
+            'data' => true,
         ]);
     }
 
+    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
-                'compound' => true,
-                'content_type' => null,
-                'csrf_protection' => false,
-                'data_class' => Revision::class,
-                'has_clipboard' => false,
-                'has_copy' => false,
-                'migration' => false,
-                'with_warning' => true,
-                'translation_domain' => 'EMSCoreBundle',
-                'raw_data' => [],
+            'compound' => true,
+            'content_type' => null,
+            'csrf_protection' => false,
+            'data_class' => Revision::class,
+            'has_clipboard' => false,
+            'has_copy' => false,
+            'migration' => false,
+            'with_warning' => true,
+            'translation_domain' => 'EMSCoreBundle',
+            'raw_data' => [],
         ]);
     }
 
+    #[\Override]
     public function getBlockPrefix(): string
     {
         return 'revision';

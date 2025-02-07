@@ -1,6 +1,4 @@
-//
 // Core: Preloader
-//
 
 .preloader {
   display: flex;
@@ -14,11 +12,9 @@
   z-index: $zindex-preloader;
 }
 
-@include dark-mode () {
+@include dark-mode {
   .preloader {
     background-color: $dark-main-bg;
     color: $white;
   }
 }
-
-//

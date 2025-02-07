@@ -27,7 +27,7 @@ final class Search
     /** @var string[] */
     private array $fields = [];
     /** @var string[] */
-    private array $fieldsExclude;
+    private readonly array $fieldsExclude;
     /** @var ?array<mixed> */
     private ?array $querySearch = null;
     /** @var string[] */
@@ -53,7 +53,7 @@ final class Search
     private ?string $sortBy = null;
     private string $analyzer;
     private string $sortOrder = 'asc';
-    private ?string $minimumShouldMatch;
+    private readonly ?string $minimumShouldMatch;
 
     public function __construct(private readonly Request $request, ClientRequest $clientRequest)
     {
@@ -105,8 +105,8 @@ final class Search
             $this->queryFacets = $requestFacets;
         }
 
-        $this->page = \intval($request->query->get('p', $request->get('p', $this->page)));
-        $this->setSize(\intval($request->query->get('l', $request->get('l', $this->size))));
+        $this->page = (int) $request->query->get('p', $request->get('p', $this->page));
+        $this->setSize((int) $request->query->get('l', $request->get('l', $this->size)));
         $this->setSortBy($request->query->get('s', $request->get('s')));
         $this->setSortOrder($request->query->all()['o'] ?? $request->get('o', $this->sortOrder));
 
@@ -135,11 +135,11 @@ final class Search
     }
 
     /**
-     * @return string[]
+     * @return list<string>
      */
     public function getTypes(): array
     {
-        return $this->types;
+        return \array_values($this->types);
     }
 
     /**
@@ -158,9 +158,6 @@ final class Search
         return $this->fields;
     }
 
-    /**
-     * @return ?BoolQuery
-     */
     public function getQuerySearch(string $queryString): ?BoolQuery
     {
         if (null === $this->querySearch) {
@@ -409,7 +406,7 @@ final class Search
      */
     private function setHighlight(array $data): void
     {
-        if (\is_array($data) && isset($data['fields'])) {
+        if (isset($data['fields'])) {
             foreach ($data['fields'] as $key => $options) {
                 $replacedKey = RequestHelper::replace($this->request, $key);
                 if ($replacedKey !== $key) {
@@ -444,7 +441,7 @@ final class Search
     {
         if (null == $this->sizes) {
             @\trigger_error('Define allow sizes with the search option "sizes"', \E_USER_DEPRECATED);
-            $this->size = \intval((int) $l > 0 ? $l : $this->size);
+            $this->size = (int) ((int) $l > 0 ? $l : $this->size);
         } elseif (\in_array($l, $this->sizes)) {
             $this->size = (int) $l;
         } else {

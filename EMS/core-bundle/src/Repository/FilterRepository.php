@@ -6,13 +6,14 @@ namespace EMS\CoreBundle\Repository;
 
 use Doctrine\Bundle\DoctrineBundle\Registry;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\ORM\QueryBuilder;
 use EMS\CoreBundle\Entity\Filter;
 
 /**
  * @extends ServiceEntityRepository<Filter>
  *
- * @method Filter|null findOneBy(array $criteria, array $orderBy = null)
+ * @method Filter|null findOneBy(mixed[] $criteria, mixed[] $orderBy = null)
  */
 class FilterRepository extends ServiceEntityRepository
 {
@@ -49,7 +50,7 @@ class FilterRepository extends ServiceEntityRepository
         $qb = $this->createQueryBuilder('f');
         $qb
             ->andWhere($qb->expr()->in('f.id', ':ids'))
-            ->setParameter('ids', $ids);
+            ->setParameter('ids', $ids, ArrayParameterType::INTEGER);
 
         return $qb->getQuery()->getResult();
     }

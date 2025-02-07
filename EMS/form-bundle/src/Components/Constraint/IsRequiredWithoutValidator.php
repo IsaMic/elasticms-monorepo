@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\FormBundle\Components\Constraint;
 
 use Symfony\Component\Validator\Constraint;
@@ -13,6 +15,7 @@ class IsRequiredWithoutValidator extends AbstractConstraintValidator
      * @param mixed      $value      The value that should be validated
      * @param Constraint $constraint The constraint for the validation
      */
+    #[\Override]
     public function validate($value, Constraint $constraint): void
     {
         if (!$constraint instanceof IsRequiredWithout) {

@@ -1,0 +1,4 @@
+core:
+  modal:
+    close: 'Close'
+    loading: 'Loading...'

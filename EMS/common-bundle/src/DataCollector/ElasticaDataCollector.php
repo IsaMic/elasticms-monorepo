@@ -14,10 +14,11 @@ class ElasticaDataCollector extends DataCollector
 {
     public function __construct(
         private readonly ElasticaLogger $logger,
-        private readonly ElasticaService $elasticaService
+        private readonly ElasticaService $elasticaService,
     ) {
     }
 
+    #[\Override]
     public function collect(Request $request, Response $response, ?\Throwable $exception = null): void
     {
         $this->data['nb_queries'] = $this->logger->getNbQueries();
@@ -76,11 +77,13 @@ class ElasticaDataCollector extends DataCollector
         return $time;
     }
 
+    #[\Override]
     public function getName(): string
     {
         return 'elastica';
     }
 
+    #[\Override]
     public function reset(): void
     {
         $this->logger->reset();

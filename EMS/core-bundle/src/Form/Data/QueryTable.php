@@ -24,7 +24,7 @@ class QueryTable extends TableAbstract
         private readonly string $queryName,
         string $ajaxUrl,
         private readonly mixed $context = null,
-        int $loadAllMaxRow = 400
+        int $loadAllMaxRow = 400,
     ) {
         if ($this->count() > $loadAllMaxRow) {
             parent::__construct($ajaxUrl, 0, 0);
@@ -60,6 +60,7 @@ class QueryTable extends TableAbstract
         return $this->idField;
     }
 
+    #[\Override]
     public function resetIterator(DataTableRequest $dataTableRequest): void
     {
         parent::resetIterator($dataTableRequest);
@@ -70,6 +71,7 @@ class QueryTable extends TableAbstract
     /**
      * @return \Traversable<string, QueryRow|EntityRow|ElasticaRow>
      */
+    #[\Override]
     public function getIterator(): \Traversable
     {
         $idPropertyAccessor = new PropertyAccessor();
@@ -78,7 +80,7 @@ class QueryTable extends TableAbstract
             if ($data instanceof EntityInterface) {
                 $id = $idPropertyAccessor->getValue($data, $this->idField);
 
-                yield \strval($id) => new EntityRow($data);
+                yield (string) $id => new EntityRow($data);
                 continue;
             }
             if ($data instanceof DocumentInterface) {
@@ -90,19 +92,21 @@ class QueryTable extends TableAbstract
             if (null === $id) {
                 continue;
             }
-            yield \strval($id) => new QueryRow($data);
+            yield (string) $id => new QueryRow($data);
         }
     }
 
+    #[\Override]
     public function count(): int
     {
         if (null === $this->count) {
             $this->count = $this->service->countQuery($this->getSearchValue(), $this->context);
         }
 
-        return $this->count;
+        return $this->count > 0 ? $this->count : 0;
     }
 
+    #[\Override]
     public function totalCount(): int
     {
         if (null === $this->totalCount) {
@@ -112,6 +116,7 @@ class QueryTable extends TableAbstract
         return $this->totalCount;
     }
 
+    #[\Override]
     public function supportsTableActions(): bool
     {
         if (!$this->loadAll) {
@@ -128,16 +133,19 @@ class QueryTable extends TableAbstract
         return false;
     }
 
+    #[\Override]
     public function getRowTemplate(): string
     {
         return \sprintf("{%%- use '@$this->templateNamespace/datatable/row.json.twig' -%%}{{ block('emsco_datatable_row') }}");
     }
 
+    #[\Override]
     public function getAttributeName(): string
     {
         return $this->queryName;
     }
 
+    #[\Override]
     public function isSortable(): bool
     {
         return $this->service->isSortable();

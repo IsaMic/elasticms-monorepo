@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\FormBundle\Components\DataTransformers;
 
 use Symfony\Component\Form\DataTransformerInterface;
@@ -17,11 +19,13 @@ class ForgivingNumberDataTransformer implements DataTransformerInterface
     {
     }
 
+    #[\Override]
     public function transform($value)
     {
         return $value;
     }
 
+    #[\Override]
     public function reverseTransform($value)
     {
         if (null === $value) {

@@ -10,7 +10,7 @@ use Symfony\Component\DomCrawler\Crawler;
 class Extractor
 {
     // Source: https://docs.oasis-open.org/xliff/v1.2/xliff-profile-html/xliff-profile-html-1.2.html#SectionDetailsElements
-    final public const PRE_DEFINED_VALUES = [
+    final public const array PRE_DEFINED_VALUES = [
         'b' => 'bold',
         'br' => 'lb',
         'caption' => 'caption',
@@ -29,8 +29,8 @@ class Extractor
         'u' => 'underlined',
     ];
 
-    private const TRANSLATABLE_ATTRIBUTES = ['title', 'alt', 'aria-label'];
-    private const INTERNAL_TAGS = [
+    private const array TRANSLATABLE_ATTRIBUTES = ['title', 'alt', 'aria-label'];
+    private const array INTERNAL_TAGS = [
         'a',
         'abbr',
         'acronym',
@@ -85,9 +85,9 @@ class Extractor
         'wbr',
     ];
 
-    final public const XLIFF_1_2 = '1.2';
-    final public const XLIFF_2_0 = '2.0';
-    final public const XLIFF_VERSIONS = [self::XLIFF_1_2, self::XLIFF_2_0];
+    final public const string XLIFF_1_2 = '1.2';
+    final public const string XLIFF_2_0 = '2.0';
+    final public const array XLIFF_VERSIONS = [self::XLIFF_1_2, self::XLIFF_2_0];
 
     private int $nextId = 1;
     private readonly string $xliffVersion;
@@ -97,7 +97,7 @@ class Extractor
     public function __construct(private readonly string $sourceLocale, private readonly ?string $targetLocale = null, string $xliffVersion = self::XLIFF_1_2)
     {
         if (!\in_array($xliffVersion, self::XLIFF_VERSIONS)) {
-            throw new \RuntimeException(\sprintf('Unsupported XLIFF version "%s", use one of the supported one: %s', $xliffVersion, \join(', ', self::XLIFF_VERSIONS)));
+            throw new \RuntimeException(\sprintf('Unsupported XLIFF version "%s", use one of the supported one: %s', $xliffVersion, \implode(', ', self::XLIFF_VERSIONS)));
         }
 
         $this->nextId = 1;
@@ -140,7 +140,7 @@ class Extractor
 
     public function addDocument(string $contentType, string $ouuid, string $revisionId): \DOMElement
     {
-        $id = \join(':', [$contentType, $ouuid, $revisionId]);
+        $id = \implode(':', [$contentType, $ouuid, $revisionId]);
         if (\version_compare($this->xliffVersion, '2.0') < 0) {
             $subNode = 'body';
             $documentAttributes = [
@@ -226,9 +226,6 @@ class Extractor
     {
         $currentSegment = null;
         foreach ($sourceNode->childNodes as $domNode) {
-            if (!$domNode instanceof \DOMNode) {
-                continue;
-            }
             if ($domNode instanceof \DOMText && $this->isEmpty($domNode)) {
                 continue;
             }
@@ -295,7 +292,7 @@ class Extractor
             $sourceAttributes = [
                 'xml:lang' => $this->sourceLocale,
             ];
-            if (null !== $sourceNode && $sourceNode instanceof \DOMElement && !\in_array($sourceNode->nodeName, self::INTERNAL_TAGS)) {
+            if ($sourceNode instanceof \DOMElement && !\in_array($sourceNode->nodeName, self::INTERNAL_TAGS)) {
                 $attributes = [
                     'restype' => static::getRestype($sourceNode->nodeName),
                 ];
@@ -336,7 +333,7 @@ class Extractor
         return $segment;
     }
 
-    private function addId(\DOMElement $xliffElement, \DOMNode $domNode, string $attributeName = null): void
+    private function addId(\DOMElement $xliffElement, \DOMNode $domNode, ?string $attributeName = null): void
     {
         $id = $this->getId($domNode, $attributeName);
         $xliffElement->setAttribute('id', $id);
@@ -399,7 +396,7 @@ class Extractor
     {
         $id = $domNode->getNodePath();
         if (null === $id) {
-            $id = \strval($this->nextId++);
+            $id = (string) ($this->nextId++);
         }
         if (null !== $attributeName) {
             $id = \sprintf('%s[@%s]', $id, $attributeName);
@@ -427,9 +424,6 @@ class Extractor
     {
         if (!$sourceNode->hasChildNodes()) {
             return true;
-        }
-        if (!$sourceNode->childNodes instanceof \DOMNodeList) {
-            throw new \RuntimeException(\sprintf('Unexpected %s object, expected \\DOMNodeList', $sourceNode->childNodes::class));
         }
         for ($i = 0; $i < $sourceNode->childNodes->length; ++$i) {
             $child = $sourceNode->childNodes->item($i);

@@ -11,46 +11,23 @@
     "authors": [
         {
             "name": "EMS Community",
-            "homepage": "https://github.com/ems-project/xliff/contributors"
+            "homepage": "https://github.com/ems-project/elasticms/contributors"
         }
     ],
     "require": {
-        "php": "^8.1",
+        "php": "^8.4",
         "ext-dom": "*",
-        "elasticms/helpers": "5.25.*",
-        "symfony/dom-crawler": "^5.4",
-        "symfony/property-access": "^5.4"
-    },
-    "require-dev": {
-        "mockery/mockery": "^0.9",
-        "phpunit/phpunit": "^9.5"
+        "elasticms/helpers": "6.0.*",
+        "symfony/dom-crawler": "6.4.*",
+        "symfony/property-access": "6.4.*"
     },
     "autoload": {
         "psr-4": {
             "EMS\\Xliff\\": "src/"
-        },
-        "exclude-from-classmap": [
-            "tests/"
-        ]
-    },
-    "autoload-dev": {
-        "psr-4": {
-            "EMS\\Xliff\\Tests\\": "tests/"
         }
     },
     "config": {
         "lock": false,
-        "sort-packages": true,
-        "allow-plugins": {
-            "phpstan/extension-installer": true
-        }
-    },
-    "extra": {
-        "branch-alias": {
-            "dev-master": "0.1-dev"
-        }
-    },
-    "scripts": {
-        "phpunit": "phpunit"
+        "sort-packages": true
     }
 }

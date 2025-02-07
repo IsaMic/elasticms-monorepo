@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Form\Form;
 
 use EMS\CoreBundle\Entity\Form\ExportDocuments;
@@ -13,12 +15,16 @@ use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\FormBuilderInterface;
 
+/**
+ * @extends AbstractType<mixed>
+ */
 class ExportDocumentsType extends AbstractType
 {
     /**
-     * @param FormBuilderInterface<FormBuilderInterface> $builder
-     * @param array<string, mixed>                       $options
+     * @param FormBuilderInterface<mixed> $builder
+     * @param array<string, mixed>        $options
      */
+    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         /** @var ExportDocuments $data */
@@ -49,7 +55,7 @@ class ExportDocumentsType extends AbstractType
             ->add('export', SubmitEmsType::class, [
                 'label' => 'Export '.$data->getContentType()->getPluralName(),
                 'attr' => ['class' => 'btn btn-primary btn-sm '],
-                'icon' => 'glyphicon glyphicon-export',
+                'icon' => 'fa fa-archive',
             ]);
     }
 }

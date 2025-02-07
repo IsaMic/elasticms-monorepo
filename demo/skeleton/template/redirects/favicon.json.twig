@@ -1,19 +1,11 @@
 {%- extends '@EMSCH/template/variables.twig' -%}
 
 {%- block request -%}
-    {%- set path = emsch_asset('img/head/icon.png', {
-        _config_type: 'image',
-        _image_format: 'png',
-        _width: 48,
-        _height: 48,
-    })|split('/') -%}
-    {{- {
-        controller: 'EMS\\CommonBundle\\Controller\\FileController::asset',
-        path: {
-            hash_config: path[path|length-3],
-            hash: 'processor',
-            filename: path[path|length-1]
-        }
-    }|json_encode|raw -}}
+    {{- emsch_asset_redirect('img/head/icon.png', {
+            _config_type: 'image',
+            _image_format: 'png',
+            _width: 48,
+            _height: 48,
+        })|json_encode|raw -}}
 {%- endblock request -%}
 

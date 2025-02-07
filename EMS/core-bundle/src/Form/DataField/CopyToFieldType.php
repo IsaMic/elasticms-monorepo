@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Form\DataField;
 
 use EMS\CoreBundle\Entity\DataField;
@@ -15,33 +17,35 @@ use Symfony\Component\Form\FormBuilderInterface;
  */
 class CopyToFieldType extends DataFieldType
 {
+    #[\Override]
     public function getLabel(): string
     {
         return 'Elasticsearch copy_to field';
     }
 
+    #[\Override]
     public function getBlockPrefix(): string
     {
         return 'empty';
     }
 
+    #[\Override]
     public static function getIcon(): string
     {
         return 'fa fa-copy';
     }
 
     /**
-     * @param FormBuilderInterface<FormBuilderInterface> $builder
-     * @param array<string, mixed>                       $options
+     * @param FormBuilderInterface<mixed> $builder
+     * @param array<string, mixed>        $options
      */
+    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         // no inputs as it's just an indexing field
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function buildOptionsForm(FormBuilderInterface $builder, array $options): void
     {
         parent::buildOptionsForm($builder, $options);
@@ -59,9 +63,7 @@ class CopyToFieldType extends DataFieldType
         $optionsForm->remove('displayOptions');
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function buildObjectArray(DataField $data, array &$out): void
     {
         // do nothing more than a mapping

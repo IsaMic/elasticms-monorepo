@@ -11,7 +11,7 @@ use EMS\CoreBundle\Entity\Form\Search;
 /**
  * @extends ServiceEntityRepository<Search>
  *
- * @method Search[] findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+ * @method Search[] findBy(mixed[] $criteria, mixed[] $orderBy = null, $limit = null, $offset = null)
  */
 class SearchRepository extends ServiceEntityRepository
 {
@@ -38,13 +38,13 @@ class SearchRepository extends ServiceEntityRepository
 
     public function remove(Search $search): void
     {
-        $this->_em->remove($search);
-        $this->_em->flush();
+        $this->getEntityManager()->remove($search);
+        $this->getEntityManager()->flush();
     }
 
     public function save(Search $search): void
     {
-        $this->_em->persist($search);
-        $this->_em->flush();
+        $this->getEntityManager()->persist($search);
+        $this->getEntityManager()->flush();
     }
 }

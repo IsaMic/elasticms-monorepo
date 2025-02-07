@@ -6,6 +6,7 @@ namespace EMS\SubmissionBundle\Tests\Command;
 
 use EMS\SubmissionBundle\Dto\FormSubmissionsCountDto;
 use EMS\SubmissionBundle\Repository\FormSubmissionRepository;
+use EMS\SubmissionBundle\Tests\Functional\App\Kernel;
 use PHPUnit\Framework\MockObject\MockObject;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
@@ -14,15 +15,13 @@ use Symfony\Component\Mailer\EventListener\MessageLoggerListener;
 use Symfony\Component\Mime\Address;
 use Symfony\Component\Mime\Email;
 
-/**
- * @env KERNEL_CLASS=EMS\SubmissionBundle\Tests\Functional\App\Kernel
- */
 final class DatabaseStatsCommandTest extends KernelTestCase
 {
     private MockObject $repository;
     private Application $application;
     private MessageLoggerListener $messageLogger;
 
+    #[\Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -37,6 +36,12 @@ final class DatabaseStatsCommandTest extends KernelTestCase
         /** @var MessageLoggerListener $messageLogger */
         $messageLogger = $kernel->getContainer()->get('functional_test.message_listener');
         $this->messageLogger = $messageLogger;
+    }
+
+    #[\Override]
+    protected static function getKernelClass(): string
+    {
+        return Kernel::class;
     }
 
     public function testExecute()

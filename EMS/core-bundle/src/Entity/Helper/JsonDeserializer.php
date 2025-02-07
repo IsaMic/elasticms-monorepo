@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Entity\Helper;
 
 use EMS\Helpers\Standard\Json;
@@ -16,10 +18,7 @@ abstract class JsonDeserializer
         $this->deserializeProperty($name, $value);
     }
 
-    /**
-     * @param mixed $value
-     */
-    protected function deserializeProperty(string $name, $value): void
+    protected function deserializeProperty(string $name, mixed $value): void
     {
         $dateFields = ['created', 'modified', 'lockUntil'];
 

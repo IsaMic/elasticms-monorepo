@@ -1,11 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Controller\ContentManagement;
 
 use EMS\CommonBundle\Contracts\Log\LocalizedLoggerInterface;
 use EMS\CoreBundle\Controller\CoreControllerTrait;
 use EMS\CoreBundle\Core\ContentType\ViewDefinition;
 use EMS\CoreBundle\Core\DataTable\DataTableFactory;
+use EMS\CoreBundle\Core\UI\FlashMessageLogger;
 use EMS\CoreBundle\Core\UI\Page\Navigation;
 use EMS\CoreBundle\Core\View\ViewManager;
 use EMS\CoreBundle\DataTable\Type\ContentType\ContentTypeViewDataTableType;
@@ -29,7 +32,8 @@ class ViewController extends AbstractController
         private readonly ViewManager $viewManager,
         private readonly DataTableFactory $dataTableFactory,
         private readonly LocalizedLoggerInterface $logger,
-        private readonly string $templateNamespace
+        private readonly FlashMessageLogger $flashMessageLogger,
+        private readonly string $templateNamespace,
     ) {
     }
 
@@ -50,7 +54,7 @@ class ViewController extends AbstractController
                 TableType::REORDER_ACTION => $this->viewManager->reorderByIds(
                     ...TableType::getReorderedKeys($form->getName(), $request)
                 ),
-                default => $this->logger->messageError(t('log.error.invalid_table_action', [], 'emsco-core'))
+                default => $this->logger->messageError(t('log.error.invalid_table_action', [], 'emsco-core')),
             };
 
             return $this->redirectToRoute(Routes::ADMIN_CONTENT_TYPE_VIEW_INDEX, [
@@ -135,7 +139,7 @@ class ViewController extends AbstractController
             ]);
 
             if ('json' === $_format) {
-                return $this->render("@$this->templateNamespace/ajax/notification.json.twig", [
+                return $this->flashMessageLogger->buildJsonResponse([
                     'success' => true,
                 ]);
             }

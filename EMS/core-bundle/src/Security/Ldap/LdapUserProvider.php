@@ -11,12 +11,14 @@ use Symfony\Component\Ldap\LdapInterface;
 use Symfony\Component\Ldap\Security\LdapUser;
 use Symfony\Component\Ldap\Security\LdapUserProvider as SymfonyLdapUserProvider;
 use Symfony\Component\Security\Core\Exception\UserNotFoundException;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 class LdapUserProvider extends SymfonyLdapUserProvider
 {
     public function __construct(LdapInterface $ldap, private readonly LdapConfig $ldapConfig, private readonly UserRepository $userRepository)
     {
-        parent::__construct($ldap,
+        parent::__construct(
+            $ldap,
             $ldapConfig->baseDn,
             $ldapConfig->searchDn,
             $ldapConfig->searchPassword,
@@ -28,6 +30,7 @@ class LdapUserProvider extends SymfonyLdapUserProvider
         );
     }
 
+    #[\Override]
     protected function loadUser(string $identifier, Entry $entry): User
     {
         try {
@@ -40,5 +43,15 @@ class LdapUserProvider extends SymfonyLdapUserProvider
         $user = $this->userRepository->findUserByUsernameOrEmail($ldapUser->getUserIdentifier());
 
         return $user ?: LdapCoreUserFactory::create($ldapUser, $this->ldapConfig);
+    }
+
+    #[\Override]
+    public function loadUserByIdentifier(string $identifier): UserInterface
+    {
+        if ('' === $this->ldapConfig->baseDn) {
+            throw new UserNotFoundException(\sprintf('Ldap server not configured'));
+        }
+
+        return parent::loadUserByIdentifier($identifier);
     }
 }

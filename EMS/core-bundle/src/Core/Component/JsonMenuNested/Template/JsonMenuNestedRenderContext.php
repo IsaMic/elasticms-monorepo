@@ -19,7 +19,7 @@ class JsonMenuNestedRenderContext
         private readonly JsonMenuNested $menu,
         ?string $activeItemId = null,
         public ?JsonMenuNested $copyItem = null,
-        ?string $loadChildrenId = null
+        ?string $loadChildrenId = null,
     ) {
         $this->addActiveItem($menu);
 
@@ -73,7 +73,7 @@ class JsonMenuNestedRenderContext
         return \array_values(\array_map(static fn (JsonMenuNested $item) => $item->getId(), $this->loadParents));
     }
 
-    private function addParent(JsonMenuNested $parent = null): void
+    private function addParent(?JsonMenuNested $parent = null): void
     {
         if (null === $parent) {
             return;

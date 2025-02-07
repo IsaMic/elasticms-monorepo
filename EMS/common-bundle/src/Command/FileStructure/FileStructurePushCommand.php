@@ -13,19 +13,24 @@ use EMS\CommonBundle\Storage\StorageManager;
 use EMS\Helpers\File\File;
 use EMS\Helpers\Html\MimeTypes;
 use EMS\Helpers\Standard\Json;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
+#[AsCommand(
+    name: Commands::FILE_STRUCTURE_PUSH,
+    description: 'Push an EMS Archive file structure into a EMS Admin storage services (via the API)',
+    hidden: false
+)]
 class FileStructurePushCommand extends AbstractCommand
 {
-    protected static $defaultName = Commands::FILE_STRUCTURE_PUSH;
-    private const ARGUMENT_FOLDER = 'folder';
-    private const OPTION_ADMIN = 'admin';
-    private const OPTION_CHUNK_SIZE = 'chunk-size';
-    private const OPTION_SAVE_HASH_FILENAME = 'save-hash-filename';
-    private const DEFAULT_SAVE_HASH_FILE = '.hash';
+    private const string ARGUMENT_FOLDER = 'folder';
+    private const string OPTION_ADMIN = 'admin';
+    private const string OPTION_CHUNK_SIZE = 'chunk-size';
+    private const string OPTION_SAVE_HASH_FILENAME = 'save-hash-filename';
+    private const string DEFAULT_SAVE_HASH_FILE = '.hash';
     private string $folderPath;
     private FileManagerInterface $fileManager;
     private int $chunkSize;
@@ -38,11 +43,11 @@ class FileStructurePushCommand extends AbstractCommand
         parent::__construct();
     }
 
+    #[\Override]
     protected function configure(): void
     {
         parent::configure();
         $this
-            ->setDescription('Push an EMS Archive file structure into a EMS Admin storage services (via the API)')
             ->addArgument(self::ARGUMENT_FOLDER, InputArgument::REQUIRED, 'Source folder')
             ->addOption(self::OPTION_ADMIN, null, InputOption::VALUE_NONE, 'Push to admin')
             ->addOption(self::OPTION_CHUNK_SIZE, null, InputOption::VALUE_OPTIONAL, 'Set the heads method chunk size', FileManagerInterface::HEADS_CHUNK_SIZE)
@@ -50,6 +55,7 @@ class FileStructurePushCommand extends AbstractCommand
         ;
     }
 
+    #[\Override]
     protected function initialize(InputInterface $input, OutputInterface $output): void
     {
         parent::initialize($input, $output);
@@ -62,6 +68,7 @@ class FileStructurePushCommand extends AbstractCommand
         $this->saveHashFilename = $this->getOptionString(self::OPTION_SAVE_HASH_FILENAME);
     }
 
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $this->io->title('EMS - File structure - Push');

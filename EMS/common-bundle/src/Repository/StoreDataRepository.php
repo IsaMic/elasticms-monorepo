@@ -6,16 +6,18 @@ namespace EMS\CommonBundle\Repository;
 
 use Doctrine\Bundle\DoctrineBundle\Registry;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\ORM\Query\Parameter;
 use EMS\CommonBundle\Entity\StoreData;
 
 /**
  * @extends ServiceEntityRepository<StoreData>
  *
  * @method StoreData|null find($id, $lockMode = null, $lockVersion = null)
- * @method StoreData|null findOneBy(array $criteria, array $orderBy = null)
- * @method StoreData[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+ * @method StoreData|null findOneBy(mixed[] $criteria, mixed[] $orderBy = null)
+ * @method StoreData[]    findBy(mixed[] $criteria, mixed[] $orderBy = null, $limit = null, $offset = null)
  */
-final class StoreDataRepository extends ServiceEntityRepository
+class StoreDataRepository extends ServiceEntityRepository
 {
     public function __construct(Registry $registry)
     {
@@ -44,10 +46,10 @@ final class StoreDataRepository extends ServiceEntityRepository
         $qb = $this->createQueryBuilder('store_data')->delete();
         $qb->where($qb->expr()->isNotNull('store_data.expiresAt'));
         $qb->andWhere($qb->expr()->lt('store_data.expiresAt', ':now'));
-        $qb->setParameters([
-            ':now' => new \DateTimeImmutable(),
-        ]);
+        $qb->setParameters(new ArrayCollection([
+            new Parameter('now', new \DateTimeImmutable()),
+        ]));
 
-        return \intval($qb->getQuery()->execute());
+        return (int) $qb->getQuery()->execute();
     }
 }

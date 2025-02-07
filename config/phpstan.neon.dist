@@ -1,0 +1,25 @@
+includes:
+	- phpstan-baseline.neon
+
+parameters:
+    tmpDir: %currentWorkingDirectory%/.cache/phpstan
+    treatPhpDocTypesAsCertain: false
+    paths:
+        - %currentWorkingDirectory%/build
+        - %currentWorkingDirectory%/elasticms-admin/src
+        - %currentWorkingDirectory%/elasticms-cli/src
+        - %currentWorkingDirectory%/elasticms-web/src
+        - %currentWorkingDirectory%/EMS/admin-ui-bundle/src
+        - %currentWorkingDirectory%/EMS/client-helper-bundle/src
+        - %currentWorkingDirectory%/EMS/common-bundle/src
+        - %currentWorkingDirectory%/EMS/core-bundle/migrations
+        - %currentWorkingDirectory%/EMS/core-bundle/src
+        - %currentWorkingDirectory%/EMS/form-bundle/src
+        - %currentWorkingDirectory%/EMS/helpers/src
+        - %currentWorkingDirectory%/EMS/submission-bundle/src
+        - %currentWorkingDirectory%/EMS/xliff/src
+    excludePaths:
+        - %currentWorkingDirectory%/vendor/*
+    level: 8
+    parallel:
+        maximumNumberOfProcesses: 2

@@ -17,6 +17,9 @@ use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
+/**
+ * @extends AbstractType<mixed>
+ */
 final class DashboardType extends AbstractType
 {
     public function __construct(private readonly DashboardService $dashboardService)
@@ -24,9 +27,10 @@ final class DashboardType extends AbstractType
     }
 
     /**
-     * @param FormBuilderInterface<FormBuilderInterface> $builder
-     * @param array<string, mixed>                       $options
+     * @param FormBuilderInterface<mixed> $builder
+     * @param array<string, mixed>        $options
      */
+    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $dashboard = $options['data'] ?? null;
@@ -88,11 +92,11 @@ final class DashboardType extends AbstractType
         if ($options['create'] ?? false) {
             $builder
                 ->add('create', SubmitEmsType::class, [
-                'attr' => [
-                    'class' => 'btn btn-primary btn-sm ',
-                ],
-                'icon' => 'fa fa-save',
-            ]);
+                    'attr' => [
+                        'class' => 'btn btn-primary btn-sm ',
+                    ],
+                    'icon' => 'fa fa-save',
+                ]);
         } else {
             $builder->add('options', DashboardOptionsType::class, [
                 'dashboard' => $this->dashboardService->get($dashboard->getType()),
@@ -106,6 +110,7 @@ final class DashboardType extends AbstractType
         }
     }
 
+    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([

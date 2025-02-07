@@ -4,30 +4,16 @@ declare(strict_types=1);
 
 namespace EMS\CoreBundle\Entity;
 
-use Doctrine\ORM\Mapping as ORM;
 use EMS\CoreBundle\Core\Revision\Task\TaskStatus;
 
 trait RevisionTaskTrait
 {
-    /**
-     * @ORM\ManyToOne(targetEntity="EMS\CoreBundle\Entity\Task")
-     *
-     * @ORM\JoinColumn(name="task_current_id", referencedColumnName="id", nullable=true)
-     */
     private ?Task $taskCurrent = null;
 
-    /**
-     * @var string[]|null
-     *
-     * @ORM\Column(name="task_planned_ids", type="json", nullable=true)
-     */
+    /** @var string[]|null */
     private ?array $taskPlannedIds = [];
 
-    /**
-     * @var string[]|null
-     *
-     * @ORM\Column(name="task_approved_ids", type="json", nullable=true)
-     */
+    /** @var string[]|null */
     private ?array $taskApprovedIds = [];
 
     public function tasksEnabled(): bool
@@ -52,7 +38,7 @@ trait RevisionTaskTrait
             $this->taskCurrent?->getId() === $task->getId() => true,
             \in_array($task->getId(), $this->getTaskPlannedIds(), true) => true,
             \in_array($task->getId(), $this->getTaskApprovedIds(), true) => true,
-            default => false
+            default => false,
         };
     }
 

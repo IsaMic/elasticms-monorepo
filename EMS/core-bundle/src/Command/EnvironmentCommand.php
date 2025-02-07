@@ -1,26 +1,35 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Command;
 
+use EMS\CoreBundle\Commands;
 use EMS\CoreBundle\Entity\Environment;
 use EMS\CoreBundle\Service\EnvironmentService;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
+#[AsCommand(
+    name: Commands::ENVIRONMENT_LIST,
+    description: 'List the environments defined.',
+    hidden: false,
+    aliases: ['ems:environment:list']
+)]
 class EnvironmentCommand extends Command
 {
-    protected static $defaultName = 'ems:environment:list';
-
     public function __construct(private readonly EnvironmentService $environmentService)
     {
         parent::__construct();
     }
 
+    #[\Override]
     protected function configure(): void
     {
-        $this->setDescription('List the environments defined')
+        $this
             ->addOption(
                 'all',
                 null,
@@ -30,6 +39,7 @@ class EnvironmentCommand extends Command
         ;
     }
 
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         if ($input->hasOption('all')) {

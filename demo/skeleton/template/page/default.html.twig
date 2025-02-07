@@ -3,28 +3,24 @@
 
 {% block title %}{{ attribute(source, locale).title|default('') }}{% endblock %}
 
-{% block metatitle %}
-    {%- apply spaceless %}
-        {% if attribute(source, locale).meta_title|default(false) %}
-            {{ attribute(source, locale).meta_title }}
-        {% else %}
-            {{ parent() }}
-        {% endif %}
-    {% endapply -%}
-{% endblock %}
+{% block metatitle -%}
+    {%- if attribute(source, locale).meta_title|default(false) -%}
+        {{- attribute(source, locale).meta_title -}}
+    {%- else -%}
+        {{- parent() -}}
+    {%- endif -%}
+{%- endblock -%}
 
-{% block meta_description %}
-    {%- apply spaceless %}
-        {% if attribute(source, locale).description|default(false) %}
-            {{ attribute(source, locale).description|striptags|ems_html_decode|trim }}
-        {% else %}
-            {{ parent() }}
-        {% endif %}
-    {% endapply -%}
-{% endblock %}
+{%- block meta_description -%}
+    {%- if attribute(source, locale).description|default(false) -%}
+        {{- attribute(source, locale).description|striptags|ems_html_decode|trim -}}
+    {%- else -%}
+        {{- parent() -}}
+    {%- endif -%}
+{%- endblock -%}
 
 {% block main -%}
-    <div class="jumbotron px-0 rounded-0 mb-0 d-flex align-items-center text-white mb-3">
+    <div class="jumbotron bg-primary py-8 px-0 rounded-0 mb-0 d-flex align-items-center text-white mb-3">
         <div class="container-fluid container-lg">
             <div class="row">
                 <div class="col-12 col-lg-10 offset-lg-1 col-xl-8 offset-xl-2 mb-2">

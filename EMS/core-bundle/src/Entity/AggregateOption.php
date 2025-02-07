@@ -1,62 +1,29 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Entity;
 
-use Doctrine\ORM\Mapping as ORM;
 use EMS\CommonBundle\Entity\CreatedModifiedTrait;
+use EMS\CommonBundle\Entity\IdentifierIntegerTrait;
 use EMS\CoreBundle\Service\Mapping;
-use EMS\Helpers\Standard\DateTime;
+use EMS\Helpers\Standard\Json;
 
-/**
- * DataField.
- *
- * @ORM\Table(name="aggregate_option")
- *
- * @ORM\Entity(repositoryClass="EMS\CoreBundle\Repository\AggregateOptionRepository")
- *
- * @ORM\HasLifecycleCallbacks()
- */
 class AggregateOption
 {
     use CreatedModifiedTrait;
-    /**
-     * @ORM\Column(name="id", type="integer")
-     *
-     * @ORM\Id
-     *
-     * @ORM\GeneratedValue(strategy="AUTO")
-     */
-    private int $id;
+    use IdentifierIntegerTrait;
 
-    /**
-     * @ORM\Column(name="name", type="string", length=255)
-     */
     private string $name;
-
-    /**
-     * @ORM\Column(name="config", type="text", nullable=true)
-     */
     private string $config;
-
-    /**
-     * @ORM\Column(name="template", type="text", nullable=true)
-     */
     private string $template;
-
-    /**
-     * @ORM\Column(name="orderKey", type="integer")
-     */
     private int $orderKey = 0;
-
-    /**
-     * @ORM\Column(name="icon", type="text", length=255, nullable=true)
-     */
     private string $icon;
 
     public function __construct()
     {
-        $this->created = DateTime::create('now');
-        $this->modified = DateTime::create('now');
+        $this->created = new \DateTime();
+        $this->modified = new \DateTime();
 
         $this->config = '{
     "terms" : { "field" : "'.Mapping::FINALIZED_BY_FIELD.'" }
@@ -70,7 +37,7 @@ class AggregateOption
 		{% set facettedSearch = currentFilters.all|merge({\'search_form\': search_form}) %}
 		<a href="{{ path(paginationPath, facettedSearch) }}" class="btn btn-block btn-social btn-default">
 			<i class="fa fa-user"></i>
-			{{ index.key|displayname }}
+			{{ index.key|emsco_display_name }}
 			<span class=" badge pull-right">{{ index.doc_count }}</span>
 		</a>
 	{% endfor %}
@@ -89,7 +56,7 @@ class AggregateOption
 		{% set facettedSearch = currentFilters.all|merge({\'search_form\': search_form}) %}
 		<a href="{{ path(paginationPath, facettedSearch) }}" class="btn btn-block btn-social btn-default">
 			<i class="fa fa-remove"></i>
-			Remove facet "{{ aggregation.buckets[0].key|displayname }}"
+			Remove facet "{{ aggregation.buckets[0].key|emsco_display_name }}"
 		</a>
 	{% else %}
 		{% set filters = currentFilters.all.search_form.filters|merge({ (1000+id) : {\'operator\': \'term\', \'booleanClause\': \'must\', \'field\': fieldName, \'pattern\': aggregation.buckets[0].key, \'boost\': \'\'}}) %}
@@ -97,21 +64,11 @@ class AggregateOption
 		{% set facettedSearch = currentFilters.all|merge({\'search_form\': search_form}) %}
 		<a href="{{ path(paginationPath, facettedSearch) }}" class="btn btn-block btn-social btn-default">
 			<i class="fa fa-user"></i>
-			{{ aggregation.buckets[0].key|displayname }}
+			{{ aggregation.buckets[0].key|emsco_display_name }}
 			<span class=" badge pull-right">{{ aggregation.buckets[0].doc_count }}</span>
 		</a>
 	{% endif %}
 {% endif %}';
-    }
-
-    /**
-     * Get id.
-     *
-     * @return int
-     */
-    public function getId()
-    {
-        return $this->id;
     }
 
     /**
@@ -205,7 +162,7 @@ class AggregateOption
             }
         };
 
-        $json = \json_decode($this->config, true, 512, JSON_THROW_ON_ERROR);
+        $json = Json::decode($this->config);
         $recursiveCheck($json);
 
         return $json;

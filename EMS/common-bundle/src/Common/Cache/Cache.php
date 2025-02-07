@@ -10,18 +10,18 @@ use Symfony\Component\Cache\Adapter\ApcuAdapter;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\Cache\Adapter\RedisAdapter;
 
-final class Cache
+class Cache
 {
     private readonly Config $config;
 
     private ?\Redis $redis = null;
     private ?AdapterInterface $adapter = null;
 
-    public const TYPE_REDIS = 'redis';
-    public const TYPE_APC = 'apc';
-    public const TYPE_FILE_SYSTEM = 'file_system';
+    public const string TYPE_REDIS = 'redis';
+    public const string TYPE_APC = 'apc';
+    public const string TYPE_FILE_SYSTEM = 'file_system';
 
-    public const TYPES = [
+    public const array TYPES = [
         self::TYPE_REDIS,
         self::TYPE_APC,
         self::TYPE_FILE_SYSTEM,

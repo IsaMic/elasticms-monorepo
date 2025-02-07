@@ -13,12 +13,16 @@ use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints\NotBlank;
 
+/**
+ * @extends AbstractType<mixed>
+ */
 class MediaLibraryDocumentFormType extends AbstractType
 {
     /**
-     * @param FormBuilderInterface<FormBuilderInterface> $builder
-     * @param array{'data': MediaLibraryDocument}        $options
+     * @param FormBuilderInterface<mixed>         $builder
+     * @param array{'data': MediaLibraryDocument} $options
      */
+    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $data = $builder->getData();
@@ -48,6 +52,7 @@ class MediaLibraryDocumentFormType extends AbstractType
         }
     }
 
+    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([

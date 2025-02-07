@@ -1,6 +1,6 @@
-//
 // Component: Control Sidebar
-//
+
+@use "sass:color";
 
 html.control-sidebar-animate {
   overflow-x: hidden;
@@ -18,6 +18,7 @@ html.control-sidebar-animate {
     display: none;
     right: -$control-sidebar-width;
     width: $control-sidebar-width;
+
     @include transition(
       right $transition-speed $transition-fn,
       display $transition-speed $transition-fn
@@ -83,6 +84,7 @@ body.text-sm {
     &,
     &::before {
       right: 0;
+
       @include transition(
         right $transition-speed $transition-fn,
         display $transition-speed $transition-fn
@@ -171,7 +173,7 @@ body.text-sm {
 
 // Light skin
 .control-sidebar-light {
-  color: lighten($sidebar-light-color, 10%);
+  color: color.adjust($sidebar-light-color, $lightness: 10%);
 
   //  Background
   background-color: $sidebar-light-bg;

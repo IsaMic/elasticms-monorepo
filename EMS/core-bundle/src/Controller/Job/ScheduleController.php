@@ -8,6 +8,7 @@ use EMS\CommonBundle\Contracts\Log\LocalizedLoggerInterface;
 use EMS\CoreBundle\Controller\CoreControllerTrait;
 use EMS\CoreBundle\Core\DataTable\DataTableFactory;
 use EMS\CoreBundle\Core\Job\ScheduleManager;
+use EMS\CoreBundle\Core\UI\FlashMessageLogger;
 use EMS\CoreBundle\DataTable\Type\Job\JobScheduleDataTableType;
 use EMS\CoreBundle\Entity\Schedule;
 use EMS\CoreBundle\Form\Data\TableAbstract;
@@ -28,7 +29,8 @@ final class ScheduleController extends AbstractController
         private readonly ScheduleManager $scheduleManager,
         private readonly DataTableFactory $dataTableFactory,
         private readonly LocalizedLoggerInterface $logger,
-        private readonly string $templateNamespace
+        private readonly FlashMessageLogger $flashMessageLogger,
+        private readonly string $templateNamespace,
     ) {
     }
 
@@ -46,7 +48,7 @@ final class ScheduleController extends AbstractController
                 TableType::REORDER_ACTION => $this->scheduleManager->reorderByIds(
                     ids: TableType::getReorderedKeys($form->getName(), $request)
                 ),
-                default => $this->logger->messageError(t('log.error.invalid_table_action', [], 'emsco-core'))
+                default => $this->logger->messageError(t('log.error.invalid_table_action', [], 'emsco-core')),
             };
 
             return $this->redirectToRoute(Routes::SCHEDULE_INDEX);
@@ -89,7 +91,7 @@ final class ScheduleController extends AbstractController
             ]);
 
             if ('json' === $_format) {
-                return $this->render("@$this->templateNamespace/ajax/notification.json.twig", [
+                return $this->flashMessageLogger->buildJsonResponse([
                     'success' => true,
                 ]);
             }

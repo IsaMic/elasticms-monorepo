@@ -8,8 +8,9 @@ use Twig\Extension\AbstractExtension;
 use Twig\TwigFilter;
 use Twig\TwigFunction;
 
-final class ConnectionExtension extends abstractExtension
+final class ConnectionExtension extends AbstractExtension
 {
+    #[\Override]
     public function getFunctions(): array
     {
         return [
@@ -17,6 +18,7 @@ final class ConnectionExtension extends abstractExtension
         ];
     }
 
+    #[\Override]
     public function getFilters(): array
     {
         return [

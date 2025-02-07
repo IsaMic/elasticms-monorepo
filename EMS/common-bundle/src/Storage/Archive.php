@@ -21,11 +21,11 @@ class Archive implements \JsonSerializable
     {
     }
 
-    public static function fromDirectory(string $directory, string $hashAlgo, callable $callback = null): self
+    public static function fromDirectory(string $directory, string $hashAlgo, ?callable $callback = null): self
     {
         $archive = new self($hashAlgo);
         $finder = new Finder();
-        $finder->files()->in($directory);
+        $finder->files()->in($directory)->ignoreDotFiles(false);
 
         if (!$finder->hasResults()) {
             throw new \RuntimeException('The directory is empty');
@@ -91,6 +91,7 @@ class Archive implements \JsonSerializable
     /**
      * @return ArchiveItem[]
      */
+    #[\Override]
     public function jsonSerialize(): array
     {
         \ksort($this->files);
@@ -167,7 +168,7 @@ class Archive implements \JsonSerializable
         }
         $newArchive = new self($this->hashAlgo);
         foreach ($this->files as $file) {
-            if (null !== $otherArchive && $otherArchive->containsByHash($file->hash)) {
+            if ($otherArchive->containsByHash($file->hash)) {
                 continue;
             }
             $newArchive->addArchiveItem($file);

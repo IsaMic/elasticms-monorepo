@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Repository;
 
 use Doctrine\ORM\EntityRepository;
@@ -32,7 +34,7 @@ class ManagedAliasRepository extends EntityRepository
         $this->addSearchFilters($qb, $searchValue);
 
         try {
-            return \intval($qb->getQuery()->getSingleScalarResult());
+            return (int) $qb->getQuery()->getSingleScalarResult();
         } catch (NonUniqueResultException) {
             return 0;
         }

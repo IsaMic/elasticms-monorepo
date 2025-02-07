@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Form\Field;
 
 use EMS\CoreBundle\Service\ObjectChoiceCacheService;
@@ -10,7 +12,7 @@ class ObjectChoiceList implements ChoiceListInterface
     /** @var array<mixed> */
     private array $choices = [];
 
-    public function __construct(private readonly ObjectChoiceCacheService $objectChoiceCacheService, private string $types, private readonly bool $loadAll = false, private bool $circleOnly = false, private bool $withWarning = true, private ?string $querySearchName = null)
+    public function __construct(private readonly ObjectChoiceCacheService $objectChoiceCacheService, private readonly string $types, private readonly bool $loadAll = false, private readonly bool $circleOnly = false, private readonly bool $withWarning = true, private readonly ?string $querySearchName = null)
     {
     }
 
@@ -20,10 +22,9 @@ class ObjectChoiceList implements ChoiceListInterface
     }
 
     /**
-     * {@inheritDoc}
-     *
      * @return array<mixed>
      */
+    #[\Override]
     public function getChoices(): array
     {
         $this->loadAll();
@@ -32,10 +33,9 @@ class ObjectChoiceList implements ChoiceListInterface
     }
 
     /**
-     * {@inheritDoc}
-     *
      * @return array<mixed>
      */
+    #[\Override]
     public function getValues(): array
     {
         return \array_keys($this->choices);
@@ -44,6 +44,7 @@ class ObjectChoiceList implements ChoiceListInterface
     /**
      * @return array<mixed>
      */
+    #[\Override]
     public function getStructuredValues(): array
     {
         $values = [];
@@ -55,10 +56,9 @@ class ObjectChoiceList implements ChoiceListInterface
     }
 
     /**
-     * {@inheritDoc}
-     *
      * @return array<mixed>
      */
+    #[\Override]
     public function getOriginalKeys(): array
     {
         $values = [];
@@ -70,12 +70,11 @@ class ObjectChoiceList implements ChoiceListInterface
     }
 
     /**
-     * {@inheritDoc}
-     *
      * @param array<mixed> $choices
      *
      * @return array<mixed>
      */
+    #[\Override]
     public function getChoicesForValues(array $choices): array
     {
         $this->choices = $this->objectChoiceCacheService->load($choices, $this->circleOnly, $this->withWarning);
@@ -84,12 +83,11 @@ class ObjectChoiceList implements ChoiceListInterface
     }
 
     /**
-     * {@inheritDoc}
-     *
      * @param array<mixed> $choices
      *
      * @return array<mixed>
      */
+    #[\Override]
     public function getValuesForChoices(array $choices): array
     {
         $this->choices = $this->objectChoiceCacheService->load($choices, $this->circleOnly, $this->withWarning);

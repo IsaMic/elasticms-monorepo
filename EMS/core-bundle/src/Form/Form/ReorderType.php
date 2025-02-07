@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Form\Form;
 
 use EMS\CoreBundle\EMSCoreBundle;
@@ -9,28 +11,33 @@ use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
+/**
+ * @extends AbstractType<mixed>
+ */
 class ReorderType extends AbstractType
 {
     /**
-     * @param FormBuilderInterface<FormBuilderInterface> $builder
-     * @param array<string, mixed>                       $options
+     * @param FormBuilderInterface<mixed> $builder
+     * @param array<string, mixed>        $options
      */
+    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->add('items', HiddenType::class, [
-                'attr' => [
-                        'class' => 'reorder-items',
-                ],
+            'attr' => [
+                'class' => 'reorder-items',
+            ],
         ]);
 
         $builder->add('reorder', SubmitEmsType::class, [
-                'attr' => [
-                        'class' => 'btn btn-primary reorder-button',
-                ],
-                'icon' => 'fa fa-reorder',
+            'attr' => [
+                'class' => 'btn btn-primary reorder-button',
+            ],
+            'icon' => 'fa fa-reorder',
         ]);
     }
 
+    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         parent::configureOptions($resolver);

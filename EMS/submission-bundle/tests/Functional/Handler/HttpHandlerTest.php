@@ -7,14 +7,16 @@ namespace EMS\SubmissionBundle\Tests\Functional\Handler;
 use EMS\FormBundle\Submission\AbstractHandler;
 use EMS\SubmissionBundle\Response\HttpHandleResponse;
 use EMS\SubmissionBundle\Tests\Functional\App\ResponseFactory;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Component\HttpClient\Response\MockResponse;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
-final class HttpHandlerTest extends AbstractHandlerTest
+final class HttpHandlerTest extends AbstractHandlerTestCase
 {
     /** @var ResponseFactory */
     private $responseFactory;
 
+    #[\Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -22,6 +24,7 @@ final class HttpHandlerTest extends AbstractHandlerTest
         $this->responseFactory = $this->container->get(ResponseFactory::class);
     }
 
+    #[\Override]
     protected function getHandler(): AbstractHandler
     {
         return $this->container->get('functional_test.emss.handler.http');
@@ -105,7 +108,7 @@ final class HttpHandlerTest extends AbstractHandlerTest
         );
     }
 
-    public function errorResponses(): array
+    public static function errorResponses(): array
     {
         return [
             '300_Response' => [new MockResponse('', ['http_code' => 400])],
@@ -114,9 +117,7 @@ final class HttpHandlerTest extends AbstractHandlerTest
         ];
     }
 
-    /**
-     * @dataProvider errorResponses
-     */
+    #[DataProvider('errorResponses')]
     public function testErrorResponse(ResponseInterface $response): void
     {
         $endpoint = \json_encode(['url' => 'http://example.test/api/form']);

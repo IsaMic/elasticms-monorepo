@@ -17,7 +17,7 @@ class CoreApiUser implements UserInterface
 
     public function __construct(
         public readonly ProfileInterface $profile,
-        private readonly string $token
+        private readonly string $token,
     ) {
         $this->displayName = $this->profile->getDisplayName();
         $this->username = $this->profile->getUsername();
@@ -30,6 +30,7 @@ class CoreApiUser implements UserInterface
         return $this->token;
     }
 
+    #[\Override]
     public function getRoles(): array
     {
         return $this->profile->getRoles();
@@ -40,15 +41,12 @@ class CoreApiUser implements UserInterface
         return null;
     }
 
-    public function getSalt()
-    {
-        return null;
-    }
-
+    #[\Override]
     public function eraseCredentials(): void
     {
     }
 
+    #[\Override]
     public function getUserIdentifier(): string
     {
         return $this->profile->getUsername();

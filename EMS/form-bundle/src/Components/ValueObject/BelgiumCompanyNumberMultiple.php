@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\FormBundle\Components\ValueObject;
 
 class BelgiumCompanyNumberMultiple
@@ -37,6 +39,6 @@ class BelgiumCompanyNumberMultiple
     {
         $numbers = \str_split($this->number->getDigits(), 10);
 
-        return \join(' ', $numbers);
+        return \implode(' ', $numbers);
     }
 }

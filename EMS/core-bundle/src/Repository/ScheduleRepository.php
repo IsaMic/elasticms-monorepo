@@ -6,6 +6,7 @@ namespace EMS\CoreBundle\Repository;
 
 use Doctrine\Bundle\DoctrineBundle\Registry;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\ORM\QueryBuilder;
 use EMS\CoreBundle\Entity\Schedule;
@@ -14,8 +15,8 @@ use EMS\CoreBundle\Entity\Schedule;
  * @extends ServiceEntityRepository<Schedule>
  *
  * @method Schedule|null find($id, $lockMode = null, $lockVersion = null)
- * @method Schedule|null findOneBy(array $criteria, array $orderBy = null)
- * @method Schedule[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+ * @method Schedule|null findOneBy(mixed[] $criteria, mixed[] $orderBy = null)
+ * @method Schedule[]    findBy(mixed[] $criteria, mixed[] $orderBy = null, $limit = null, $offset = null)
  */
 class ScheduleRepository extends ServiceEntityRepository
 {
@@ -39,7 +40,7 @@ class ScheduleRepository extends ServiceEntityRepository
         $this->addSearchFilters($qb, $searchValue);
 
         try {
-            return \intval($qb->getQuery()->getSingleScalarResult());
+            return (int) $qb->getQuery()->getSingleScalarResult();
         } catch (NonUniqueResultException) {
             return 0;
         }
@@ -66,7 +67,7 @@ class ScheduleRepository extends ServiceEntityRepository
     {
         $queryBuilder = $this->createQueryBuilder('schedule');
         $queryBuilder->where('schedule.id IN (:ids)')
-            ->setParameter('ids', $ids);
+            ->setParameter('ids', $ids, ArrayParameterType::STRING);
 
         return $queryBuilder->getQuery()->getResult();
     }

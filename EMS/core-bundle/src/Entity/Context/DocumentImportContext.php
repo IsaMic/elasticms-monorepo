@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Entity\Context;
 
 use EMS\CoreBundle\Entity\ContentType;
@@ -16,7 +18,7 @@ class DocumentImportContext
         private readonly bool $shouldRawImport,
         private readonly bool $shouldIndexInDefaultEnv,
         private readonly bool $shouldFinalize,
-        private readonly bool $shouldForce
+        private readonly bool $shouldForce,
     ) {
         $this->environment = $this->contentType->giveEnvironment();
     }

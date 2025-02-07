@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\CLI\ExpressionLanguage;
 
-use App\CLI\Helper\Pa11yWrapper;
 use EMS\Helpers\Standard\Json;
 use Ramsey\Uuid\Uuid;
 
@@ -36,7 +35,7 @@ class Functions
         $output = [];
         $body = self::trimDivContainers($body);
         foreach ($body->childNodes as $child) {
-            if ($child instanceof \DOMNode && $tag === $child->nodeName) {
+            if ($tag === $child->nodeName) {
                 self::addNodeToJsonMenu($document, $current, $output, $tag, $fieldName, $typeName, $labelField);
                 $current = [$child];
             } else {
@@ -98,16 +97,8 @@ class Functions
         return $body;
     }
 
-    public static function pa11y(string $url): string
-    {
-        $wrapper = new Pa11yWrapper($url);
-        $wrapper->start();
-
-        return $wrapper->getOutput();
-    }
-
     /**
-     * @param array<string, string[]> $values,
+     * @param array<string, string[]> $values
      * @param array<string, string[]> $labels
      */
     public static function listToJsonMenuNested(array $values, string $fieldName, string $typeName, ?array $labels, ?string $labelField, bool $multiplex = false): string
@@ -142,12 +133,12 @@ class Functions
             }
         }
 
-        return JSON::encode($data);
+        return Json::encode($data);
     }
 
     /**
-     * @param array<string, string[]> $values,
-     * @param array<string, string[]> $keys,
+     * @param array<string, string[]> $values
+     * @param array<string, string[]> $keys
      */
     public static function arrayToJsonMenuNested(array $values, array $keys): string
     {
@@ -166,12 +157,12 @@ class Functions
             }
         }
 
-        return JSON::encode($data);
+        return Json::encode($data);
     }
 
     /**
-     * @param string|array<string>|array<string, string[]> $values,
-     * @param array<string>|array<string, string[]>        $keys,
+     * @param string|array<string>|array<string, string[]> $values
+     * @param array<string>|array<string, string[]>        $keys
      *
      * @return array<string, string[]>
      */

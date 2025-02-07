@@ -5,42 +5,47 @@ declare(strict_types=1);
 namespace EMS\CoreBundle\Command\Revision;
 
 use EMS\CommonBundle\Common\Command\AbstractCommand;
-use EMS\CommonBundle\Common\Standard\DateTime;
 use EMS\CoreBundle\Commands;
 use EMS\CoreBundle\Core\Revision\Search\RevisionSearcher;
 use EMS\CoreBundle\Entity\ContentType;
 use EMS\CoreBundle\Service\ContentTypeService;
 use EMS\CoreBundle\Service\Revision\RevisionService;
+use EMS\Helpers\Standard\DateTime;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
+#[AsCommand(
+    name: Commands::REVISION_ARCHIVE,
+    description: 'Archive documents for a given content type.',
+    hidden: false
+)]
 final class ArchiveCommand extends AbstractCommand
 {
     private ContentType $contentType;
     private string $searchQuery;
     private ?\DateTimeInterface $modifiedBefore = null;
+    private const string USER = 'SYSTEM_ARCHIVE';
 
-    protected static $defaultName = Commands::REVISION_ARCHIVE;
-    private const USER = 'SYSTEM_ARCHIVE';
-
-    public const ARGUMENT_CONTENT_TYPE = 'content-type';
-    public const OPTION_FORCE = 'force';
-    public const OPTION_MODIFIED_BEFORE = 'modified-before';
-    public const OPTION_BATCH_SIZE = 'batch-size';
-    public const OPTION_SCROLL_SIZE = 'scroll-size';
-    public const OPTION_SCROLL_TIMEOUT = 'scroll-timeout';
-    public const OPTION_SEARCH_QUERY = 'search-query';
+    public const string ARGUMENT_CONTENT_TYPE = 'content-type';
+    public const string OPTION_FORCE = 'force';
+    public const string OPTION_MODIFIED_BEFORE = 'modified-before';
+    public const string OPTION_BATCH_SIZE = 'batch-size';
+    public const string OPTION_SCROLL_SIZE = 'scroll-size';
+    public const string OPTION_SCROLL_TIMEOUT = 'scroll-timeout';
+    public const string OPTION_SEARCH_QUERY = 'search-query';
 
     public function __construct(
         private readonly RevisionSearcher $revisionSearcher,
         private readonly RevisionService $revisionService,
-        private readonly ContentTypeService $contentTypeService
+        private readonly ContentTypeService $contentTypeService,
     ) {
         parent::__construct();
     }
 
+    #[\Override]
     protected function configure(): void
     {
         $this
@@ -52,6 +57,7 @@ final class ArchiveCommand extends AbstractCommand
         ;
     }
 
+    #[\Override]
     protected function initialize(InputInterface $input, OutputInterface $output): void
     {
         parent::initialize($input, $output);
@@ -74,6 +80,7 @@ final class ArchiveCommand extends AbstractCommand
         }
     }
 
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $environment = $this->contentType->giveEnvironment();

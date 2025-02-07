@@ -1,18 +1,26 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Controller;
 
 use EMS\CommonBundle\Contracts\Spreadsheet\SpreadsheetGeneratorServiceInterface;
 use EMS\CommonBundle\Helper\EmsFields;
+use EMS\CoreBundle\Core\ContentType\FieldType\FieldTypeService;
+use EMS\CoreBundle\Core\ContentType\FieldType\FieldTypeTreeItem;
 use EMS\CoreBundle\Core\DataTable\DataTableFactory;
+use EMS\CoreBundle\Core\UI\FlashMessageLogger;
 use EMS\CoreBundle\Core\User\UserManager;
 use EMS\CoreBundle\DataTable\Type\UserDataTableType;
 use EMS\CoreBundle\Entity\AuthToken;
+use EMS\CoreBundle\Entity\ContentType;
 use EMS\CoreBundle\Entity\User;
 use EMS\CoreBundle\Form\Form\TableType;
 use EMS\CoreBundle\Form\Form\UserType;
 use EMS\CoreBundle\Repository\AuthTokenRepository;
+use EMS\CoreBundle\Repository\ContentTypeRepository;
 use EMS\CoreBundle\Repository\WysiwygProfileRepository;
+use EMS\CoreBundle\Roles;
 use EMS\CoreBundle\Routes;
 use EMS\CoreBundle\Service\UserService;
 use Psr\Log\LoggerInterface;
@@ -24,18 +32,21 @@ class UserController extends AbstractController
 {
     public function __construct(
         private readonly LoggerInterface $logger,
+        private readonly ContentTypeRepository $contentTypeRepository,
         private readonly UserService $userService,
         private readonly UserManager $userManager,
         private readonly SpreadsheetGeneratorServiceInterface $spreadsheetGenerator,
         private readonly DataTableFactory $dataTableFactory,
         private readonly AuthTokenRepository $authTokenRepository,
         private readonly WysiwygProfileRepository $wysiwygProfileRepository,
+        private readonly FlashMessageLogger $flashMessageLogger,
         private readonly string $templateNamespace,
-        private readonly string $dateTimeFormat
+        private readonly FieldTypeService $fieldTypeService,
+        private readonly string $dateTimeFormat,
     ) {
     }
 
-    public function indexAction(Request $request): Response
+    public function index(Request $request): Response
     {
         $table = $this->dataTableFactory->create(UserDataTableType::class);
 
@@ -47,7 +58,77 @@ class UserController extends AbstractController
         ]);
     }
 
-    public function addUserAction(Request $request): Response
+    public function contentTypePermissions(): Response
+    {
+        $contentTypes = $this->contentTypeRepository->findAll();
+
+        $contentTypeCounts = [];
+        foreach ($contentTypes as $contentType) {
+            $tree = $this->fieldTypeService->getTree($contentType);
+
+            $fieldTypesWithMinimumRole = $tree->getChildrenRecursive()->filter(fn (FieldTypeTreeItem $item) => $item->getFieldType()->getRestrictionOption('minimum_role', false));
+
+            $contentTypeCounts[$contentType->getId()] = \count($fieldTypesWithMinimumRole);
+
+            $roles = [
+                'view' => $contentType->getRoles()['view'],
+                'create' => $contentType->getRoles()['create'],
+                'edit' => $contentType->getRoles()['edit'],
+                'publish' => $contentType->getRoles()['publish'],
+                'delete' => $contentType->getRoles()['delete'],
+                'trash' => $contentType->getRoles()['trash'],
+                'archive' => $contentType->getRoles()['archive'],
+                'show_link_create' => $contentType->getRoles()['show_link_create'],
+                'show_link_search' => $contentType->getRoles()['show_link_search'],
+            ];
+        }
+
+        $roles = [
+            Roles::ROLE_AUTHOR,
+            Roles::ROLE_REVIEWER,
+            Roles::ROLE_TRADUCTOR,
+            Roles::ROLE_AUDITOR,
+            Roles::ROLE_COPYWRITER,
+            Roles::ROLE_PUBLISHER,
+            Roles::ROLE_WEBMASTER,
+            Roles::ROLE_ADMIN,
+            Roles::ROLE_SUPER_ADMIN,
+        ];
+
+        $rolesFunctionality = [
+            Roles::ROLE_API,
+            Roles::ROLE_FORM_CRM,
+            Roles::ROLE_TASK_MANAGER,
+            Roles::ROLE_ALLOW_ALIGN,
+            Roles::ROLE_USER_MANAGEMENT,
+            Roles::ROLE_COPY_PASTE,
+            Roles::ROLE_DEFAULT_SEARCH,
+            Roles::ROLE_SUPER_USER,
+            Roles::ROLE_USER_READ,
+        ];
+
+        return $this->render("@$this->templateNamespace/user/permissions/permissions.html.twig", [
+            'contentTypeCounts' => $contentTypeCounts,
+            'roles' => $roles,
+            'rolesFunctionality' => $rolesFunctionality,
+            'contentTypes' => $contentTypes,
+        ]);
+    }
+
+    public function contentTypeFieldsPermissions(ContentType $contentType): Response
+    {
+        $tree = $this->fieldTypeService->getTree($contentType);
+
+        $fieldTypesWithMinimumRole = $tree->getChildrenRecursive()->filter(fn (FieldTypeTreeItem $item) => $item->getFieldType()->getRestrictionOption('minimum_role', false));
+
+        return $this->render("@$this->templateNamespace/user/permissions/specific-permissions.html.twig", [
+            'contentType' => $contentType,
+            'tree' => $tree,
+            'children' => $fieldTypesWithMinimumRole,
+        ]);
+    }
+
+    public function addUser(Request $request): Response
     {
         $user = new User();
         $result = $this->wysiwygProfileRepository->findBy([], ['orderKey' => 'asc'], 1);
@@ -75,7 +156,7 @@ class UserController extends AbstractController
         ]);
     }
 
-    public function editUserAction(User $id, Request $request): Response
+    public function editUser(User $id, Request $request): Response
     {
         return $this->edit($id, $request);
     }
@@ -102,7 +183,7 @@ class UserController extends AbstractController
         ]);
     }
 
-    public function removeUserAction(User $id): Response
+    public function removeUser(User $id): Response
     {
         return $this->delete($id);
     }
@@ -142,11 +223,6 @@ class UserController extends AbstractController
         return $this->redirectToRoute(Routes::USER_INDEX);
     }
 
-    public function apiKeyAction(string $username): Response
-    {
-        return $this->apiKey($username);
-    }
-
     public function apiKey(string $username): Response
     {
         $user = $this->userService->giveUser($username, false);
@@ -175,13 +251,13 @@ class UserController extends AbstractController
         return $this->redirectToRoute(Routes::USER_INDEX);
     }
 
-    public function sidebarCollapseAction(bool $collapsed): Response
+    public function sidebarCollapse(bool $collapsed): Response
     {
         $user = $this->userService->giveUser($this->userService->getCurrentUser()->getUsername(), false);
         $user->setSidebarCollapse($collapsed);
         $this->userService->updateUser($user);
 
-        return $this->render("@$this->templateNamespace/ajax/notification.json.twig", [
+        return $this->flashMessageLogger->buildJsonResponse([
             'success' => true,
         ]);
     }

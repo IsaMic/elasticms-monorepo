@@ -32,6 +32,7 @@ use EMS\CommonBundle\Elasticsearch\Exception\NotSingleResultException;
 use EMS\CommonBundle\Elasticsearch\Response\AnalyzeResponse;
 use EMS\CommonBundle\Elasticsearch\Response\Response as EmsResponse;
 use EMS\CommonBundle\Search\Search;
+use EMS\Helpers\Standard\Json;
 use EMS\Helpers\Standard\Type;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\OptionsResolver\Options;
@@ -39,7 +40,7 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class ElasticaService
 {
-    private const MAX_INDICES_BY_ALIAS = 100;
+    private const int MAX_INDICES_BY_ALIAS = 100;
     private ?string $version = null;
     private ?string $healthStatus = null;
     /** @var array<string, bool> */
@@ -79,7 +80,7 @@ class ElasticaService
         return $this->client->requestEndpoint($endpoint)->isOk();
     }
 
-    public function getHealthStatus(string $waitForStatus = null, string $timeout = '10s', ?string $index = null): string
+    public function getHealthStatus(?string $waitForStatus = null, string $timeout = '10s', ?string $index = null): string
     {
         if (null !== $this->healthStatus) {
             return $this->healthStatus;
@@ -107,7 +108,7 @@ class ElasticaService
     /**
      * @return array<string, mixed>
      */
-    public function getClusterHealth(string $waitForStatus = null, string $timeout = '10s', ?string $index = null): array
+    public function getClusterHealth(?string $waitForStatus = null, string $timeout = '10s', ?string $index = null): array
     {
         if ($this->useAdminProxy) {
             throw new \RuntimeException('getClusterHealth not supported in proxy mode');
@@ -168,14 +169,14 @@ class ElasticaService
     }
 
     /**
-     * @param string[] $indexes
-     * @param string[] $terms
-     * @param string[] $contentTypes
+     * @param string[]     $indexes
+     * @param list<string> $terms
+     * @param list<string> $contentTypes
      */
     public function generateTermsSearch(array $indexes, string $field, array $terms, array $contentTypes = []): Search
     {
         $query = new Terms($field, $terms);
-        if (empty($contentTypes)) {
+        if (!empty($contentTypes)) {
             $query = $this->filterByContentTypes($query, $contentTypes);
         }
 
@@ -188,7 +189,7 @@ class ElasticaService
     }
 
     /**
-     * @param string[] $terms
+     * @param list<string> $terms
      */
     public function getTermsQuery(string $field, array $terms): Terms
     {
@@ -199,7 +200,7 @@ class ElasticaService
     {
         if ($this->useAdminProxy) {
             $response = $this->adminHelper->getCoreApi()->search()->search($search);
-            $resultSet = $response->buildResultSet($this->createElasticaSearch($search, $search->getSearchOptions())->getQuery(), $this->getVersion());
+            $resultSet = $response->buildResultSet($this->createElasticaSearch($search, $search->getSearchOptions())->getQuery());
         } else {
             $resultSet = $this->createElasticaSearch($search, $search->getSearchOptions())->search();
         }
@@ -259,7 +260,7 @@ class ElasticaService
         $response = $this->client->requestEndpoint($endpoint)->getData();
 
         if (isset($response['count'])) {
-            return \intval($response['count']);
+            return (int) $response['count'];
         }
         throw new \RuntimeException('Unexpected count query response structure');
     }
@@ -280,7 +281,7 @@ class ElasticaService
 
     /**
      * @param AbstractQuery|array<mixed>|null $query
-     * @param string[]                        $contentTypes
+     * @param list<string>                    $contentTypes
      *
      * @return AbstractQuery|array<mixed>|null
      */
@@ -396,7 +397,7 @@ class ElasticaService
 
     /**
      * @param string[]     $indexes
-     * @param string[]     $contentTypes
+     * @param list<string> $contentTypes
      * @param array<mixed> $body
      */
     public function convertElasticsearchBody(array $indexes, array $contentTypes, array $body): Search
@@ -451,7 +452,7 @@ class ElasticaService
             $contentTypes[] = $contentType;
         }
 
-        if ($query) {
+        if (null !== $query) {
             $search = $this->generateSearch([$index], $query, $contentTypes);
         } else {
             $search = $this->generateTermsSearch([$index], '_id', [$id], $contentTypes);
@@ -524,7 +525,7 @@ class ElasticaService
     /**
      * @param array<mixed> $parameters
      *
-     * @return array{type: string[], index: string[], body: array<mixed>, size: int, from: int, _source: string[], sort: ?array<mixed>}
+     * @return array{type: list<string>, index: string[], body: array<mixed>, size: int, from: int, _source: string[], sort: ?array<mixed>}
      */
     private function resolveElasticsearchSearchParameters(array $parameters): array
     {
@@ -561,13 +562,13 @@ class ElasticaService
                     return [];
                 }
                 if (\is_string($value)) {
-                    $value = \json_decode($value, true, 512, JSON_THROW_ON_ERROR);
+                    $value = Json::decode($value);
                 }
 
                 return $value;
             })
         ;
-        /** @var array{type: string[], index: string[], body: array<mixed>, size: int, from: int, _source: string[], sort: ?array<mixed>} $resolvedParameters */
+        /** @var array{type: list<string>, index: string[], body: array<mixed>, size: int, from: int, _source: string[], sort: ?array<mixed>} $resolvedParameters */
         $resolvedParameters = $optionResolver->resolve($parameters);
 
         return $resolvedParameters;
@@ -728,7 +729,7 @@ class ElasticaService
         foreach (['query', 'aggs', 'post_filter'] as $attribute) {
             $resolver->setNormalizer($attribute, function (Options $options, $value) {
                 if (\is_string($value)) {
-                    $value = \json_decode($value, true, 512, JSON_THROW_ON_ERROR);
+                    $value = Json::decode($value);
                 }
 
                 return $value;

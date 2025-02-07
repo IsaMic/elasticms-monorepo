@@ -9,10 +9,12 @@ use EMS\CoreBundle\Entity\User;
 use EMS\CoreBundle\Repository\FormSubmissionFileRepository;
 use EMS\CoreBundle\Repository\FormSubmissionRepository;
 use EMS\CoreBundle\Service\EntityServiceInterface;
+use EMS\Helpers\Standard\Json;
 use EMS\SubmissionBundle\Entity\FormSubmission;
 use EMS\SubmissionBundle\Entity\FormSubmissionFile;
 use EMS\SubmissionBundle\Request\DatabaseRequest;
-use Symfony\Component\HttpFoundation\Session\Flash\FlashBagInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpFoundation\Session\FlashBagAwareSessionInterface;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\PropertyAccess\PropertyAccessor;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -20,24 +22,23 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 use Twig\Environment;
 use ZipStream\ZipStream;
 
-final class FormSubmissionService implements EntityServiceInterface
+final readonly class FormSubmissionService implements EntityServiceInterface
 {
     public function __construct(
-        private readonly FormSubmissionRepository $formSubmissionRepository,
-        private readonly FormSubmissionFileRepository $formSubmissionFileRepository,
-        private readonly Environment $twig,
-        private readonly FlashBagInterface $flashBag,
-        private readonly TranslatorInterface $translator,
-        private readonly string $templateNamespace
+        private FormSubmissionRepository $formSubmissionRepository,
+        private FormSubmissionFileRepository $formSubmissionFileRepository,
+        private Environment $twig,
+        private RequestStack $requestStack,
+        private TranslatorInterface $translator,
+        private string $templateNamespace,
     ) {
     }
 
     /**
-     * @param mixed $context
-     *
      * @return FormSubmission[]
      */
-    public function get(int $from, int $size, ?string $orderField, string $orderDirection, string $searchValue, $context = null): array
+    #[\Override]
+    public function get(int $from, int $size, ?string $orderField, string $orderDirection, string $searchValue, mixed $context = null): array
     {
         return $this->formSubmissionRepository->get($from, $size, $orderField, $orderDirection, $searchValue);
     }
@@ -88,17 +89,17 @@ final class FormSubmissionService implements EntityServiceInterface
      */
     public function createDownloadForMultiple(array $formSubmissionIds): StreamedResponse
     {
-        $response = new StreamedResponse(function () use ($formSubmissionIds) {
-            $zip = new ZipStream('submissionData.zip');
+        return new StreamedResponse(function () use ($formSubmissionIds) {
+            $zip = new ZipStream(outputName: 'submissionData.zip');
 
             foreach ($formSubmissionIds as $formSubmissionId) {
                 $formSubmission = $this->getById($formSubmissionId);
                 $data = $formSubmission->getData();
 
-                $rawJson = \json_encode($data, JSON_UNESCAPED_UNICODE);
-                if (\is_string($rawJson)) {
-                    $zip->addFile($formSubmissionId.'/data.json', $rawJson);
-                }
+                $zip->addFile(
+                    fileName: $formSubmissionId.'/data.json',
+                    data: Json::encode($data, false, true)
+                );
 
                 foreach ($formSubmission->getFiles() as $file) {
                     if ($streamRead = $file->getFile()) {
@@ -111,8 +112,6 @@ final class FormSubmissionService implements EntityServiceInterface
 
             $zip->finish();
         });
-
-        return $response;
     }
 
     /**
@@ -130,7 +129,7 @@ final class FormSubmissionService implements EntityServiceInterface
             /** @var array<mixed> $data */
             $data = $formSubmission->getData();
             $data = \array_filter($data, fn ($value) => !\is_array($value));
-            $data = \array_map(fn ($value) => \strval($value), $data);
+            $data = \array_map(fn ($value) => (string) $value, $data);
             $data['id'] = $formSubmission->getId();
             $data['form'] = $formSubmission->getName();
             $data['instance'] = $formSubmission->getInstance();
@@ -149,8 +148,8 @@ final class FormSubmissionService implements EntityServiceInterface
         $config['sheets'] = [];
         foreach ($sheets as $key => $value) {
             $config['sheets'][] = [
-              'name' => $key,
-              'rows' => $this->normalizeRows($value),
+                'name' => $key,
+                'rows' => $this->normalizeRows($value),
             ];
         }
 
@@ -188,7 +187,11 @@ final class FormSubmissionService implements EntityServiceInterface
         }
 
         $formSubmission = $this->getById($id);
-        $this->flashBag->add('notice', $this->translator->trans('form_submissions.process.success', ['%id%' => $formSubmission->getId()], 'EMSCoreBundle'));
+        $session = $this->requestStack->getSession();
+        if (!$session instanceof FlashBagAwareSessionInterface) {
+            throw new \RuntimeException('Unexpected non FlashBag aware session');
+        }
+        $session->getFlashBag()->add('notice', $this->translator->trans('form_submissions.process.success', ['%id%' => $formSubmission->getId()], 'EMSCoreBundle'));
 
         $formSubmission->process($user->getUsername());
         $this->formSubmissionRepository->save($formSubmission);
@@ -209,7 +212,11 @@ final class FormSubmissionService implements EntityServiceInterface
             $formSubmission = $this->getById($id);
             $formSubmission->process($user->getUsername());
             $this->formSubmissionRepository->persist($formSubmission);
-            $this->flashBag->add('notice', $this->translator->trans('form_submissions.process.success', ['%id%' => $id], 'EMSCoreBundle'));
+            $session = $this->requestStack->getSession();
+            if (!$session instanceof FlashBagAwareSessionInterface) {
+                throw new \RuntimeException('Unexpected non FlashBag aware session');
+            }
+            $session->getFlashBag()->add('notice', $this->translator->trans('form_submissions.process.success', ['%id%' => $id], 'EMSCoreBundle'));
         }
 
         $this->formSubmissionRepository->flush();
@@ -250,11 +257,13 @@ final class FormSubmissionService implements EntityServiceInterface
         }
     }
 
+    #[\Override]
     public function isSortable(): bool
     {
         return false;
     }
 
+    #[\Override]
     public function getEntityName(): string
     {
         return 'formSubmission';
@@ -263,31 +272,37 @@ final class FormSubmissionService implements EntityServiceInterface
     /**
      * @return string[]
      */
+    #[\Override]
     public function getAliasesName(): array
     {
         return [];
     }
 
-    public function count(string $filterValue = '', $context = null): int
+    #[\Override]
+    public function count(string $searchValue = '', mixed $context = null): int
     {
-        return $this->formSubmissionRepository->countAllUnprocessed($filterValue);
+        return $this->formSubmissionRepository->countAllUnprocessed($searchValue);
     }
 
+    #[\Override]
     public function getByItemName(string $name): ?EntityInterface
     {
         throw new \RuntimeException('getByItemName method not yet implemented');
     }
 
+    #[\Override]
     public function updateEntityFromJson(EntityInterface $entity, string $json): EntityInterface
     {
         throw new \RuntimeException('updateEntityFromJson method not yet implemented');
     }
 
+    #[\Override]
     public function createEntityFromJson(string $json, ?string $name = null): EntityInterface
     {
         throw new \RuntimeException('createEntityFromJson method not yet implemented');
     }
 
+    #[\Override]
     public function deleteByItemName(string $name): string
     {
         throw new \RuntimeException('deleteByItemName method not yet implemented');

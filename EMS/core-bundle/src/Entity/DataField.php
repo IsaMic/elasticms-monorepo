@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Entity;
 
 use Doctrine\Common\Collections\ArrayCollection;
@@ -65,11 +67,13 @@ class DataField implements \ArrayAccess, \IteratorAggregate, \Stringable
         }
     }
 
+    #[\Override]
     public function offsetSet(mixed $offset, mixed $value): void
     {
         $this->children->offsetSet($offset, $value);
     }
 
+    #[\Override]
     public function offsetExists(mixed $offset): bool
     {
         if (\is_int($offset) && !$this->children->offsetExists($offset) && null !== $this->fieldType && $this->fieldType->getChildren()->count() > 0) {
@@ -82,16 +86,19 @@ class DataField implements \ArrayAccess, \IteratorAggregate, \Stringable
         return $this->children->offsetExists($offset);
     }
 
+    #[\Override]
     public function offsetUnset(mixed $offset): void
     {
         $this->children->offsetUnset($offset);
     }
 
+    #[\Override]
     public function offsetGet(mixed $offset): mixed
     {
         return (0 === $offset) ? $this->children : $this->children->offsetGet($offset);
     }
 
+    #[\Override]
     public function getIterator(): \Traversable
     {
         return $this->children->getIterator();
@@ -120,6 +127,7 @@ class DataField implements \ArrayAccess, \IteratorAggregate, \Stringable
         }
     }
 
+    #[\Override]
     public function __toString(): string
     {
         if (null !== $this->rawData && \is_string($this->rawData)) {
@@ -462,10 +470,10 @@ class DataField implements \ArrayAccess, \IteratorAggregate, \Stringable
 
         if (null === $this->rawData || \is_int($this->rawData)) {
             return $this->rawData;
-        } elseif (\intval($this->rawData) || '0' === $this->rawData) {
-            return \intval($this->rawData);
-//             return $this->rawData;
-//             throw new DataFormatException('Integer expected: '.print_r($this->rawData, true));
+        } elseif ((int) $this->rawData || '0' === $this->rawData) {
+            return (int) $this->rawData;
+            //             return $this->rawData;
+            //             throw new DataFormatException('Integer expected: '.print_r($this->rawData, true));
         }
         $this->addMessage('Integer expected: '.\print_r($this->rawData, true));
 
@@ -481,8 +489,8 @@ class DataField implements \ArrayAccess, \IteratorAggregate, \Stringable
     {
         if (null === $rawData || \is_int($rawData)) {
             $this->rawData = $rawData;
-        } elseif (\intval($rawData) || '0' === $rawData) {
-            $this->rawData = \intval($rawData);
+        } elseif ((int) $rawData || '0' === $rawData) {
+            $this->rawData = (int) $rawData;
         } else {
             $this->addMessage('Integer expected: '.\print_r($rawData, true));
             $this->rawData = $rawData;
@@ -515,7 +523,7 @@ class DataField implements \ArrayAccess, \IteratorAggregate, \Stringable
                 throw new DataFormatException('Array expected: '.\print_r($this->rawData, true));
             }
             foreach ($this->rawData as $item) {
-                $out[] = \DateTime::createFromFormat(\DateTime::ISO8601, $item);
+                $out[] = \DateTime::createFromFormat(\DateTimeInterface::ATOM, $item);
             }
         }
 
@@ -589,7 +597,7 @@ class DataField implements \ArrayAccess, \IteratorAggregate, \Stringable
         return $this->orderKey;
     }
 
-    public function setFieldType(FieldType $fieldType = null): self
+    public function setFieldType(?FieldType $fieldType = null): self
     {
         $this->fieldType = $fieldType;
 
@@ -615,7 +623,7 @@ class DataField implements \ArrayAccess, \IteratorAggregate, \Stringable
      *
      * @return DataField
      */
-    public function setParent(DataField $parent = null)
+    public function setParent(?DataField $parent = null)
     {
         $this->parent = $parent;
 

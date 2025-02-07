@@ -1,0 +1,83 @@
+{% extends '@EMSAdminUI/bootstrap5/base/html5.html.twig' %}
+{%- trans_default_domain 'base' -%}
+{% set wysiwygInfo = emsco_wysiwyg_info() %}
+
+{%- set type_filters = [] -%}
+{%- set all_types = false %}
+{%- if emsco_get_content_types()|length > 0 -%}
+    {%- for contentType in emsco_get_content_types()|filter(contentType => contentType.webContent) -%}
+        {%- if all_types  -%}
+            {% set all_types = all_types~','~contentType.name -%}
+        {%- else %}
+            {% set all_types = contentType.name -%}
+        {%- endif -%}
+        {%- set type_filters = type_filters|merge([[contentType.singularName, contentType.name ]]) -%}
+    {%- endfor -%}
+{%- endif -%}
+{%- set type_filters = [['All content types'|trans, all_types ]]|merge(type_filters) -%}
+
+{% set body_attr = {
+    class: 'hold-transition sidebar-mini sidebar-mini-md layout-fixed layout-navbar-fixed',
+    'data-hash-algo': ems_hash_algo,
+    'data-status-url': path('elasticsearch.status', {_format: 'json'}),
+    'data-search-api': path('elasticsearch.api.search'),
+    'data-init-upload': path('emsco_file_data_init_upload'),
+    'data-revision-url': path('emsco_view_revisions', {
+        'type': '__type__',
+        'ouuid': '__ouuid__',
+    }),
+    'data-ems-link-info': path('emsco_ems_link_info'),
+    'data-file-view': path('ems.file.view', { sha1: '__file_identifier__', name: '__file_name__' }),
+    'data-file-extract': path('ems_file_extract', { sha1: '__file_identifier__', name: '__file_name__' }),
+    'data-file-extract-forced': path('ems_file_extract_forced', { sha1: '__file_identifier__', name: '__file_name__' }),
+    'data-wysiwyg-type-filters': type_filters|json_encode,
+    'data-wysiwyg-info': wysiwygInfo,
+    'data-asset-path': asset(''),
+} %}
+{% set theme_color_contrast = theme_color in ['yellow','lime','white','cyan'] ? 'light' : 'dark' %}
+{% set breadcrumb = [] %}
+
+{% block breadcrumb %}
+    {% if breadcrumb|length > 1 %}
+        <ol class="breadcrumb float-sm-end">
+            {% for key, label in breadcrumb %}
+                {% if loop.last %}
+                    <li class="breadcrumb-item active">{{ label }}</li>
+                {% else %}
+                    <li class="breadcrumb-item"><a href="{{ key }}">{{ label }}</a></li>
+                {% endif %}
+            {% endfor %}
+        </ol>
+    {% endif %}
+{% endblock breadcrumb %}
+
+{% block wrapper %}
+    <div class="wrapper">
+        {% if preloader|default(false) %}
+            {{ include('@EMSAdminUI/bootstrap5/elements/preloader.html.twig') }}
+        {% endif %}
+        {{ include('@EMSAdminUI/bootstrap5/elements/topbar.html.twig') }}
+        {{ include('@EMSAdminUI/bootstrap5/elements/sidenav.html.twig') }}
+        <div class="content-wrapper">
+            {{ include('@EMSAdminUI/bootstrap5/elements/toasts.html.twig') }}
+            <div class="container-fluid">
+                <div class="content-header mb-2">
+                    <div class="d-flex flex-column flex-lg-row">
+                        <div class="ms-lg-auto order-lg-1">
+                            {{ block('breadcrumb') }}
+                        </div>
+                        <div class="order-lg-0">
+                            <h1 class="m-0">{% block pagetitle %}{{ block('title') }}{% endblock %}{% block subtitle %}{% endblock %}</h1>
+                        </div>
+                    </div>
+                </div>
+                <section class="content">
+                    {% block body %}{% endblock body %}
+                </section>
+            </div>
+        </div>
+
+        {{ include('@EMSAdminUI/bootstrap5/elements/footer.html.twig') }}
+        {{ include('@EMSAdminUI/bootstrap5/elements/control-sidebar.html.twig') }}
+    </div>
+{% endblock wrapper %}

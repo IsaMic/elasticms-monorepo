@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CommonBundle\EventListener;
 
 use EMS\CommonBundle\Command\CommandInterface;
@@ -23,6 +25,7 @@ class CommandListener implements EventSubscriberInterface
     /**
      * @return array<string, mixed>
      */
+    #[\Override]
     public static function getSubscribedEvents(): array
     {
         return [

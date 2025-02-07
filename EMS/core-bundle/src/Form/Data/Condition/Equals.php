@@ -10,13 +10,14 @@ class Equals implements ConditionInterface
 {
     public function __construct(
         private readonly string $pathProperty,
-        private readonly mixed $value
+        private readonly mixed $value,
     ) {
     }
 
     /**
      * @param object|array<mixed> $objectOrArray
      */
+    #[\Override]
     public function valid($objectOrArray): bool
     {
         return $this->value === (new PropertyAccessor())->getValue($objectOrArray, $this->pathProperty);

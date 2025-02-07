@@ -6,25 +6,29 @@ namespace EMS\CoreBundle\Command\Environment;
 
 use EMS\CoreBundle\Commands;
 use EMS\CoreBundle\Entity\Environment;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
+#[AsCommand(
+    name: Commands::ENVIRONMENT_ALIGN,
+    description: 'Align an environment from another one.',
+    hidden: false
+)]
 class AlignCommand extends AbstractEnvironmentCommand
 {
     private Environment $source;
     private Environment $target;
     private bool $publicationTemplate = false;
 
-    final public const ARGUMENT_SOURCE = 'source';
-    final public const ARGUMENT_TARGET = 'target';
-    final public const OPTION_SNAPSHOT = 'snapshot';
-    final public const OPTION_PUBLICATION_TEMPLATE = 'publication-template';
+    final public const string ARGUMENT_SOURCE = 'source';
+    final public const string ARGUMENT_TARGET = 'target';
+    final public const string OPTION_SNAPSHOT = 'snapshot';
+    final public const string OPTION_PUBLICATION_TEMPLATE = 'publication-template';
 
-    private const LOCK_USER = 'SYSTEM_ALIGN';
-
-    protected static $defaultName = Commands::ENVIRONMENT_ALIGN;
+    private const string LOCK_USER = 'SYSTEM_ALIGN';
 
     /** @var array<string, int> */
     private array $counters = [
@@ -36,15 +40,15 @@ class AlignCommand extends AbstractEnvironmentCommand
 
     /** @var array<int, string> */
     private array $bulkResultCounter = [
-       0 => 'aligned',
-       1 => 'published',
-       -1 => 'publication_template',
+        0 => 'aligned',
+        1 => 'published',
+        -1 => 'publication_template',
     ];
 
+    #[\Override]
     protected function configure(): void
     {
         $this
-            ->setDescription('Align an environment from another one')
             ->addArgument(self::ARGUMENT_SOURCE, InputArgument::REQUIRED, 'Environment source name')
             ->addArgument(self::ARGUMENT_TARGET, InputArgument::REQUIRED, 'Environment target name')
             ->addOption(self::OPTION_SNAPSHOT, null, InputOption::VALUE_NONE, 'If set, the target environment will be tagged as a snapshot after the alignment')
@@ -55,6 +59,7 @@ class AlignCommand extends AbstractEnvironmentCommand
         $this->configureRevisionSearcher();
     }
 
+    #[\Override]
     protected function initialize(InputInterface $input, OutputInterface $output): void
     {
         parent::initialize($input, $output);
@@ -65,12 +70,14 @@ class AlignCommand extends AbstractEnvironmentCommand
         $this->publishService->bulkStart($this->revisionSearcher->getSize(), $this->logger);
     }
 
+    #[\Override]
     protected function interact(InputInterface $input, OutputInterface $output): void
     {
         $this->source = $this->choiceEnvironment(self::ARGUMENT_SOURCE, 'Select an existing environment as source');
         $this->target = $this->choiceEnvironment(self::ARGUMENT_TARGET, 'Select an existing environment as target');
     }
 
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         if (!$this->forceProtection($input)) {
@@ -149,7 +156,9 @@ class AlignCommand extends AbstractEnvironmentCommand
         foreach ($targetIsPreviewEnvironment as $ctName => $counter) {
             $this->io->caution(\sprintf(
                 '%d %s revisions were not aligned as %s is the default environment',
-                $counter, $ctName, $this->target->getName()
+                $counter,
+                $ctName,
+                $this->target->getName()
             ));
         }
 

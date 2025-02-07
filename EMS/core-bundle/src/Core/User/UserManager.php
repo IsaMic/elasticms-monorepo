@@ -18,14 +18,14 @@ class UserManager
 {
     public const PASSWORD_RETRY_TTL = 7200;
     public const CONFIRMATION_TOKEN_TTL = 86400;
-    private const MAIL_TEMPLATE = '/user/mail.twig';
+    private const string MAIL_TEMPLATE = '/user/mail.twig';
 
     public function __construct(
         private readonly TokenStorageInterface $tokenStorage,
         private readonly MailerService $mailerService,
         private readonly UserRepository $userRepository,
         private readonly UserPasswordHasherInterface $userPasswordHasher,
-        private readonly string $templateNamespace
+        private readonly string $templateNamespace,
     ) {
     }
 

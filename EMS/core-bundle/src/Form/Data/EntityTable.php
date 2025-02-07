@@ -24,8 +24,8 @@ final class EntityTable extends TableAbstract
         private readonly EntityServiceInterface $entityService,
         string $ajaxUrl,
         private $context = null,
-        int $loadAllMaxRow = 400)
-    {
+        int $loadAllMaxRow = 400
+    ) {
         if ($this->count() > $loadAllMaxRow) {
             parent::__construct($ajaxUrl, 0, 0);
             $this->loadAll = false;
@@ -48,6 +48,7 @@ final class EntityTable extends TableAbstract
         $this->massAction = $massAction;
     }
 
+    #[\Override]
     public function resetIterator(DataTableRequest $dataTableRequest): void
     {
         parent::resetIterator($dataTableRequest);
@@ -55,6 +56,7 @@ final class EntityTable extends TableAbstract
         $this->count = null;
     }
 
+    #[\Override]
     public function isSortable(): bool
     {
         return $this->entityService->isSortable();
@@ -63,18 +65,21 @@ final class EntityTable extends TableAbstract
     /**
      * @return \Traversable<string, EntityRow>
      */
+    #[\Override]
     public function getIterator(): \Traversable
     {
         foreach ($this->entityService->get($this->getFrom(), $this->getSize(), $this->getOrderField(), $this->getOrderDirection(), $this->getSearchValue(), $this->context) as $entity) {
-            yield \strval($entity->getId()) => new EntityRow($entity);
+            yield (string) $entity->getId() => new EntityRow($entity);
         }
     }
 
+    #[\Override]
     public function getAttributeName(): string
     {
         return u($this->entityService->getEntityName())->camel()->toString();
     }
 
+    #[\Override]
     public function totalCount(): int
     {
         if (null === $this->totalCount) {
@@ -84,15 +89,17 @@ final class EntityTable extends TableAbstract
         return $this->totalCount;
     }
 
+    #[\Override]
     public function count(): int
     {
         if (null === $this->count) {
             $this->count = $this->entityService->count($this->getSearchValue(), $this->context);
         }
 
-        return $this->count;
+        return $this->count > 0 ? $this->count : 0;
     }
 
+    #[\Override]
     public function supportsTableActions(): bool
     {
         if (!$this->loadAll) {
@@ -110,6 +117,7 @@ final class EntityTable extends TableAbstract
         return false;
     }
 
+    #[\Override]
     public function getRowTemplate(): string
     {
         return \sprintf("{%%- use '@$this->templateNamespace/datatable/row.json.twig' -%%}{{ block('emsco_datatable_row') }}");

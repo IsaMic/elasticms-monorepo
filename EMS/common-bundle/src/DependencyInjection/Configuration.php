@@ -4,18 +4,19 @@ declare(strict_types=1);
 
 namespace EMS\CommonBundle\DependencyInjection;
 
-use Monolog\Logger;
+use Monolog\Level;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 
 class Configuration implements ConfigurationInterface
 {
-    private const ELASTICSEARCH_DEFAULT_HOSTS = ['http://localhost:9200'];
-    private const LOG_LEVEL = Logger::NOTICE;
-    final public const WEBALIZE_REMOVABLE_REGEX = "/([^a-zA-Z0-9_| \-.'\/])|(\.$)/";
-    final public const WEBALIZE_DASHABLE_REGEX = "/[\/| ']+/";
+    private const array ELASTICSEARCH_DEFAULT_HOSTS = ['http://localhost:9200'];
+    private const int LOG_LEVEL = Level::Notice->value;
+    final public const string WEBALIZE_REMOVABLE_REGEX = "/([^a-zA-Z0-9_| \-.'\/])|(\.$)/";
+    final public const string WEBALIZE_DASHABLE_REGEX = "/[\/| ']+/";
 
+    #[\Override]
     public function getConfigTreeBuilder(): TreeBuilder
     {
         $treeBuilder = new TreeBuilder('ems_common');
@@ -36,6 +37,7 @@ class Configuration implements ConfigurationInterface
                 ->integerNode('log_level')->defaultValue(self::LOG_LEVEL)->end()
                 ->variableNode('excluded_content_types')->defaultValue([])->end()
                 ->variableNode('slug_symbol_map')->defaultValue(null)->end()
+                ->scalarNode('vite_dev_server')->defaultNull()->end()
             ->end()
         ;
 
@@ -78,7 +80,6 @@ class Configuration implements ConfigurationInterface
                     ->addDefaultsIfNotSet()
                         ->children()
                             ->variableNode('headers')->defaultValue([])->end()
-                            ->scalarNode('max_connections')->defaultValue(6)->end()
                             ->scalarNode('timeout')->defaultValue(30)->end()
                             ->scalarNode('verify')->defaultValue(true)->end()
                         ->end()
@@ -110,8 +111,8 @@ class Configuration implements ConfigurationInterface
                 ->arrayNode('webalize')
                     ->addDefaultsIfNotSet()
                     ->children()
-                        ->scalarNode('removable_regex')->defaultValue(self::WEBALIZE_REMOVABLE_REGEX)->setDeprecated('elasticms/common-bundle', '6.0.0')->end()
-                        ->scalarNode('dashable_regex')->defaultValue(self::WEBALIZE_DASHABLE_REGEX)->setDeprecated('elasticms/common-bundle', '6.0.0')->end()
+                        ->scalarNode('removable_regex')->defaultValue(self::WEBALIZE_REMOVABLE_REGEX)->end()
+                        ->scalarNode('dashable_regex')->defaultValue(self::WEBALIZE_DASHABLE_REGEX)->end()
                 ->end()
             ->end()
         ;

@@ -17,44 +17,48 @@ use EMS\CommonBundle\Storage\StorageManager;
 use EMS\Helpers\Standard\Hash;
 use EMS\Helpers\Standard\Json;
 use EMS\Helpers\Standard\UuidGenerator;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\ExpressionLanguage\ExpressionLanguage;
 
+#[AsCommand(
+    name: Commands::FILE_READER_IMPORT,
+    description: 'Import an Excel file or a CSV file, one document per row.',
+    hidden: false
+)]
 final class FileReaderImportCommand extends AbstractCommand
 {
-    protected static $defaultName = Commands::FILE_READER_IMPORT;
-
-    private const ARGUMENT_FILE = 'file';
-    private const ARGUMENT_CONTENT_TYPE = 'content-type';
-    private const OPTION_CONFIG = 'config';
-    private const OPTION_DRY_RUN = 'dry-run';
-    private const OPTION_LIMIT = 'limit';
-    private const OPTION_FLUSH_SIZE = 'flush-size';
-    private const OPTION_MERGE = 'merge';
+    private const string ARGUMENT_FILE = 'file';
+    private const string ARGUMENT_CONTENT_TYPE = 'content-type';
+    private const string OPTION_CONFIG = 'config';
+    private const string OPTION_DRY_RUN = 'dry-run';
+    private const string OPTION_LIMIT = 'limit';
+    private const string OPTION_FLUSH_SIZE = 'flush-size';
+    private const string OPTION_MERGE = 'merge';
 
     private string $file;
     private string $contentType;
     private bool $dryRun;
     private bool $merge;
     private int $flushSize;
-    private ?int $limit;
+    private ?int $limit = null;
     private ExpressionLanguage $expressionLanguage;
 
     public function __construct(
         private readonly AdminHelper $adminHelper,
         private readonly StorageManager $storageManager,
-        private readonly FileReaderInterface $fileReader
+        private readonly FileReaderInterface $fileReader,
     ) {
         parent::__construct();
     }
 
+    #[\Override]
     protected function configure(): void
     {
         $this
-            ->setDescription('Import an Excel file or a CSV file, one document per row')
             ->addArgument(self::ARGUMENT_FILE, InputArgument::REQUIRED, 'File path (xlsx or csv)')
             ->addArgument(self::ARGUMENT_CONTENT_TYPE, InputArgument::REQUIRED, 'Content type target')
             ->addOption(self::OPTION_CONFIG, null, InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'Config(s) json, file path or hash', [])
@@ -65,6 +69,7 @@ final class FileReaderImportCommand extends AbstractCommand
         ;
     }
 
+    #[\Override]
     protected function initialize(InputInterface $input, OutputInterface $output): void
     {
         parent::initialize($input, $output);
@@ -78,6 +83,7 @@ final class FileReaderImportCommand extends AbstractCommand
         $this->expressionLanguage = new ExpressionLanguage();
     }
 
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         try {
@@ -140,7 +146,8 @@ final class FileReaderImportCommand extends AbstractCommand
                 $this->deleteMissingDocuments($contentTypeApi, ...\array_keys($ouuids));
             }
 
-            $this->io->definitionList('Summary',
+            $this->io->definitionList(
+                'Summary',
                 ['Index' => $count],
                 ['Delete' => \count($ouuids)]
             );
@@ -157,7 +164,7 @@ final class FileReaderImportCommand extends AbstractCommand
     {
         $configs = \array_map(fn (string $input) => match (true) {
             Json::isJson($input) => Json::decode($input),
-            default => Json::decode($this->getFile($input)->getContent())
+            default => Json::decode($this->getFile($input)->getContent()),
         }, $inputs);
 
         return FileReaderImportConfig::createFromArray(
@@ -181,7 +188,7 @@ final class FileReaderImportCommand extends AbstractCommand
             $config->generateOuuid => (string) UuidGenerator::fromValue(($prefix ?? '').$ouuid),
             null !== $prefix => Hash::string($prefix.$ouuid),
             $config->generateHash => Hash::string(\sprintf('FileReaderImport:%s:%s', $this->contentType, $ouuid)),
-            default => $ouuid
+            default => $ouuid,
         };
     }
 

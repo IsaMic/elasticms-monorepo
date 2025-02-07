@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Form\DataField;
 
 use Doctrine\Common\Collections\ArrayCollection;
@@ -21,47 +23,46 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
  */
 class TabsFieldType extends DataFieldType
 {
-    private const LOCALE_PREFERRED_FIRST_DISPLAY_OPTION = 'localePreferredFirst';
+    private const string LOCALE_PREFERRED_FIRST_DISPLAY_OPTION = 'localePreferredFirst';
 
     public function __construct(
         AuthorizationCheckerInterface $authorizationChecker,
         FormRegistryInterface $formRegistry,
         ElasticsearchService $elasticsearchService,
-        private readonly UserManager $userManager)
-    {
+        private readonly UserManager $userManager
+    ) {
         parent::__construct($authorizationChecker, $formRegistry, $elasticsearchService);
     }
 
+    #[\Override]
     public function getLabel(): string
     {
         return 'Visual tab container (invisible in Elasticsearch)';
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function importData(DataField $dataField, array|string|int|float|bool|null $sourceArray, bool $isMigration): array
     {
         throw new \Exception('This method should never be called');
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function getBlockPrefix(): string
     {
         return 'tabsfieldtype';
     }
 
+    #[\Override]
     public static function getIcon(): string
     {
         return 'fa fa-object-group';
     }
 
     /**
-     * @param FormBuilderInterface<FormBuilderInterface> $builder
-     * @param array<string, mixed>                       $options
+     * @param FormBuilderInterface<mixed> $builder
+     * @param array<string, mixed>        $options
      */
+    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         /** @var FieldType $fieldType */
@@ -77,7 +78,7 @@ class TabsFieldType extends DataFieldType
             $iterator->uasort(fn (FieldType $a, FieldType $b) => match (true) {
                 $a->getName() === $userLanguage => -1,
                 $b->getName() === $userLanguage => 1,
-                default => 0
+                default => 0,
             });
             $children = new ArrayCollection(\iterator_to_array($iterator));
         }
@@ -87,25 +88,19 @@ class TabsFieldType extends DataFieldType
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function buildObjectArray(DataField $data, array &$out): void
     {
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public static function isContainer(): bool
     {
         /* this kind of compound field may contain children */
         return true;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function buildOptionsForm(FormBuilderInterface $builder, array $options): void
     {
         parent::buildOptionsForm($builder, $options);
@@ -122,31 +117,26 @@ class TabsFieldType extends DataFieldType
         $optionsForm->get('restrictionOptions')->remove('mandatory_if');
     }
 
+    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         parent::configureOptions($resolver);
         $resolver->setDefault(self::LOCALE_PREFERRED_FIRST_DISPLAY_OPTION, false);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public static function isVirtual(array $option = []): bool
     {
         return true;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public static function getJsonNames(FieldType $current): array
     {
         return [];
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function generateMapping(FieldType $current): array
     {
         return [];

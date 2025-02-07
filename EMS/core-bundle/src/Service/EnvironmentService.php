@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Service;
 
 use Doctrine\Bundle\DoctrineBundle\Registry;
@@ -42,7 +44,7 @@ class EnvironmentService implements EntityServiceInterface
         private readonly LoggerInterface $logger,
         private readonly ElasticaService $elasticaService,
         private readonly AliasService $aliasService,
-        private readonly string $instanceId
+        private readonly string $instanceId,
     ) {
         $environmentRepository = $doctrine->getRepository(Environment::class);
         if (!$environmentRepository instanceof EnvironmentRepository) {
@@ -195,6 +197,21 @@ class EnvironmentService implements EntityServiceInterface
         return $this->environmentsById;
     }
 
+    /** @return Environment[] */
+    public function getByNames(string ...$names): array
+    {
+        return \count($names) > 0 ? $this->environmentRepository->findBy(['name' => $names]) : [];
+    }
+
+    /** @return array<int|string, mixed> */
+    public function getAllRevisionIdsByEnvironmentAndOuuids(Environment $environment, string ...$ouuids): array
+    {
+        return $this->environmentRepository->findAllRevisionIdsByEnvironmentAndOuuids(
+            environment: $environment,
+            ouuids: $ouuids
+        );
+    }
+
     /**
      * @return array<mixed>
      */
@@ -237,11 +254,7 @@ class EnvironmentService implements EntityServiceInterface
 
     public function getByName(string $name): Environment|false
     {
-        if (isset($this->getEnvironments()[$name])) {
-            return $this->getEnvironments()[$name];
-        }
-
-        return false;
+        return $this->getEnvironments()[$name] ?? false;
     }
 
     public function giveByName(string $name): Environment
@@ -370,12 +383,14 @@ class EnvironmentService implements EntityServiceInterface
         return true;
     }
 
+    #[\Override]
     public function isSortable(): bool
     {
         return true;
     }
 
-    public function get(int $from, int $size, ?string $orderField, string $orderDirection, string $searchValue, $context = null): array
+    #[\Override]
+    public function get(int $from, int $size, ?string $orderField, string $orderDirection, string $searchValue, mixed $context = null): array
     {
         $qb = $this->environmentRepository->makeQueryBuilder(
             isManaged: \is_array($context) ? ($context['managed'] ?? false) : null,
@@ -399,6 +414,7 @@ class EnvironmentService implements EntityServiceInterface
         return $environments;
     }
 
+    #[\Override]
     public function getEntityName(): string
     {
         return 'environment';
@@ -407,6 +423,7 @@ class EnvironmentService implements EntityServiceInterface
     /**
      * @return string[]
      */
+    #[\Override]
     public function getAliasesName(): array
     {
         return [
@@ -416,7 +433,8 @@ class EnvironmentService implements EntityServiceInterface
         ];
     }
 
-    public function count(string $searchValue = '', $context = null): int
+    #[\Override]
+    public function count(string $searchValue = '', mixed $context = null): int
     {
         return (int) $this->environmentRepository
             ->makeQueryBuilder(
@@ -428,11 +446,13 @@ class EnvironmentService implements EntityServiceInterface
             ->getSingleScalarResult();
     }
 
+    #[\Override]
     public function getByItemName(string $name): ?EntityInterface
     {
         return $this->environmentRepository->findByName($name);
     }
 
+    #[\Override]
     public function updateEntityFromJson(EntityInterface $entity, string $json): EntityInterface
     {
         if (!$entity instanceof Environment) {
@@ -456,6 +476,7 @@ class EnvironmentService implements EntityServiceInterface
         return $environment;
     }
 
+    #[\Override]
     public function createEntityFromJson(string $json, ?string $name = null): EntityInterface
     {
         $meta = JsonClass::fromJsonString($json);
@@ -480,6 +501,7 @@ class EnvironmentService implements EntityServiceInterface
         return $this->instanceId.$environment->getName();
     }
 
+    #[\Override]
     public function deleteByItemName(string $name): string
     {
         $environment = $this->getByItemName($name);
@@ -492,7 +514,7 @@ class EnvironmentService implements EntityServiceInterface
         $id = $environment->getId();
         $this->environmentRepository->delete($environment);
 
-        return \strval($id);
+        return (string) $id;
     }
 
     private function applyStats(Environment ...$environments): void

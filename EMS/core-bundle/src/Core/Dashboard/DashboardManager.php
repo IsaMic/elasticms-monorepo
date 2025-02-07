@@ -25,12 +25,14 @@ class DashboardManager implements EntityServiceInterface
     {
     }
 
+    #[\Override]
     public function isSortable(): bool
     {
         return true;
     }
 
-    public function get(int $from, int $size, ?string $orderField, string $orderDirection, string $searchValue, $context = null): array
+    #[\Override]
+    public function get(int $from, int $size, ?string $orderField, string $orderDirection, string $searchValue, mixed $context = null): array
     {
         if (null !== $context) {
             throw new \RuntimeException('Unexpected not null context');
@@ -39,6 +41,7 @@ class DashboardManager implements EntityServiceInterface
         return $this->dashboardRepository->get($from, $size, $orderField, $orderDirection, $searchValue);
     }
 
+    #[\Override]
     public function getEntityName(): string
     {
         return 'dashboard';
@@ -47,6 +50,7 @@ class DashboardManager implements EntityServiceInterface
     /**
      * @return string[]
      */
+    #[\Override]
     public function getAliasesName(): array
     {
         return [
@@ -56,7 +60,8 @@ class DashboardManager implements EntityServiceInterface
         ];
     }
 
-    public function count(string $searchValue = '', $context = null): int
+    #[\Override]
+    public function count(string $searchValue = '', mixed $context = null): int
     {
         if (null !== $context) {
             throw new \RuntimeException('Unexpected not null context');
@@ -70,10 +75,7 @@ class DashboardManager implements EntityServiceInterface
         if (0 === $dashboard->getOrderKey()) {
             $dashboard->setOrderKey($this->dashboardRepository->counter() + 1);
         }
-        $encoder = new Encoder();
-        $name = $dashboard->getName();
-        $webalized = $encoder->webalize($name);
-        $dashboard->setName($webalized);
+        $dashboard->setName(new Encoder()->slug(text: $dashboard->getName(), separator: '_')->toString());
         $this->dashboardRepository->create($dashboard);
     }
 
@@ -171,11 +173,13 @@ class DashboardManager implements EntityServiceInterface
         $this->update($dashboard);
     }
 
+    #[\Override]
     public function getByItemName(string $name): ?EntityInterface
     {
         return $this->dashboardRepository->getByName($name);
     }
 
+    #[\Override]
     public function updateEntityFromJson(EntityInterface $entity, string $json): EntityInterface
     {
         if (!$entity instanceof Dashboard) {
@@ -187,6 +191,7 @@ class DashboardManager implements EntityServiceInterface
         return $dashboard;
     }
 
+    #[\Override]
     public function createEntityFromJson(string $json, ?string $name = null): EntityInterface
     {
         $dashboard = Dashboard::fromJson($json);
@@ -198,6 +203,7 @@ class DashboardManager implements EntityServiceInterface
         return $dashboard;
     }
 
+    #[\Override]
     public function deleteByItemName(string $name): string
     {
         $dashboard = $this->dashboardRepository->getByName($name);

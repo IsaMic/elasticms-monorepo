@@ -1,6 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\FormBundle\Submission;
+
+use EMS\Helpers\Standard\Json;
 
 abstract class AbstractHandleResponse implements HandleResponseInterface
 {
@@ -31,26 +35,26 @@ abstract class AbstractHandleResponse implements HandleResponseInterface
         $this->extra = $extra;
     }
 
+    #[\Override]
     public function getStatus(): string
     {
         return $this->status;
     }
 
+    #[\Override]
     public function getResponse(): string
     {
         try {
-            return \json_encode(\array_merge([
+            return Json::encode(\array_merge([
                 'status' => $this->status,
                 'data' => $this->data,
-            ], $this->extra), JSON_THROW_ON_ERROR);
+            ], $this->extra));
         } catch (\Throwable) {
             return '';
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function getSummary(): array
     {
         /** @var array{status: string, data: string, success: string} $summary */

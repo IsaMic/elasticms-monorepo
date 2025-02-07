@@ -4,24 +4,30 @@ declare(strict_types=1);
 
 namespace EMS\ClientHelperBundle\Helper\Api;
 
-use EMS\CommonBundle\Common\CoreApi\CoreApi;
 use EMS\CommonBundle\Common\HttpClientFactory;
+use EMS\CommonBundle\Contracts\CoreApi\CoreApiInterface;
+use EMS\Helpers\Standard\Json;
 use GuzzleHttp\Client as HttpClient;
 
 /**
  * @todo use EMS\CommonBundle\Contracts\CoreApi\CoreApiInterface
  */
-final class Client
+final readonly class Client
 {
-    private readonly HttpClient $client;
+    private HttpClient $client;
 
     public function __construct(
-        private readonly string $name,
-        string $baseUrl,
-        private readonly string $key,
-        public readonly CoreApi $coreApi,
+        private string $name,
+        private string $baseUrl,
+        private string $key,
+        private CoreApiInterface $coreApi,
     ) {
         $this->client = HttpClientFactory::create($baseUrl, ['X-Auth-Token' => $this->key]);
+    }
+
+    public function getCoreApi(): CoreApiInterface
+    {
+        return $this->coreApi->setBaseUrl($this->baseUrl);
     }
 
     public function getName(): string
@@ -58,10 +64,10 @@ final class Client
 
         $response = $this->client->post(
             $url,
-            ['body' => \json_encode($body, JSON_THROW_ON_ERROR)]
+            ['body' => Json::encode($body)]
         );
 
-        return \json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
+        return Json::decode($response->getBody()->getContents());
     }
 
     /**
@@ -73,10 +79,10 @@ final class Client
     {
         $response = $this->client->post(
             \sprintf('/api/data/%s/replace/%s', $type, $ouuid),
-            ['body' => \json_encode($body, JSON_THROW_ON_ERROR)]
+            ['body' => Json::encode($body)]
         );
 
-        return \json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
+        return Json::decode($response->getBody()->getContents());
     }
 
     /**
@@ -88,7 +94,7 @@ final class Client
             \sprintf('api/data/%s/finalize/%d', $type, $revisionId)
         );
 
-        return \json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
+        return Json::decode($response->getBody()->getContents());
     }
 
     /**
@@ -100,7 +106,7 @@ final class Client
             \sprintf('api/data/%s/discard/%d', $type, $revisionId)
         );
 
-        return \json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
+        return Json::decode($response->getBody()->getContents());
     }
 
     /**
@@ -118,6 +124,6 @@ final class Client
             ],
         ]);
 
-        return \json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
+        return Json::decode($response->getBody()->getContents());
     }
 }

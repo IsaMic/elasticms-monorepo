@@ -15,18 +15,17 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Logger\ConsoleLogger;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Finder\Finder;
-use Symfony\Component\Finder\SplFileInfo;
 
 class UpdateCommand extends AbstractCommand
 {
-    private const CONTENT_TYPE = 'content-type';
-    private const FOLDER = 'folder';
-    private const DEFAULT_FOLDER = 'document';
-    private const DUMP_FILE = 'dump-file';
-    private const ONLY_MISSING = 'only-missing';
+    private const string CONTENT_TYPE = 'content-type';
+    private const string FOLDER = 'folder';
+    private const string DEFAULT_FOLDER = 'document';
+    private const string DUMP_FILE = 'dump-file';
+    private const string ONLY_MISSING = 'only-missing';
     private string $contentType;
     private string $folder;
-    private ?string $dumpFile;
+    private ?string $dumpFile = null;
     private bool $onlyMissing;
 
     public function __construct(private readonly AdminHelper $adminHelper, string $projectFolder)
@@ -35,6 +34,7 @@ class UpdateCommand extends AbstractCommand
         $this->folder = $projectFolder.DIRECTORY_SEPARATOR.self::DEFAULT_FOLDER;
     }
 
+    #[\Override]
     public function initialize(InputInterface $input, OutputInterface $output): void
     {
         parent::initialize($input, $output);
@@ -49,6 +49,7 @@ class UpdateCommand extends AbstractCommand
         $this->onlyMissing = $this->getOptionBool(self::ONLY_MISSING);
     }
 
+    #[\Override]
     protected function configure(): void
     {
         parent::configure();
@@ -58,6 +59,7 @@ class UpdateCommand extends AbstractCommand
         $this->addOption(self::ONLY_MISSING, null, InputOption::VALUE_NONE, 'Only create missing documents');
     }
 
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $coreApi = $this->adminHelper->getCoreApi();
@@ -80,9 +82,6 @@ class UpdateCommand extends AbstractCommand
         $jsonFiles = $finder->in($directory)->files()->name('*.json');
         $this->io->progressStart($jsonFiles->count());
         foreach ($jsonFiles as $file) {
-            if (!$file instanceof SplFileInfo) {
-                throw new \RuntimeException('Unexpected SplFileInfo object');
-            }
             $ouuid = $file->getBasename('.json');
             if ($this->onlyMissing && $dataApi->head($ouuid)) {
                 $this->io->progressAdvance();

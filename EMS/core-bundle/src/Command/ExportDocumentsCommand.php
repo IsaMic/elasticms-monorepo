@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Command;
 
 use EMS\CommonBundle\Common\Command\AbstractCommand;
@@ -18,6 +20,7 @@ use EMS\Helpers\File\TempFile;
 use EMS\Helpers\Html\MimeTypes;
 use EMS\Helpers\Standard\Json;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -25,30 +28,35 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Twig\Error\Error;
 
+#[AsCommand(
+    name: Commands::CONTENT_TYPE_EXPORT,
+    description: 'Export a search result of a content type to a specific format.',
+    hidden: false,
+    aliases: ['ems:contenttype:export']
+)]
 class ExportDocumentsCommand extends AbstractCommand
 {
-    protected static $defaultName = Commands::CONTENT_TYPE_EXPORT;
-    private const ARGUMENT_QUERY = 'query';
-    private const OPTION_ENVIRONMENT = 'environment';
-    private const OPTION_WITH_BUSINESS_ID = 'withBusinessId';
-    private const OPTION_SCROLL_SIZE = 'scrollSize';
-    private const OPTION_SCROLL_TIMEOUT = 'scrollTimeout';
-    private const OPTION_BASE_URL = 'baseUrl';
+    private const string ARGUMENT_QUERY = 'query';
+    private const string OPTION_ENVIRONMENT = 'environment';
+    private const string OPTION_WITH_BUSINESS_ID = 'withBusinessId';
+    private const string OPTION_SCROLL_SIZE = 'scrollSize';
+    private const string OPTION_SCROLL_TIMEOUT = 'scrollTimeout';
+    private const string OPTION_BASE_URL = 'baseUrl';
     public const ARGUMENT_CONTENT_TYPE_NAME = 'contentTypeName';
-    private const ARGUMENT_FORMAT = 'format';
-    final public const ARGUMENT_OUTPUT_FILE = 'outputFile';
+    private const string ARGUMENT_FORMAT = 'format';
+    final public const string ARGUMENT_OUTPUT_FILE = 'outputFile';
     private string $contentTypeName;
     private string $format;
     private int $scrollSize;
     private string $scrollTimeout;
     private bool $withBusinessId;
-    private ?string $baseUrl;
-    private ?string $environmentName;
+    private ?string $baseUrl = null;
+    private ?string $environmentName = null;
     /**
      * @var mixed[]
      */
     private array $query;
-    private ?string $zipFilename;
+    private ?string $zipFilename = null;
 
     public function __construct(
         protected readonly LoggerInterface $logger,
@@ -59,14 +67,15 @@ class ExportDocumentsCommand extends AbstractCommand
         protected readonly AssetRuntime $runtime,
         private readonly ElasticaService $elasticaService,
         private readonly StorageManager $storageManager,
-        protected readonly string $instanceId)
-    {
+        protected readonly string $instanceId
+    ) {
         parent::__construct();
     }
 
+    #[\Override]
     protected function configure(): void
     {
-        $this->setDescription('Export a search result of a content type to a specific format')
+        $this
             ->addArgument(self::ARGUMENT_CONTENT_TYPE_NAME, InputArgument::REQUIRED, 'The document\'s content type name to export')
             ->addArgument(self::ARGUMENT_FORMAT, InputArgument::OPTIONAL, \sprintf('The format of the output: %s or the name of the content type\'s action', \implode(', ', TemplateService::EXPORT_FORMATS)), 'json')
             ->addArgument(self::ARGUMENT_QUERY, InputArgument::OPTIONAL, 'The query to run', '{}')
@@ -78,6 +87,7 @@ class ExportDocumentsCommand extends AbstractCommand
             ->addOption(self::OPTION_BASE_URL, null, InputArgument::OPTIONAL, 'Base url of the application (in order to generate a link)', null);
     }
 
+    #[\Override]
     protected function initialize(InputInterface $input, OutputInterface $output): void
     {
         parent::initialize($input, $output);
@@ -92,6 +102,7 @@ class ExportDocumentsCommand extends AbstractCommand
         $this->baseUrl = $this->getOptionStringNull(self::OPTION_BASE_URL);
     }
 
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $contentType = $this->contentTypeService->giveByName($this->contentTypeName);
@@ -230,7 +241,7 @@ class ExportDocumentsCommand extends AbstractCommand
             $zip->addFromString('emsExport'.$extension, $accumulatedContent);
         }
 
-        if (\sizeof($errorList) > 0) {
+        if (\count($errorList) > 0) {
             $zip->addFromString('All-Errors.txt', \implode("\n", $errorList));
         }
 

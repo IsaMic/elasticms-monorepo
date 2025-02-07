@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Form\View;
 
 use EMS\CommonBundle\Helper\EmsFields;
@@ -13,6 +15,7 @@ use EMS\CoreBundle\Service\ContentTypeService;
 use EMS\CoreBundle\Service\DataService;
 use EMS\CoreBundle\Service\Mapping;
 use EMS\CoreBundle\Service\SearchService;
+use EMS\Helpers\Standard\Json;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Form\CallbackTransformer;
 use Symfony\Component\Form\Extension\Core\Type\IntegerType;
@@ -38,25 +41,28 @@ class HierarchicalViewType extends ViewType
         protected DataService $dataService,
         protected RouterInterface $router,
         protected ContentTypeService $contentTypeService,
-        private readonly string $templateNamespace)
-    {
+        private readonly string $templateNamespace
+    ) {
         parent::__construct($formFactory, $twig, $logger, $templateNamespace);
     }
 
+    #[\Override]
     public function getLabel(): string
     {
         return 'Hierarchical: manage a menu structure (based on a ES query)';
     }
 
+    #[\Override]
     public function getName(): string
     {
         return 'Hierarchical';
     }
 
     /**
-     * @param FormBuilderInterface<FormBuilderInterface> $builder
-     * @param array<string, mixed>                       $options
+     * @param FormBuilderInterface<mixed> $builder
+     * @param array<string, mixed>        $options
      */
+    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         parent::buildForm($builder, $options);
@@ -70,36 +76,36 @@ class HierarchicalViewType extends ViewType
 
         $builder
         ->add('parent', DataLinkFieldType::class, [
-                'label' => 'Parent',
-                'metadata' => $fieldType,
-                'type' => $view->getContentType()->getName(),
-                'multiple' => false,
-                'dynamicLoading' => true,
+            'label' => 'Parent',
+            'metadata' => $fieldType,
+            'type' => $view->getContentType()->getName(),
+            'multiple' => false,
+            'dynamicLoading' => true,
         ])
         ->add('size', IntegerType::class, [
-                'label' => 'Limit the result to the x first results',
-                'attr' => [
-                ],
+            'label' => 'Limit the result to the x first results',
+            'attr' => [
+            ],
         ])
         ->add('maxDepth', IntegerType::class, [
-                'label' => 'Limit the menu\'s depth',
-                'attr' => [
-                ],
+            'label' => 'Limit the menu\'s depth',
+            'attr' => [
+            ],
         ])
         ->add('maxDepth', IntegerType::class, [
-                'label' => 'Limit the menu\'s depth',
-                'attr' => [
-                ],
+            'label' => 'Limit the menu\'s depth',
+            'attr' => [
+            ],
         ])
         ->add('field', ContentTypeFieldPickerType::class, [
-                'label' => 'Target children field (datalink)',
-                'required' => false,
-                'firstLevelOnly' => false,
-                'mapping' => $mapping,
-                'types' => [
-                        'keyword',
-                        'text', // TODO: for ES2 support
-                ], ]);
+            'label' => 'Target children field (datalink)',
+            'required' => false,
+            'firstLevelOnly' => false,
+            'mapping' => $mapping,
+            'types' => [
+                'keyword',
+                'text', // TODO: for ES2 support
+            ], ]);
 
         $builder->get('parent')->addModelTransformer(new CallbackTransformer(
             function ($raw) {
@@ -121,19 +127,19 @@ $dataField->getRawData()
         ));
     }
 
+    #[\Override]
     public function getBlockPrefix(): string
     {
         return 'hierarchical_view';
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function getParameters(View $view, FormFactoryInterface $formFactory, Request $request): array
     {
         return [];
     }
 
+    #[\Override]
     public function generateResponse(View $view, Request $request): Response
     {
         if (empty($view->getOptions()['parent'])) {
@@ -160,14 +166,14 @@ $dataField->getRawData()
         $data = [];
 
         $form = $this->formFactory->create(ReorganizeType::class, $data, [
-                'view' => $view,
+            'view' => $view,
         ]);
 
         $form->handleRequest($request);
 
         if ($form->isSubmitted()) {
             $data = $form->getData();
-            $structure = \json_decode((string) $data['structure'], true, 512, JSON_THROW_ON_ERROR);
+            $structure = Json::decode((string) $data['structure']);
 
             $this->reorder($view->getOptions()['parent'], $view, $structure);
 
@@ -178,17 +184,17 @@ $dataField->getRawData()
             ]);
 
             return new RedirectResponse($this->router->generate('data.draft_in_progress', [
-                    'contentTypeId' => $view->getContentType()->getId(),
+                'contentTypeId' => $view->getContentType()->getId(),
             ], UrlGeneratorInterface::RELATIVE_PATH));
         }
 
         $response = new Response();
         $response->setContent($this->twig->render("@$this->templateNamespace/view/custom/".$this->getBlockPrefix().'.html.twig', [
-                'parent' => $parent,
-                'view' => $view,
-                'form' => $form->createView(),
-                'contentType' => $view->getContentType(),
-                'environment' => $view->getContentType()->getEnvironment(),
+            'parent' => $parent,
+            'view' => $view,
+            'form' => $form->createView(),
+            'contentType' => $view->getContentType(),
+            'environment' => $view->getContentType()->getEnvironment(),
         ]));
 
         return $response;

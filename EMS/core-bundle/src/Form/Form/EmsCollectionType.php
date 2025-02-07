@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Form\Form;
 
 use EMS\CoreBundle\Entity\FieldType;
@@ -16,9 +18,10 @@ class EmsCollectionType extends CollectionType
     }
 
     /**
-     * @param FormBuilderInterface<FormBuilderInterface> $builder
-     * @param array<string, mixed>                       $options
+     * @param FormBuilderInterface<mixed> $builder
+     * @param array<string, mixed>        $options
      */
+    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         /** @var FieldType $fieldType */
@@ -33,34 +36,35 @@ class EmsCollectionType extends CollectionType
         }
 
         $options = \array_merge($options, [
-                'entry_type' => CollectionItemFieldType::class,
-                'entry_options' => [
-                    'metadata' => $fieldType,
-                    'migration' => $options['migration'],
-                    'with_warning' => $options['with_warning'],
-                    'raw_data' => $options['raw_data'],
-                    'referrer-ems-id' => $options['referrer-ems-id'],
-                ],
-                'allow_add' => true,
-                'allow_delete' => true,
-                'prototype' => true,
-                'prototype_name' => '__name__'.$fieldType->getId().'__',
-                'required' => false,
-                'disabled' => $disabled,
+            'entry_type' => CollectionItemFieldType::class,
+            'entry_options' => [
+                'metadata' => $fieldType,
+                'migration' => $options['migration'],
+                'with_warning' => $options['with_warning'],
+                'raw_data' => $options['raw_data'],
+                'referrer-ems-id' => $options['referrer-ems-id'],
+            ],
+            'allow_add' => true,
+            'allow_delete' => true,
+            'prototype' => true,
+            'prototype_name' => '__name__'.$fieldType->getId().'__',
+            'required' => false,
+            'disabled' => $disabled,
         ]);
 
         parent::buildForm($builder, $options);
     }
 
+    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         parent::configureOptions($resolver);
         $resolver->setDefaults([
-                'collapsible' => false,
-                'icon' => null,
-                'itemBootstrapClass' => null,
-                'singularLabel' => null,
-                'sortable' => false,
+            'collapsible' => false,
+            'icon' => null,
+            'itemBootstrapClass' => null,
+            'singularLabel' => null,
+            'sortable' => false,
         ]);
     }
 }

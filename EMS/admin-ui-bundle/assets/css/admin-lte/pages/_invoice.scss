@@ -1,6 +1,4 @@
-//
 // Pages: Invoice
-//
 
 .invoice {
   background-color: $white;
@@ -12,7 +10,7 @@
   margin-top: 0;
 }
 
-@include dark-mode () {
+@include dark-mode {
   .invoice {
     background-color: $dark;
   }

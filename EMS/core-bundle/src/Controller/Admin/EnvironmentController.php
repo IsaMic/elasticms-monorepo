@@ -71,16 +71,16 @@ class EnvironmentController extends AbstractController
     public function add(Request $request): Response
     {
         $form = $this->createFormBuilder([])->add('name', IconTextType::class, [
-                'icon' => 'fa fa-database',
-                'required' => false,
+            'icon' => 'fa fa-database',
+            'required' => false,
         ])->add('color', ColorPickerType::class, [
-                'required' => false,
+            'required' => false,
         ])->add('save', SubmitEmsType::class, [
-                'label' => 'Create',
-                'icon' => 'fa fa-plus',
-                'attr' => [
-                        'class' => 'btn btn-primary pull-right',
-                ],
+            'label' => 'Create',
+            'icon' => 'fa fa-plus',
+            'attr' => [
+                'class' => 'btn btn-primary pull-right',
+            ],
         ])->getForm();
 
         $form->handleRequest($request);
@@ -123,7 +123,7 @@ class EnvironmentController extends AbstractController
         }
 
         return $this->render("@$this->templateNamespace/environment/add.html.twig", [
-                'form' => $form->createView(),
+            'form' => $form->createView(),
         ]);
     }
 
@@ -165,8 +165,8 @@ class EnvironmentController extends AbstractController
         }
 
         return $this->render("@$this->templateNamespace/environment/view.html.twig", [
-                'environment' => $environment,
-                'info' => $info,
+            'environment' => $environment,
+            'info' => $info,
         ]);
     }
 
@@ -208,8 +208,8 @@ class EnvironmentController extends AbstractController
         }
 
         return $this->render("@$this->templateNamespace/environment/rebuild.html.twig", [
-                'environment' => $environment,
-                'form' => $form->createView(),
+            'environment' => $environment,
+            'form' => $form->createView(),
         ]);
     }
 
@@ -244,10 +244,13 @@ class EnvironmentController extends AbstractController
                     icon: 'fa fa-list-ul',
                     route: Routes::ADMIN_ENVIRONMENT_INDEX
                 ),
-            ])
+            ]),
         };
     }
 
+    /**
+     * @return RedirectResponse|FormInterface<mixed>
+     */
     private function dataTableEnvironment(Request $request): RedirectResponse|FormInterface
     {
         $table = $this->dataTableFactory->create(EnvironmentDataTableType::class, ['managed' => true]);
@@ -262,7 +265,7 @@ class EnvironmentController extends AbstractController
                 TableType::REORDER_ACTION => $this->environmentService->reorderByIds(
                     ...TableType::getReorderedKeys($form->getName(), $request)
                 ),
-                default => $this->logger->messageError(t('log.error.invalid_table_action', [], 'emsco-core'))
+                default => $this->logger->messageError(t('log.error.invalid_table_action', [], 'emsco-core')),
             };
 
             return $this->redirectToRoute(Routes::ADMIN_ENVIRONMENT_INDEX);
@@ -271,6 +274,9 @@ class EnvironmentController extends AbstractController
         return $form;
     }
 
+    /**
+     * @return FormInterface<mixed>
+     */
     private function dataTableExternalEnvironment(): FormInterface
     {
         $table = $this->dataTableFactory->create(EnvironmentDataTableType::class, ['managed' => false]);
@@ -280,6 +286,9 @@ class EnvironmentController extends AbstractController
         ]);
     }
 
+    /**
+     * @return FormInterface<mixed>
+     */
     private function dataTableManagedAlias(): FormInterface
     {
         $table = $this->dataTableFactory->create(EnvironmentManagedAliasDataTableType::class);

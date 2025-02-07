@@ -12,6 +12,9 @@ use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
+/**
+ * @extends AbstractType<mixed>
+ */
 final class FormType extends AbstractType
 {
     public function __construct()
@@ -19,9 +22,10 @@ final class FormType extends AbstractType
     }
 
     /**
-     * @param FormBuilderInterface<FormBuilderInterface> $builder
-     * @param array<string, mixed>                       $options
+     * @param FormBuilderInterface<mixed> $builder
+     * @param array<string, mixed>        $options
      */
+    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $form = $options['data'] ?? null;
@@ -46,11 +50,11 @@ final class FormType extends AbstractType
         if ($options['create'] ?? false) {
             $builder
                 ->add('create', SubmitEmsType::class, [
-                'attr' => [
-                    'class' => 'btn btn-primary btn-sm ',
-                ],
-                'icon' => 'fa fa-save',
-            ]);
+                    'attr' => [
+                        'class' => 'btn btn-primary btn-sm ',
+                    ],
+                    'icon' => 'fa fa-save',
+                ]);
         } else {
             $builder->add('fieldType', FieldTypeType::class, [
                 'data' => $form->getFieldType(),
@@ -64,6 +68,7 @@ final class FormType extends AbstractType
         }
     }
 
+    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([

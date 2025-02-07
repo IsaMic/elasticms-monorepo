@@ -22,20 +22,17 @@ use Symfony\Component\Security\Http\Authenticator\Passport\Passport;
 
 class LdapAuthTokenLoginAuthenticator extends AbstractAuthenticator
 {
-    private AuthTokenRepository $authTokenRepository;
-    private LdapConfig $ldapConfig;
-
-    public function __construct(LdapConfig $ldapConfig, AuthTokenRepository $authTokenRepository)
+    public function __construct(private readonly LdapConfig $ldapConfig, private readonly AuthTokenRepository $authTokenRepository)
     {
-        $this->authTokenRepository = $authTokenRepository;
-        $this->ldapConfig = $ldapConfig;
     }
 
+    #[\Override]
     public function supports(Request $request): ?bool
     {
         return Routes::AUTH_TOKEN_LOGIN === $request->attributes->get('_route') && $request->isMethod('POST');
     }
 
+    #[\Override]
     public function authenticate(Request $request): Passport
     {
         $content = $request->getContent();
@@ -62,6 +59,7 @@ class LdapAuthTokenLoginAuthenticator extends AbstractAuthenticator
         );
     }
 
+    #[\Override]
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response
     {
         $user = $token->getUser();
@@ -76,6 +74,7 @@ class LdapAuthTokenLoginAuthenticator extends AbstractAuthenticator
         ]);
     }
 
+    #[\Override]
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception): ?Response
     {
         return new JsonResponse([

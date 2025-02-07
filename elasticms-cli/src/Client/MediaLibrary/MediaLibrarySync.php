@@ -23,15 +23,15 @@ use Symfony\Component\Mime\MimeTypes;
 
 final class MediaLibrarySync
 {
-    public const SYNC_METADATA = '_sync_metadata';
+    public const string SYNC_METADATA = '_sync_metadata';
     /** @var mixed[] */
     private array $metadatas = [];
     /** @var string[] */
     private array $knownFolders = [];
-    private DataInterface $contentTypeApi;
-    private string $defaultAlias;
-    private MimeTypes $mimeTypes;
-    private Filesystem $filesystem;
+    private readonly DataInterface $contentTypeApi;
+    private readonly string $defaultAlias;
+    private readonly MimeTypes $mimeTypes;
+    private readonly Filesystem $filesystem;
     private ?TikaHelper $tikaHelper = null;
     /** @var string[] */
     private array $cleanPaths = [];
@@ -120,7 +120,7 @@ final class MediaLibrarySync
     /**
      * @param mixed[] $data
      */
-    private function uploadMedia(string $path, array $data = [], SplFileInfo $file = null): void
+    private function uploadMedia(string $path, array $data = [], ?SplFileInfo $file = null): void
     {
         $pos = \strrpos($path, '/');
         if (false === $pos) {
@@ -289,11 +289,7 @@ final class MediaLibrarySync
      */
     private function getMetadata(string $path): array
     {
-        if (isset($this->metadatas[$path])) {
-            return $this->metadatas[$path];
-        }
-
-        return [];
+        return $this->metadatas[$path] ?? [];
     }
 
     private function getFolderPath(): string

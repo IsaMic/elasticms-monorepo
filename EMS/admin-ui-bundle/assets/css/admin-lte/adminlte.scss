@@ -7,10 +7,10 @@
 
 // Bootstrap
 // ---------------------------------------------------
-@import "~bootstrap/scss/functions";
+@import "bootstrap/scss/functions";
 @import "bootstrap-depracated";
 @import "bootstrap-variables";
-@import "~bootstrap/scss/bootstrap";
+@import "bootstrap/scss/bootstrap";
 
 // Variables and Mixins
 // ---------------------------------------------------
@@ -18,9 +18,18 @@
 @import "variables-alt";
 @import "mixins";
 
+// Parts
+// ---------------------------------------------------
 @import "parts/core";
 @import "parts/components";
-//@import "parts/extra-components";
+
+// @import "parts/extra-components";
 @import "parts/pages";
-//@import "parts/plugins";
+
+// @import "parts/plugins";
 @import "parts/miscellaneous";
+
+// EMS Modules
+// ---------------------------------------------------
+@import "../core/components/media_library";
+@import "../core/components/json_menu_nested";

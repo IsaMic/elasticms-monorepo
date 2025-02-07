@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Form\View\Criteria;
 
 use EMS\CoreBundle\Entity\DataField;
@@ -14,16 +16,15 @@ use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
- * It's the mother class of all specific DataField used in eMS.
- *
- * @author Mathieu De Keyzer <ems@theus.be>
+ * @extends AbstractType<mixed>
  */
 class CriteriaFilterType extends AbstractType
 {
     /**
-     * @param FormBuilderInterface<FormBuilderInterface> $builder
-     * @param array<string, mixed>                       $options
+     * @param FormBuilderInterface<mixed> $builder
+     * @param array<string, mixed>        $options
      */
+    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         parent::buildForm($builder, $options);
@@ -62,26 +63,26 @@ class CriteriaFilterType extends AbstractType
             }
 
             $builder->add('columnCriteria', ChoiceType::class, [
-                    'choices' => $choices,
-                    'data' => $defaultColumn,
-                    'attr' => [
-                            'class' => 'criteria-filter-columnrow',
-                    ],
+                'choices' => $choices,
+                'data' => $defaultColumn,
+                'attr' => [
+                    'class' => 'criteria-filter-columnrow',
+                ],
             ]);
 
             $builder->add('rowCriteria', ChoiceType::class, [
-                    'choices' => $choices,
-                    'data' => $defaultRow,
-                    'attr' => [
-                            'class' => 'criteria-filter-columnrow',
-                    ],
+                'choices' => $choices,
+                'data' => $defaultRow,
+                'attr' => [
+                    'class' => 'criteria-filter-columnrow',
+                ],
             ]);
 
             $builder->add('manage', SubmitEmsType::class, [
-                    'icon' => 'fa fa-table',
-                    'attr' => [
-                            'class' => 'btn-primary',
-                    ],
+                'icon' => 'fa fa-table',
+                'attr' => [
+                    'class' => 'btn-primary',
+                ],
             ]);
 
             if ($view->getOptions()['categoryFieldPath']) {
@@ -120,7 +121,7 @@ class CriteriaFilterType extends AbstractType
             }
 
             $criterion = $builder->create('criterion', FormType::class, [
-                    'label' => ' ',
+                'label' => ' ',
             ]);
 
             $fieldPaths = \preg_split('/\\r\\n|\\r|\\n/', (string) $view->getOptions()['criteriaFieldPaths']);
@@ -147,7 +148,7 @@ class CriteriaFilterType extends AbstractType
                     }
                     $displayOptions['attr'] =
                         [
-                                'data-name' => $child->getName(),
+                            'data-name' => $child->getName(),
                         ];
 
                     $displayOptions['multiple'] = true; // ($child->getName() == $defaultRow || $child->getName() == $defaultColumn);
@@ -172,6 +173,7 @@ class CriteriaFilterType extends AbstractType
         }
     }
 
+    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         /* set the default option value for this kind of compound field */

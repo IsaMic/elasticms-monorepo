@@ -11,12 +11,16 @@ use Symfony\Component\Security\Core\Exception\UserNotFoundException;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
 
+/**
+ * @implements UserProviderInterface<UserInterface>
+ */
 class UserApiProvider implements UserProviderInterface
 {
     public function __construct(private readonly AuthTokenRepository $authTokenRepository)
     {
     }
 
+    #[\Override]
     public function loadUserByIdentifier(string $identifier): UserInterface
     {
         $authToken = $this->authTokenRepository->findOneBy(['value' => $identifier]);
@@ -38,11 +42,13 @@ class UserApiProvider implements UserProviderInterface
         return $this->loadUserByIdentifier($username);
     }
 
+    #[\Override]
     public function refreshUser(UserInterface $user): UserInterface
     {
         throw new UnsupportedUserException();
     }
 
+    #[\Override]
     public function supportsClass(string $class): bool
     {
         return UserInterface::class === $class;

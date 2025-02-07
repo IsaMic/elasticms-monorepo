@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Controller\Views;
 
 use EMS\CommonBundle\Elasticsearch\Document\Document;
@@ -8,6 +10,7 @@ use EMS\CommonBundle\Helper\EmsFields;
 use EMS\CommonBundle\Search\Search;
 use EMS\CommonBundle\Service\ElasticaService;
 use EMS\CoreBundle\Core\ContentType\ContentTypeRoles;
+use EMS\CoreBundle\Core\UI\FlashMessageLogger;
 use EMS\CoreBundle\Entity\DataField;
 use EMS\CoreBundle\Entity\FieldType;
 use EMS\CoreBundle\Entity\Form\CriteriaUpdateConfig;
@@ -50,22 +53,23 @@ class CriteriaController extends AbstractController
         private readonly FormRegistryInterface $formRegistry,
         private readonly FieldTypeRepository $fieldTypeRepository,
         private readonly RevisionRepository $revisionRepository,
-        private readonly string $templateNamespace)
-    {
+        private readonly FlashMessageLogger $flashMessageLogger,
+        private readonly string $templateNamespace
+    ) {
     }
 
     public function align(View $view, Request $request): Response
     {
         $criteriaUpdateConfig = new CriteriaUpdateConfig($view, $this->logger);
         $form = $this->createForm(CriteriaFilterType::class, $criteriaUpdateConfig, [
-                'view' => $view,
+            'view' => $view,
         ]);
 
         $form->handleRequest($request);
         /** @var CriteriaUpdateConfig $criteriaUpdateConfig */
         $criteriaUpdateConfig = $form->getData();
 
-        $tables = $this->generateCriteriaTable($view, $criteriaUpdateConfig);
+        $tables = $this->generateCriteriaTableContext($view, $criteriaUpdateConfig);
         $params = \explode(':', Type::string($request->request->get('alignOn')));
 
         $isRowAlign = ('row' == $params[0]);
@@ -109,11 +113,10 @@ class CriteriaController extends AbstractController
                                     $type = $structuredTarget[0];
                                     $ouuid = $structuredTarget[1];
 
-                                    /** @var Revision $revision */
                                     $revision = $this->dataService->getNewestRevision($type, $ouuid);
                                 }
 
-                                if ($revision = $this->removeCriteria($filters, $revision, $criteriaField)) {
+                                if ($revision = $this->removeCriteriaFromRevision($filters, $revision, $criteriaField)) {
                                     $itemToFinalize[$toremove->getValue()] = $revision;
                                 }
                             } else {
@@ -130,7 +133,7 @@ class CriteriaController extends AbstractController
                                 }
 
                                 $revision = $this->removeCriteriaRevision($view, $rawData, $targetFieldName, $itemToFinalize);
-//                                 $revision = $this->addCriteriaRevision($view, $rawData, $targetFieldName, $itemToFinalize);
+                                //                                 $revision = $this->addCriteriaRevision($view, $rawData, $targetFieldName, $itemToFinalize);
                                 if ($revision) {
                                     $itemToFinalize[$revision->getOuuid()] = $revision;
                                 }
@@ -163,11 +166,10 @@ class CriteriaController extends AbstractController
                                     $type = $structuredTarget[0];
                                     $ouuid = $structuredTarget[1];
 
-                                    /** @var Revision $revision */
                                     $revision = $this->dataService->getNewestRevision($type, $ouuid);
                                 }
 
-                                if ($revision = $this->addCriteria($filters, $revision, $criteriaField)) {
+                                if ($revision = $this->addCriteriaToRevision($filters, $revision, $criteriaField)) {
                                     $itemToFinalize[$toadd->getValue()] = $revision;
                                 }
                             } else {
@@ -220,7 +222,7 @@ class CriteriaController extends AbstractController
         return $authorized;
     }
 
-    public function generateCriteriaTableAction(View $view, Request $request): Response
+    public function generateCriteriaTable(View $view, Request $request): Response
     {
         $counters = $this->revisionRepository->draftCounterGroupedByContentType([], true);
 
@@ -235,11 +237,11 @@ class CriteriaController extends AbstractController
         $criteriaUpdateConfig = new CriteriaUpdateConfig($view, $this->logger);
 
         $form = $this->createForm(CriteriaFilterType::class, $criteriaUpdateConfig, [
-                'view' => $view,
-                'attr' => [
-                    'id' => 'criteria_filter',
-                        'action' => $this->generateUrl('data.customindexview', ['viewId' => $view->getId()], UrlGeneratorInterface::RELATIVE_PATH),
-                ],
+            'view' => $view,
+            'attr' => [
+                'id' => 'criteria_filter',
+                'action' => $this->generateUrl('data.customindexview', ['viewId' => $view->getId()], UrlGeneratorInterface::RELATIVE_PATH),
+            ],
         ]);
 
         $form->handleRequest($request);
@@ -266,9 +268,9 @@ class CriteriaController extends AbstractController
 
         if (!$valid) {
             return $this->render("@$this->templateNamespace/view/custom/criteria_view.html.twig", [
-                    'view' => $view,
-                    'form' => $form->createView(),
-                    'contentType' => $contentType,
+                'view' => $view,
+                'form' => $form->createView(),
+                'contentType' => $contentType,
             ]);
         }
 
@@ -305,7 +307,7 @@ class CriteriaController extends AbstractController
             ]);
         }
 
-        $tables = $this->generateCriteriaTable($view, $criteriaUpdateConfig);
+        $tables = $this->generateCriteriaTableContext($view, $criteriaUpdateConfig);
 
         return $this->render("@$this->templateNamespace/view/custom/criteria_table.html.twig", [
             'table' => $tables['table'],
@@ -331,25 +333,25 @@ class CriteriaController extends AbstractController
      * @throws PerformanceException
      * @throws \Exception
      */
-    public function generateCriteriaTable(View $view, CriteriaUpdateConfig $criteriaUpdateConfig): array
+    private function generateCriteriaTableContext(View $view, CriteriaUpdateConfig $criteriaUpdateConfig): array
     {
         $contentType = $view->getContentType();
 
-//        $criteriaField = $contentType->getFieldType();
+        //        $criteriaField = $contentType->getFieldType();
 
         $criteriaFieldName = false;
         if ('internal' == $view->getOptions()['criteriaMode']) {
             $criteriaFieldName = $view->getOptions()['criteriaField'];
-//            $criteriaField = $contentType->getFieldType()->getChildByPath($criteriaFieldName);
+            //            $criteriaField = $contentType->getFieldType()->getChildByPath($criteriaFieldName);
         }
 
         $body = [
-                'query' => [
-                        'bool' => [
-                                'must' => [
-                                ],
-                        ],
+            'query' => [
+                'bool' => [
+                    'must' => [
+                    ],
                 ],
+            ],
         ];
 
         $categoryChoiceList = false;
@@ -398,17 +400,17 @@ class CriteriaController extends AbstractController
                 'nested' => [
                     'path' => $criteriaFieldName,
                     'query' => [
-                            'bool' => ['must' => $criteriaFilters],
+                        'bool' => ['must' => $criteriaFilters],
                     ],
                 ],
             ];
         }
-//        /** @var FieldType $columnField */
-//        $columnField = $criteriaField->getChildByPath($criteriaUpdateConfig->getColumnCriteria());
-//
-//
-//        /** @var FieldType $rowField */
-//        $rowField = $criteriaField->getChildByPath($criteriaUpdateConfig->getRowCriteria());
+        //        /** @var FieldType $columnField */
+        //        $columnField = $criteriaField->getChildByPath($criteriaUpdateConfig->getColumnCriteria());
+        //
+        //
+        //        /** @var FieldType $rowField */
+        //        $rowField = $criteriaField->getChildByPath($criteriaUpdateConfig->getRowCriteria());
 
         $table = [];
         /** @var ObjectChoiceListItem $rowItem */
@@ -485,7 +487,7 @@ class CriteriaController extends AbstractController
         ];
     }
 
-    public function addCriteriaAction(View $view, Request $request): Response
+    public function addCriteria(View $view, Request $request): Response
     {
         $filters = $request->request->all('filters');
         $target = Type::string($request->request->get('target'));
@@ -501,9 +503,6 @@ class CriteriaController extends AbstractController
             $ouuid = $structuredTarget[1];
 
             $revision = $this->dataService->getNewestRevision($type, $ouuid);
-            if (!$revision instanceof Revision) {
-                throw new \RuntimeException('Unexpected revision type');
-            }
 
             $authorized = $this->authorizationChecker->isGranted($view->getContentType()->role(ContentTypeRoles::EDIT));
             if (!$authorized) {
@@ -513,8 +512,8 @@ class CriteriaController extends AbstractController
                     EmsFields::LOG_REVISION_ID_FIELD => $revision->getId(),
                 ]);
 
-                return $this->render("@$this->templateNamespace/ajax/notification.json.twig", [
-                        'success' => false,
+                return $this->flashMessageLogger->buildJsonResponse([
+                    'success' => false,
                 ]);
             }
 
@@ -526,20 +525,16 @@ class CriteriaController extends AbstractController
                     'count' => 0,
                 ]);
 
-                return $this->render("@$this->templateNamespace/ajax/notification.json.twig", [
-                        'success' => false,
+                return $this->flashMessageLogger->buildJsonResponse([
+                    'success' => false,
                 ]);
             }
 
             try {
-                if ($revision = $this->addCriteria($filters, $revision, $criteriaField)) {
+                if ($revision = $this->addCriteriaToRevision($filters, $revision, $criteriaField)) {
                     $this->dataService->finalizeDraft($revision);
                 }
             } catch (LockedException) {
-                if (!$revision instanceof Revision) {
-                    throw new \RuntimeException('Unexpected revision type');
-                }
-
                 $this->logger->warning('log.view.criteria.locked_revision', [
                     EmsFields::LOG_CONTENTTYPE_FIELD => $revision->giveContentType()->getName(),
                     EmsFields::LOG_OUUID_FIELD => $revision->getOuuid(),
@@ -548,8 +543,8 @@ class CriteriaController extends AbstractController
                     'locked_by' => $revision->getLockBy(),
                 ]);
 
-                return $this->render("@$this->templateNamespace/ajax/notification.json.twig", [
-                        'success' => false,
+                return $this->flashMessageLogger->buildJsonResponse([
+                    'success' => false,
                 ]);
             }
         } else {
@@ -570,8 +565,8 @@ class CriteriaController extends AbstractController
             }
         }
 
-        return $this->render("@$this->templateNamespace/ajax/notification.json.twig", [
-                'success' => true,
+        return $this->flashMessageLogger->buildJsonResponse([
+            'success' => true,
         ]);
     }
 
@@ -646,7 +641,6 @@ class CriteriaController extends AbstractController
 
             return $revision;
         } elseif (1 == $response->getTotal()) {
-            /** @var Revision $revision */
             $revision = null;
             /** @var Document $document */
             foreach ($response->getDocuments() as $document) {
@@ -712,7 +706,7 @@ class CriteriaController extends AbstractController
      *
      * @throws \Exception
      */
-    public function addCriteria(array $filters, Revision $revision, string $criteriaField): false|Revision
+    private function addCriteriaToRevision(array $filters, Revision $revision, string $criteriaField): false|Revision
     {
         $rawData = $revision->getRawData();
         if (!isset($rawData[$criteriaField])) {
@@ -779,7 +773,7 @@ class CriteriaController extends AbstractController
         return false;
     }
 
-    public function removeCriteriaAction(View $view, Request $request): Response
+    public function removeCriteria(View $view, Request $request): Response
     {
         $filters = $request->request->all('filters');
         $target = Type::string($request->request->get('target'));
@@ -805,13 +799,13 @@ class CriteriaController extends AbstractController
                     'count' => 0,
                 ]);
 
-                return $this->render("@$this->templateNamespace/ajax/notification.json.twig", [
-                        'success' => false,
+                return $this->flashMessageLogger->buildJsonResponse([
+                    'success' => false,
                 ]);
             }
 
             try {
-                if ($revision = $this->removeCriteria($filters, $revision, $criteriaField)) {
+                if ($revision = $this->removeCriteriaFromRevision($filters, $revision, $criteriaField)) {
                     $this->dataService->finalizeDraft($revision);
                 }
             } catch (LockedException) {
@@ -827,8 +821,8 @@ class CriteriaController extends AbstractController
                     'locked_by' => $revision->getLockBy(),
                 ]);
 
-                return $this->render("@$this->templateNamespace/ajax/notification.json.twig", [
-                        'success' => false,
+                return $this->flashMessageLogger->buildJsonResponse([
+                    'success' => false,
                 ]);
             }
         } else {
@@ -849,7 +843,7 @@ class CriteriaController extends AbstractController
             }
         }
 
-        return $this->render("@$this->templateNamespace/ajax/notification.json.twig", [
+        return $this->flashMessageLogger->buildJsonResponse([
             'success' => true,
         ]);
     }
@@ -867,28 +861,28 @@ class CriteriaController extends AbstractController
         $multipleField = $this->getMultipleField($view->getContentType()->getFieldType());
 
         $body = [
-                'query' => [
-                        'bool' => [
-                                'must' => [
-                                ],
-                        ],
+            'query' => [
+                'bool' => [
+                    'must' => [
+                    ],
                 ],
+            ],
         ];
 
         foreach ($rawData as $name => $key) {
             $body['query']['bool']['must'][] = [
-                    'term' => [
-                            $name => [
-                                    'value' => $key,
-                            ],
+                'term' => [
+                    $name => [
+                        'value' => $key,
                     ],
+                ],
             ];
         }
 
         $search = $this->elasticaService->convertElasticsearchSearch([
-                'body' => $body,
-                'index' => $view->getContentType()->giveEnvironment()->getAlias(),
-                'type' => $view->getContentType()->getName(),
+            'body' => $body,
+            'index' => $view->getContentType()->giveEnvironment()->getAlias(),
+            'type' => $view->getContentType()->getName(),
         ]);
         $response = EmsResponse::fromResultSet($this->elasticaService->search($search));
 
@@ -897,7 +891,6 @@ class CriteriaController extends AbstractController
                 'field_name' => $targetFieldName,
             ]);
         } elseif (1 == $response->getTotal()) {
-            /** @var Revision $revision */
             $revision = null;
             $queryDocument = null;
             /** @var Document $document */
@@ -969,7 +962,7 @@ class CriteriaController extends AbstractController
      *
      * @throws \Exception
      */
-    public function removeCriteria(array $filters, Revision $revision, string $criteriaField): false|Revision
+    private function removeCriteriaFromRevision(array $filters, Revision $revision, string $criteriaField): false|Revision
     {
         $rawData = $revision->getRawData();
         if (!isset($rawData[$criteriaField])) {
@@ -1098,7 +1091,7 @@ class CriteriaController extends AbstractController
         return false;
     }
 
-    public function fieldFilterAction(Request $request): JsonResponse
+    public function fieldFilter(Request $request): JsonResponse
     {
         /** @var FieldType $field */
         $field = $this->fieldTypeRepository->find($request->query->get('targetField'));
@@ -1115,7 +1108,7 @@ class CriteriaController extends AbstractController
 
         foreach ($choices as $idx => $choice) {
             $label = $labels[$idx] ?? $choice;
-            if (!$request->query->get('q') || \stristr($choice, $request->query->get('q')) || \stristr($label, $request->query->get('q'))) {
+            if (!$request->query->get('q') || \stristr($choice, (string) $request->query->get('q')) || \stristr($label, (string) $request->query->get('q'))) {
                 $out['items'][] = [
                     'id' => $choice,
                     'text' => $label,

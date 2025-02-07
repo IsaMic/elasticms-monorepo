@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Form\DataField;
 
 use EMS\CoreBundle\Entity\DataField;
@@ -15,51 +17,51 @@ use Symfony\Component\Form\FormBuilderInterface;
  */
 class IconFieldType extends DataFieldType
 {
+    #[\Override]
     public static function getIcon(): string
     {
         return 'fa fa-flag';
     }
 
+    #[\Override]
     public function getLabel(): string
     {
         return 'Icon field';
     }
 
     /**
-     * @param FormBuilderInterface<FormBuilderInterface> $builder
-     * @param array<string, mixed>                       $options
+     * @param FormBuilderInterface<mixed> $builder
+     * @param array<string, mixed>        $options
      */
+    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         /** @var FieldType $fieldType */
         $fieldType = $options['metadata'];
         $builder->add('value', IconPickerType::class, [
-                'label' => (null != $options['label'] ? $options['label'] : 'Icon field type'),
-                'disabled' => $this->isDisabled($options),
-                'required' => false,
+            'label' => (null != $options['label'] ? $options['label'] : 'Icon field type'),
+            'disabled' => $this->isDisabled($options),
+            'required' => false,
         ]);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function getDefaultOptions(string $name): array
     {
         $out = parent::getDefaultOptions($name);
 
-        $out['mappingOptions']['index'] = 'not_analyzed';
+        $out['mappingOptions']['analyzer'] = 'keyword';
 
         return $out;
     }
 
+    #[\Override]
     public function getBlockPrefix(): string
     {
         return 'bypassdatafield';
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function viewTransform(DataField $dataField)
     {
         $out = parent::viewTransform($dataField);
@@ -68,10 +70,9 @@ class IconFieldType extends DataFieldType
     }
 
     /**
-     * {@inheritDoc}
-     *
      * @param array<mixed> $data
      */
+    #[\Override]
     public function reverseViewTransform($data, FieldType $fieldType): DataField
     {
         $value = $data['value'];

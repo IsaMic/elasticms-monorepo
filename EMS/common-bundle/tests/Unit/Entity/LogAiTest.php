@@ -6,11 +6,13 @@ namespace EMS\CommonBundle\Tests\Entity;
 
 use EMS\CommonBundle\Entity\Log;
 use PHPUnit\Framework\TestCase;
+use Ramsey\Uuid\Uuid;
 
 class LogAiTest extends TestCase
 {
     private Log $log;
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->log = new Log();
@@ -18,7 +20,7 @@ class LogAiTest extends TestCase
 
     public function testId(): void
     {
-        $uuid = \Ramsey\Uuid\Uuid::uuid4();
+        $uuid = Uuid::uuid4();
         $this->log->setId($uuid);
 
         $this->assertSame($uuid->toString(), $this->log->getId());

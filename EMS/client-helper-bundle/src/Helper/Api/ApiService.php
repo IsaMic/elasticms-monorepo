@@ -10,29 +10,29 @@ use EMS\CommonBundle\Common\CoreApi\Exception\NotSuccessfulException;
 use EMS\CommonBundle\Helper\EmsFields;
 use EMS\Helpers\Standard\Json;
 use Ramsey\Uuid\Uuid;
+use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\FileBag;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
-use Symfony\Component\Security\Core\Security;
 use Twig\Environment;
 
 /**
  * @todo use EMS\CommonBundle\Contracts\CoreApi\CoreApiInterface
  */
-final class ApiService
+final readonly class ApiService
 {
     /**
      * @param ClientRequest[] $clientRequests
      * @param Client[]        $apiClients
      */
     public function __construct(
-        private readonly Environment $twig,
-        private readonly UrlGeneratorInterface $urlGenerator,
-        private readonly Security $security,
-        private readonly iterable $clientRequests = [],
-        private readonly iterable $apiClients = []
+        private Environment $twig,
+        private UrlGeneratorInterface $urlGenerator,
+        private Security $security,
+        private iterable $clientRequests = [],
+        private iterable $apiClients = [],
     ) {
     }
 
@@ -41,10 +41,10 @@ final class ApiService
      */
     public function index(string $apiName, string $contentType, ?string $ouuid, array $rawData, bool $merge = false): string
     {
-        $dataEndpoint = $this->getApiClient($apiName)->coreApi->data($contentType);
+        $dataEndpoint = $this->getApiClient($apiName)->getCoreApi()->data($contentType);
 
         try {
-            $ouuid = $ouuid ?? Uuid::uuid4()->toString();
+            $ouuid ??= Uuid::uuid4()->toString();
 
             return $dataEndpoint->index($ouuid, $rawData, $merge, true)->getOuuid();
         } catch (NotSuccessfulException $e) {
@@ -62,7 +62,7 @@ final class ApiService
     /**
      * @return mixed
      */
-    public function treatFormRequest(Request $request, string $apiName, string $validationTemplate = null)
+    public function treatFormRequest(Request $request, string $apiName, ?string $validationTemplate = null)
     {
         $body = $request->request->all();
         $body = $this->treatFiles($body, $apiName, $request->files);
@@ -236,7 +236,7 @@ final class ApiService
 
         $user = $this->security->getUser();
         if ($user instanceof CoreApiUser) {
-            $client->coreApi->setToken($user->getToken());
+            $client->getCoreApi()->setToken($user->getToken());
         }
 
         return $client;

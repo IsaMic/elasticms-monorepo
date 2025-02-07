@@ -9,6 +9,7 @@ use EMS\CommonBundle\Helper\EmsFields;
 use EMS\CommonBundle\Helper\Text\Encoder;
 use EMS\CoreBundle\Controller\CoreControllerTrait;
 use EMS\CoreBundle\Core\DataTable\DataTableFactory;
+use EMS\CoreBundle\Core\UI\FlashMessageLogger;
 use EMS\CoreBundle\Core\UI\Page\Navigation;
 use EMS\CoreBundle\DataTable\Type\ContentType\ContentTypeActionDataTableType;
 use EMS\CoreBundle\Entity\ContentType;
@@ -36,7 +37,8 @@ final class ActionController extends AbstractController
         private readonly DataTableFactory $dataTableFactory,
         private readonly LocalizedLoggerInterface $logger,
         private readonly TemplateRepository $templateRepository,
-        private readonly string $templateNamespace
+        private readonly FlashMessageLogger $flashMessageLogger,
+        private readonly string $templateNamespace,
     ) {
     }
 
@@ -57,7 +59,7 @@ final class ActionController extends AbstractController
                 TableType::REORDER_ACTION => $this->actionService->reorderByIds(
                     ...TableType::getReorderedKeys($form->getName(), $request)
                 ),
-                default => $this->logger->messageError(t('log.error.invalid_table_action', [], 'emsco-core'))
+                default => $this->logger->messageError(t('log.error.invalid_table_action', [], 'emsco-core')),
             };
 
             return $this->redirectToRoute(Routes::ADMIN_CONTENT_TYPE_ACTION_INDEX, [
@@ -88,7 +90,7 @@ final class ActionController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             $action->setOrderKey($this->actionService->count('', $contentType) + 1);
-            $action->setName(Encoder::webalize($action->getName()));
+            $action->setName(new Encoder()->slug(text: $action->getName(), separator: '_')->toString());
             $this->templateRepository->save($action);
             $this->logger->notice('log.action.added', [
                 'action_name' => $action->getName(),
@@ -122,13 +124,13 @@ final class ActionController extends AbstractController
             ]);
 
             if ('json' === $_format) {
-                return $this->render("@$this->templateNamespace/ajax/notification.json.twig", [
+                return $this->flashMessageLogger->buildJsonResponse([
                     'success' => true,
                 ]);
             }
 
             return $this->redirectToRoute(Routes::ADMIN_CONTENT_TYPE_ACTION_INDEX, [
-                    'contentType' => $action->giveContentType()->getId(),
+                'contentType' => $action->giveContentType()->getId(),
             ]);
         }
 
@@ -139,7 +141,7 @@ final class ActionController extends AbstractController
                 }
             }
 
-            return $this->render("@$this->templateNamespace/ajax/notification.json.twig", [
+            return $this->flashMessageLogger->buildJsonResponse([
                 'success' => $form->isValid(),
             ]);
         }

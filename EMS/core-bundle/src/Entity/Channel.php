@@ -4,84 +4,38 @@ declare(strict_types=1);
 
 namespace EMS\CoreBundle\Entity;
 
-use Doctrine\ORM\Mapping as ORM;
 use EMS\CommonBundle\Entity\CreatedModifiedTrait;
 use EMS\CoreBundle\Entity\Helper\JsonClass;
 use EMS\CoreBundle\Entity\Helper\JsonDeserializer;
-use EMS\Helpers\Standard\DateTime;
-use Ramsey\Uuid\Doctrine\UuidGenerator;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 
-/**
- * @ORM\Table(name="channel")
- *
- * @ORM\Entity()
- *
- * @ORM\HasLifecycleCallbacks()
- */
 class Channel extends JsonDeserializer implements \JsonSerializable, EntityInterface
 {
     use CreatedModifiedTrait;
-    /**
-     * @ORM\Id
-     *
-     * @ORM\Column(type="uuid", unique=true)
-     *
-     * @ORM\GeneratedValue(strategy="CUSTOM")
-     *
-     * @ORM\CustomIdGenerator(class=UuidGenerator::class)
-     */
+
     private UuidInterface $id;
-
-    /**
-     * @ORM\Column(name="name", type="string", length=255, unique=true)
-     */
     protected string $name = '';
-
-    /**
-     * @var string
-     *
-     * @ORM\Column(name="alias", type="string", length=255)
-     */
+    /** @var string */
     protected $alias;
-
-    /**
-     * @var bool
-     *
-     * @ORM\Column(name="public", type="boolean", options={"default" : 0})
-     */
+    /** @var bool */
     protected $public = false;
-
-    /**
-     * @var string
-     *
-     * @ORM\Column(name="label", type="string", length=255)
-     */
+    /** @var string */
     protected $label;
-
-    /**
-     * @var ?array<string, mixed>
-     *
-     * @ORM\Column(name="options", type="json", nullable=true)
-     */
+    /** @var ?array<string, mixed> */
     protected ?array $options = [
         'translationContentType' => 'label',
         'routeContentType' => 'route',
         'templateContentType' => 'template',
         'searchConfig' => '{}',
     ];
-
-    /**
-     * @ORM\Column(name="order_key", type="integer")
-     */
     protected int $orderKey = 0;
 
     public function __construct()
     {
         $this->id = Uuid::uuid4();
-        $this->created = DateTime::create('now');
-        $this->modified = DateTime::create('now');
+        $this->created = new \DateTime();
+        $this->modified = new \DateTime();
     }
 
     public static function fromJson(string $json, ?\EMS\CommonBundle\Entity\EntityInterface $channel = null): Channel
@@ -95,11 +49,13 @@ class Channel extends JsonDeserializer implements \JsonSerializable, EntityInter
         return $channel;
     }
 
+    #[\Override]
     public function getId(): string
     {
         return $this->id->toString();
     }
 
+    #[\Override]
     public function getName(): string
     {
         return $this->name;
@@ -183,6 +139,7 @@ class Channel extends JsonDeserializer implements \JsonSerializable, EntityInter
         return \sprintf('/channel/%s%s', $this->getName(), $entryPath);
     }
 
+    #[\Override]
     public function jsonSerialize(): JsonClass
     {
         $json = new JsonClass(\get_object_vars($this), self::class);

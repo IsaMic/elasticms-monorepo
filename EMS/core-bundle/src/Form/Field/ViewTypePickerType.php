@@ -1,23 +1,26 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Form\Field;
 
 use EMS\CoreBundle\Core\ContentType\ViewTypes;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-class ViewTypePickerType extends SelectPickerType
+class ViewTypePickerType extends Select2Type
 {
     public function __construct(private readonly ViewTypes $viewTypes)
     {
         parent::__construct();
     }
 
+    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
             'choices' => $this->viewTypes->getIds(),
             'attr' => [
-                    'data-live-search' => true,
+                'data-live-search' => true,
             ],
             'choice_attr' => function ($category, $key, $id) {
                 $viewType = $this->viewTypes->get($id);

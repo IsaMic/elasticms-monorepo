@@ -1,18 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Form\Field;
 
 use EMS\CoreBundle\Entity\ManagedAlias;
 use EMS\CoreBundle\Service\AliasService;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-class AlignIndexesType extends SelectPickerType
+class AlignIndexesType extends Select2Type
 {
     public function __construct(private readonly AliasService $aliasService)
     {
         parent::__construct();
     }
 
+    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         $managedAliases = $this->aliasService->getManagedAliases();

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CommonBundle\Twig;
 
 use EMS\CommonBundle\Common\Text\EmsHtml;
@@ -19,7 +21,7 @@ class TextRuntime implements RuntimeExtensionInterface
         private readonly Encoder $encoder,
         private readonly Decoder $decoder,
         private readonly ValidatorInterface $validator,
-        private readonly LoggerInterface $logger
+        private readonly LoggerInterface $logger,
     ) {
     }
 
@@ -85,7 +87,7 @@ class TextRuntime implements RuntimeExtensionInterface
     /**
      * @param \DOMNode|\DOMNodeList<\DOMNode>|\DOMNode[]|string|null $node
      */
-    public function domCrawler($node, string $uri = null, string $baseHref = null): Crawler
+    public function domCrawler($node, ?string $uri = null, ?string $baseHref = null): Crawler
     {
         return new Crawler($node, $uri, $baseHref);
     }

@@ -1,24 +1,33 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Command;
 
 use Doctrine\Bundle\DoctrineBundle\Registry;
 use Doctrine\ORM\EntityManager;
 use EMS\CommonBundle\Common\Command\AbstractCommand;
 use EMS\CommonBundle\Storage\NotFoundException;
+use EMS\CoreBundle\Commands;
 use EMS\CoreBundle\Entity\UploadedAsset;
 use EMS\CoreBundle\Repository\UploadedAssetRepository;
 use EMS\CoreBundle\Service\AssetExtractorService;
 use EMS\CoreBundle\Service\ContentTypeService;
 use EMS\CoreBundle\Service\FileService;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
+#[AsCommand(
+    name: Commands::ASSET_SYNCHRONIZE,
+    description: 'Synchronize registered assets on storage services.',
+    hidden: false,
+    aliases: ['ems:asset:synchronize']
+)]
 class SynchronizeAssetCommand extends AbstractCommand
 {
-    protected static $defaultName = 'ems:asset:synchronize';
     /** @var string */
     protected $databaseName;
     /** @var string */
@@ -29,11 +38,7 @@ class SynchronizeAssetCommand extends AbstractCommand
         parent::__construct();
     }
 
-    protected function configure(): void
-    {
-        $this->setDescription('Synchronize registered assets on storage services');
-    }
-
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         /** @var EntityManager $em */
@@ -69,7 +74,7 @@ class SynchronizeAssetCommand extends AbstractCommand
             foreach ($hashes as $hash) {
                 try {
                     $this->fileService->synchroniseAsset($hash['hash']);
-                } catch (NotFoundException $e) {
+                } catch (NotFoundException) {
                     $message = \sprintf('File not found %s', $hash['hash']);
                     $output->writeln('');
                     $output->writeln(\sprintf('<comment>%s</comment>', $message));

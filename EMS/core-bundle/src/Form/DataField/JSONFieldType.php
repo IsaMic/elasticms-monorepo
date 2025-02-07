@@ -17,20 +17,23 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class JSONFieldType extends DataFieldType
 {
+    #[\Override]
     public function getLabel(): string
     {
         return 'JSON field';
     }
 
+    #[\Override]
     public static function getIcon(): string
     {
         return 'fa fa-code';
     }
 
     /**
-     * @param FormBuilderInterface<FormBuilderInterface> $builder
-     * @param array<string, mixed>                       $options
+     * @param FormBuilderInterface<mixed> $builder
+     * @param array<string, mixed>        $options
      */
+    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         /** @var FieldType $fieldType */
@@ -46,6 +49,7 @@ class JSONFieldType extends DataFieldType
     /**
      * @return array{'value': string}
      */
+    #[\Override]
     public function viewTransform(DataField $dataField): array
     {
         $prettyPrint = (bool) $dataField->giveFieldType()->getDisplayOption('prettyPrint', false);
@@ -54,10 +58,9 @@ class JSONFieldType extends DataFieldType
     }
 
     /**
-     * {@inheritDoc}
-     *
      * @param ?array<mixed> $data
      */
+    #[\Override]
     public function reverseViewTransform($data, FieldType $fieldType): DataField
     {
         $dataField = parent::reverseViewTransform($data, $fieldType);
@@ -74,9 +77,7 @@ class JSONFieldType extends DataFieldType
         return $dataField;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function buildObjectArray(DataField $data, array &$out): void
     {
         if (!$data->giveFieldType()->getDeleted()) {
@@ -84,15 +85,14 @@ class JSONFieldType extends DataFieldType
         }
     }
 
+    #[\Override]
     public function getBlockPrefix(): string
     {
         return 'bypassdatafield';
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public function isValid(DataField &$dataField, DataField $parent = null, mixed &$masterRawData = null): bool
+    #[\Override]
+    public function isValid(DataField &$dataField, ?DataField $parent = null, mixed &$masterRawData = null): bool
     {
         if ($this->hasDeletedParent($parent)) {
             return true;
@@ -102,15 +102,17 @@ class JSONFieldType extends DataFieldType
     }
 
     /**
-     * @param FormInterface<FormInterface> $form
-     * @param array<string, mixed>         $options
+     * @param FormInterface<mixed> $form
+     * @param array<string, mixed> $options
      */
+    #[\Override]
     public function buildView(FormView $view, FormInterface $form, array $options): void
     {
         parent::buildView($view, $form, $options);
         $view->vars['icon'] = $options['icon'];
     }
 
+    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         parent::configureOptions($resolver);
@@ -119,9 +121,7 @@ class JSONFieldType extends DataFieldType
         $resolver->setDefault('prettyPrint', false);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function generateMapping(FieldType $current): array
     {
         if (!empty($current->getMappingOptions()) && !empty($current->getMappingOptions()['mappingOptions'])) {
@@ -131,9 +131,7 @@ class JSONFieldType extends DataFieldType
         return [];
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function buildOptionsForm(FormBuilderInterface $builder, array $options): void
     {
         parent::buildOptionsForm($builder, $options);
@@ -144,12 +142,11 @@ class JSONFieldType extends DataFieldType
 
         if ($optionsForm->has('mappingOptions')) {
             $optionsForm->get('mappingOptions')
-                ->remove('index')
                 ->remove('analyzer')
                 ->add('mappingOptions', TextareaType::class, [
                     'required' => false,
                     'attr' => ['rows' => 8],
-            ]);
+                ]);
         }
     }
 }

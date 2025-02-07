@@ -1,12 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CommonBundle\Common;
 
 use EMS\CommonBundle\Elasticsearch\Document\EMSSource;
+use EMS\CommonBundle\Helper\EmsFields;
 
 class EMSLink implements \Stringable, \JsonSerializable
 {
-    final public const EMSLINK_ASSET_PREFIX = 'ems://asset:';
+    final public const string EMSLINK_ASSET_PREFIX = 'ems://asset:';
     private string $linkType = 'object';
 
     /** @var string */
@@ -22,13 +25,14 @@ class EMSLink implements \Stringable, \JsonSerializable
      * Example: <a href="ems://object:page:AV44kX4b1tfmVMOaE61u">example</a>
      * link_type => object, content_type => page, ouuid => AV44kX4b1tfmVMOaE61u
      */
-    final public const PATTERN = '/((?P<src>src="))?ems:\/\/(?P<link_type>.*?):(?:(?P<content_type>([[:alnum:]]|_)*?):)?(?P<ouuid>([[:alnum:]]|-|_)*)(?:\?(?P<query>(?:[^"|\']*)))?/';
-    final public const SIMPLE_PATTERN = '/(?:(?P<content_type>.*?):)?(?P<ouuid>([[:alnum:]]|-|_)*)/';
+    final public const string PATTERN = '/((?P<src>src="))?ems:\/\/(?P<link_type>.*?):(?:(?P<content_type>([[:alnum:]]|_)*?):)?(?P<ouuid>([[:alnum:]]|-|_)*)(?:\?(?P<query>(?:[^"|\']*)))?/';
+    final public const string SIMPLE_PATTERN = '/(?:(?P<content_type>.*?):)?(?P<ouuid>([[:alnum:]]|-|_)*)/';
 
     private function __construct()
     {
     }
 
+    #[\Override]
     public function jsonSerialize(): string
     {
         return $this->__toString();
@@ -104,6 +108,7 @@ class EMSLink implements \Stringable, \JsonSerializable
         return $link;
     }
 
+    #[\Override]
     public function __toString(): string
     {
         return \vsprintf('ems://%s:%s%s%s', [
@@ -154,5 +159,35 @@ class EMSLink implements \Stringable, \JsonSerializable
     public function getEmsId(): string
     {
         return \sprintf('%s:%s', $this->contentType, $this->ouuid);
+    }
+
+    /**
+     * @return array{sha1: string, filename: string, mimetype: string}
+     */
+    public function getFileTypeArray(): array
+    {
+        if ('asset' !== $this->linkType) {
+            throw new \RuntimeException('Only a asset link can be converted into a FileTypeArray');
+        }
+        if (null === $this->ouuid) {
+            throw new \RuntimeException('Unexpected null hash');
+        }
+
+        $attributes = [];
+        if (null !== $this->query) {
+            \parse_str($this->query, $attributes);
+        }
+        if (\is_array($attributes['name'] ?? 'file.bin')) {
+            throw new \RuntimeException('Unexpected array in url name parameter');
+        }
+        if (\is_array($attributes['type'] ?? 'application/bin')) {
+            throw new \RuntimeException('Unexpected array in url type parameter');
+        }
+
+        return [
+            EmsFields::CONTENT_FILE_HASH_FIELD => $this->ouuid,
+            EmsFields::CONTENT_FILE_NAME_FIELD => (string) ($attributes['name'] ?? 'file.bin'),
+            EmsFields::CONTENT_MIME_TYPE_FIELD => (string) ($attributes['type'] ?? 'application/bin'),
+        ];
     }
 }

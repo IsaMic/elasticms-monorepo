@@ -9,21 +9,11 @@ use Psr\Http\Message\StreamInterface;
 
 class TempFile
 {
-    private const PREFIX = 'EMS_temp_file_';
-    /** @var self[] */
-    private static array $collector = [];
+    private const string PREFIX = 'EMS_temp_file_';
 
     private function __construct(public readonly string $path)
     {
-        self::$collector[] = $this;
-    }
-
-    /**
-     * @return self[]
-     */
-    public static function getIterator(): array
-    {
-        return self::$collector;
+        TempDestructCollector::add($this);
     }
 
     public function __destruct()
@@ -45,7 +35,7 @@ class TempFile
         return \file_exists($this->path);
     }
 
-    public function loadFromStream(StreamInterface $stream, callable $callback = null): self
+    public function loadFromStream(StreamInterface $stream, ?callable $callback = null): self
     {
         if (!$handle = \fopen($this->path, 'w')) {
             throw new \RuntimeException(\sprintf('Can\'t open a temporary file %s', $this->path));

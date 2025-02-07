@@ -1,6 +1,4 @@
 security:
-    enable_authenticator_manager: true
-
     providers:
         core_api:
             id: emsch.security.core_api.user_provider
@@ -26,4 +24,5 @@ security:
                 path: emsch_logout
 
     access_control:
+        - { path: ^/emsch/api, roles: ROLE_API }
         - { path: ^/, roles: PUBLIC_ACCESS }

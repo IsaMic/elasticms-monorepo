@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Entity;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
-use Doctrine\ORM\Mapping as ORM;
 use EMS\CommonBundle\Entity\CreatedModifiedTrait;
+use EMS\CommonBundle\Entity\IdentifierIntegerTrait;
 use EMS\CoreBundle\Core\Revision\RawDataTransformer;
 use EMS\CoreBundle\Exception\LockedException;
 use EMS\CoreBundle\Exception\NotLockedException;
@@ -16,164 +18,49 @@ use EMS\Helpers\Standard\Type;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 
-/**
- * Revision.
- *
- * @ORM\Table(name="revision", uniqueConstraints={@ORM\UniqueConstraint(name="tuple_index", columns={"end_time", "ouuid"})}, indexes={@ORM\Index(name="ouuid_idx", columns={"ouuid"})})
- *
- * @ORM\Entity(repositoryClass="EMS\CoreBundle\Repository\RevisionRepository")
- *
- * @ORM\HasLifecycleCallbacks()
- */
 class Revision implements EntityInterface, \Stringable
 {
     use RevisionTaskTrait;
     use CreatedModifiedTrait;
-    /**
-     * @ORM\Column(name="id", type="integer")
-     *
-     * @ORM\Id
-     *
-     * @ORM\GeneratedValue(strategy="AUTO")
-     */
-    private ?int $id = null;
-    /**
-     * @ORM\Column(name="auto_save_at", type="datetime", nullable=true)
-     */
+    use IdentifierIntegerTrait;
+
     private ?\DateTime $autoSaveAt = null;
-    /**
-     * @ORM\Column(name="archived", type="boolean", options={"default": false})
-     */
     private bool $archived = false;
-    /**
-     * @ORM\Column(name="deleted", type="boolean")
-     */
     private bool $deleted = false;
-    /**
-     * @ORM\ManyToOne(targetEntity="ContentType")
-     *
-     * @ORM\JoinColumn(name="content_type_id", referencedColumnName="id")
-     */
     private ?ContentType $contentType = null;
     private ?DataField $dataField = null;
-    /**
-     * @ORM\Column(name="version", type="integer")
-     *
-     * @ORM\Version
-     */
     private int $version = 0;
-    /**
-     * @ORM\Column(name="ouuid", type="string", length=255, nullable=true)
-     */
+
     private ?string $ouuid = null;
-    /**
-     * @ORM\Column(name="start_time", type="datetime")
-     */
     private \DateTime $startTime;
-    /**
-     * @ORM\Column(name="end_time", type="datetime", nullable=true)
-     */
     private ?\DateTime $endTime = null;
-    /**
-     * @ORM\Column(name="draft", type="boolean")
-     */
     private bool $draft = false;
-    /**
-     * @ORM\Column(name="finalized_by", type="string", length=255, nullable=true)
-     */
     private ?string $finalizedBy = null;
-    /**
-     * @ORM\Column(name="finalized_date", type="datetime", nullable=true)
-     */
     private ?\DateTime $finalizedDate = null;
     private ?\DateTime $tryToFinalizeOn = null;
-    /**
-     * @ORM\Column(name="archived_by", type="string", length=255, nullable=true)
-     */
     private ?string $archivedBy = null;
-    /**
-     * @ORM\Column(name="deleted_by", type="string", length=255, nullable=true)
-     */
     private ?string $deletedBy = null;
-    /**
-     * @ORM\Column(name="lock_by", type="string", length=255, nullable=true)
-     */
     private ?string $lockBy = null;
-    /**
-     * @ORM\Column(name="auto_save_by", type="string", length=255, nullable=true)
-     */
     private ?string $autoSaveBy = null;
-    /**
-     * @ORM\Column(name="lock_until", type="datetime", nullable=true)
-     */
     private ?\DateTime $lockUntil = null;
-    /**
-     * @var ArrayCollection<int, Environment>|Environment[]
-     *
-     * @ORM\ManyToMany(targetEntity="Environment", inversedBy="revisions", cascade={"persist"})
-     *
-     * @ORM\JoinTable(name="environment_revision")
-     *
-     * @ORM\OrderBy({"orderKey":"ASC"})
-     */
+    /** @var Collection<int, Environment> */
     private Collection $environments;
-    /**
-     * @var Collection<int, Notification>
-     *
-     * @ORM\OneToMany(targetEntity="Notification", mappedBy="revision", cascade={"persist", "remove"})
-     *
-     * @ORM\OrderBy({"created" = "ASC"})
-     */
+    /** @var Collection<int, Notification> */
     private Collection $notifications;
-    /**
-     * @var ?array<mixed>
-     *
-     * @ORM\Column(name="raw_data", type="json", nullable=true)
-     */
+    /** @var ?array<mixed> */
     private ?array $rawData = null;
-    /**
-     * @var ?array<mixed>
-     *
-     * @ORM\Column(name="auto_save", type="json", nullable=true)
-     */
+    /** @var ?array<mixed> */
     private ?array $autoSave = null;
-    /**
-     * @var ?string[]
-     *
-     * @ORM\Column(name="circles", type="simple_array", nullable=true)
-     */
+    /** @var ?string[] */
     private ?array $circles = null;
-    /**
-     * @ORM\Column(name="labelField", type="text", nullable=true)
-     */
     private ?string $labelField = null;
-    /**
-     * @ORM\Column(name="sha1", type="string", nullable=true)
-     */
     private ?string $sha1 = null;
-    /**not persisted field to ensure that they are all there after a submit */
     private ?bool $allFieldsAreThere = false;
-    /**
-     * @ORM\Column(type="uuid", name="version_uuid", unique=false, nullable=true)
-     */
     private ?UuidInterface $versionUuid = null;
-    /**
-     * @ORM\Column(type="string", name="version_tag", nullable=true)
-     */
     private ?string $versionTag = null;
-    /**
-     * @ORM\Column(type="string", name="version_next_tag", nullable=true)
-     */
     private ?string $versionNextTag = null;
-    /**
-     * @ORM\Column(name="draft_save_date", type="datetime", nullable=true)
-     */
     private ?\DateTime $draftSaveDate = null;
-    /**
-     * @var Collection<int, ReleaseRevision>
-     *
-     * @ORM\OneToMany(targetEntity="ReleaseRevision", mappedBy="revision", cascade={"remove"})
-     */
+    /** @var Collection<int, ReleaseRevision> */
     private Collection $releases;
     private bool $selfUpdate = false;
 
@@ -188,11 +75,6 @@ class Revision implements EntityInterface, \Stringable
         $this->selfUpdate = true;
     }
 
-    /**
-     * @ORM\PrePersist
-     *
-     * @ORM\PreUpdate
-     */
     public function checkLock(): void
     {
         if ($this->selfUpdate && $this->isLocked()) {
@@ -243,8 +125,8 @@ class Revision implements EntityInterface, \Stringable
         $this->environments = new ArrayCollection();
         $this->notifications = new ArrayCollection();
         $this->releases = new ArrayCollection();
-        $this->created = DateTime::create('now');
-        $this->modified = DateTime::create('now');
+        $this->created = new \DateTime();
+        $this->modified = new \DateTime();
         $this->startTime = new \DateTime('now');
 
         $a = \func_get_args();
@@ -275,6 +157,7 @@ class Revision implements EntityInterface, \Stringable
         // TODO: Refactoring: Dependency injection of the first Datafield in the Revision.
     }
 
+    #[\Override]
     public function __toString(): string
     {
         $out = 'New instance';
@@ -303,10 +186,10 @@ class Revision implements EntityInterface, \Stringable
     public function getObject($source): array
     {
         return [
-                '_index' => 'N/A',
-                '_source' => $source,
-                '_id' => $this->ouuid,
-                '_type' => $this->giveContentType()->getName(),
+            '_index' => 'N/A',
+            '_source' => $source,
+            '_id' => $this->ouuid,
+            '_type' => $this->giveContentType()->getName(),
         ];
     }
 
@@ -320,7 +203,7 @@ class Revision implements EntityInterface, \Stringable
         $draft->setStartTime($now);
         $draft->setCreated($now);
         $draft->setEndTime(null);
-        $draft->setAutoSave(null);
+        $draft->autoSaveClear();
         $draft->setDraft(true);
 
         return $draft;
@@ -354,7 +237,7 @@ class Revision implements EntityInterface, \Stringable
             $this->setEndTime($endTime);
         }
         $this->setDraft(false);
-        $this->setAutoSave(null);
+        $this->autoSaveClear();
         $this->removeEnvironment($this->giveContentType()->giveEnvironment());
     }
 
@@ -368,11 +251,6 @@ class Revision implements EntityInterface, \Stringable
         $this->allFieldsAreThere = $allFieldsAreThere;
 
         return $this;
-    }
-
-    public function getId(): ?int
-    {
-        return $this->id;
     }
 
     public function isCurrent(): bool
@@ -749,7 +627,7 @@ class Revision implements EntityInterface, \Stringable
     }
 
     /**
-     * @param array<mixed> $autoSave
+     * @param array<string, mixed> $autoSave
      */
     public function setAutoSave(?array $autoSave): self
     {
@@ -764,6 +642,37 @@ class Revision implements EntityInterface, \Stringable
     public function getAutoSave(): ?array
     {
         return $this->autoSave;
+    }
+
+    public function autoSaveClear(): self
+    {
+        $this->autoSaveAt = null;
+        $this->autoSaveBy = null;
+        $this->autoSave = null;
+
+        return $this;
+    }
+
+    public function autoSaveToRawData(): self
+    {
+        if (null !== $this->autoSave) {
+            $this->rawData = $this->autoSave;
+            $this->autoSaveClear();
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function getDraftData(): array
+    {
+        if (!$this->isDraft()) {
+            return [];
+        }
+
+        return $this->getAutoSave() ?? $this->getRawData();
     }
 
     public function getLabel(): string
@@ -929,7 +838,7 @@ class Revision implements EntityInterface, \Stringable
             if ($this->hasOuuid()) {
                 $this->setVersionDate('from', $this->created); // migration existing docs
             } else {
-                $this->setVersionDate('from', new \DateTimeImmutable('now'));
+                $this->setVersionDate('from', new \DateTime());
             }
         }
     }
@@ -984,9 +893,11 @@ class Revision implements EntityInterface, \Stringable
         return $this->draftSaveDate;
     }
 
-    public function setDraftSaveDate(?\DateTime $draftSaveDate): void
+    public function setDraftSaveDate(?\DateTime $draftSaveDate): self
     {
         $this->draftSaveDate = $draftSaveDate;
+
+        return $this;
     }
 
     /**
@@ -997,8 +908,9 @@ class Revision implements EntityInterface, \Stringable
         return $this->releases->toArray();
     }
 
+    #[\Override]
     public function getName(): string
     {
-        return \strval($this->id ?? '');
+        return (string) ($this->id ?? '');
     }
 }

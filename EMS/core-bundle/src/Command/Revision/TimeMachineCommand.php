@@ -7,44 +7,51 @@ namespace EMS\CoreBundle\Command\Revision;
 use Doctrine\Bundle\DoctrineBundle\Registry;
 use Doctrine\Persistence\ObjectManager;
 use EMS\CommonBundle\Common\EMSLink;
-use EMS\CommonBundle\Common\Standard\DateTime;
+use EMS\CoreBundle\Commands;
 use EMS\CoreBundle\Service\DataService;
 use EMS\CoreBundle\Service\IndexService;
 use EMS\CoreBundle\Service\Revision\RevisionService;
+use EMS\Helpers\Standard\DateTime;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+#[AsCommand(
+    name: Commands::REVISIONS_TIME_MACHINE,
+    description: 'Revert to a copy of the revision wich was the current one for a given timestamp.',
+    hidden: false,
+    aliases: ['ems:revision:time-machine']
+)]
 final class TimeMachineCommand extends Command
 {
     private SymfonyStyle $style;
     private readonly ObjectManager $em;
 
-    protected static $defaultName = 'ems:revision:time-machine';
+    private const string SYSTEM_TIME_MACHINE = 'SYSTEM_TIME_MACHINE';
+    public const int RESULT_NOT_FOUND = 1;
+    public const int RESULT_EQUALS_IN_TIME = 2;
+    public const int RESULT_SUCCESS = 3;
 
-    private const SYSTEM_TIME_MACHINE = 'SYSTEM_TIME_MACHINE';
-    public const RESULT_NOT_FOUND = 1;
-    public const RESULT_EQUALS_IN_TIME = 2;
-    public const RESULT_SUCCESS = 3;
-
-    public const RESULTS = [
-         self::RESULT_NOT_FOUND => 'Not found in time revision',
-         self::RESULT_EQUALS_IN_TIME => 'Revision in time property equals current revision property',
-         self::RESULT_SUCCESS => 'New revision with in time revision property data',
+    public const array RESULTS = [
+        self::RESULT_NOT_FOUND => 'Not found in time revision',
+        self::RESULT_EQUALS_IN_TIME => 'Revision in time property equals current revision property',
+        self::RESULT_SUCCESS => 'New revision with in time revision property data',
     ];
 
     public function __construct(
         private readonly RevisionService $revisionService,
         private readonly DataService $dataService,
         Registry $doctrine,
-        private readonly IndexService $indexService
+        private readonly IndexService $indexService,
     ) {
         parent::__construct();
         $this->em = $doctrine->getManager();
     }
 
+    #[\Override]
     protected function configure(): void
     {
         $this
@@ -54,18 +61,20 @@ final class TimeMachineCommand extends Command
         ;
     }
 
+    #[\Override]
     protected function initialize(InputInterface $input, OutputInterface $output): void
     {
         $this->style = new SymfonyStyle($input, $output);
         $this->style->title('EMS - Revision - TimeMachine');
     }
 
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $propertyPath = \strval($input->getArgument('propertyPath'));
+        $propertyPath = (string) $input->getArgument('propertyPath');
         $path = \explode('.', $propertyPath);
-        $emsLink = EMSLink::fromText(\strval($input->getArgument('emsLink')));
-        $dateTime = DateTime::create(\strval($input->getArgument('datetime')));
+        $emsLink = EMSLink::fromText((string) $input->getArgument('emsLink'));
+        $dateTime = DateTime::create((string) $input->getArgument('datetime'));
 
         $this->style->note(\sprintf('Searching for history revision on %s', $dateTime->format('d/m/Y H:i:s')));
 

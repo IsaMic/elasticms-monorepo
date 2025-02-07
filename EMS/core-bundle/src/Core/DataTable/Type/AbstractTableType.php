@@ -15,6 +15,7 @@ abstract class AbstractTableType implements DataTableTypeInterface
 
     public const LOAD_MAX_ROWS = 400;
 
+    #[\Override]
     public function configureOptions(OptionsResolver $optionsResolver): void
     {
     }
@@ -22,29 +23,34 @@ abstract class AbstractTableType implements DataTableTypeInterface
     /**
      * @param array<mixed> $options
      */
+    #[\Override]
     public function getContext(array $options): mixed
     {
         return null;
     }
 
+    #[\Override]
     public function getExportFormats(): array
     {
         return [];
     }
 
+    #[\Override]
     public function getHash(): string
     {
-        return Hash::string(\get_class($this));
+        return Hash::string(static::class);
     }
 
     /**
      * @return string[]
      */
+    #[\Override]
     public function getRoles(): array
     {
         return [Roles::ROLE_USER];
     }
 
+    #[\Override]
     public function setFormat(DataTableFormat $format): void
     {
         $this->format = $format;

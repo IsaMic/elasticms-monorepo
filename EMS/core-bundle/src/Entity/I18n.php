@@ -1,64 +1,28 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Entity;
 
-use Doctrine\ORM\Mapping as ORM;
 use EMS\CommonBundle\Entity\CreatedModifiedTrait;
+use EMS\CommonBundle\Entity\IdentifierIntegerTrait;
 use EMS\CoreBundle\Entity\Helper\JsonClass;
 use EMS\CoreBundle\Entity\Helper\JsonDeserializer;
-use EMS\Helpers\Standard\DateTime;
 
-/**
- * I18n.
- *
- * @ORM\Table(name="i18n")
- *
- * @ORM\Entity()
- *
- * @ORM\HasLifecycleCallbacks()
- */
 class I18n extends JsonDeserializer implements \JsonSerializable, EntityInterface
 {
     use CreatedModifiedTrait;
-    /**
-     * @ORM\Column(name="id", type="integer")
-     *
-     * @ORM\Id
-     *
-     * @ORM\GeneratedValue(strategy="AUTO")
-     */
-    private int $id;
+    use IdentifierIntegerTrait;
 
-    /**
-     * @var string
-     *
-     * @ORM\Column(name="identifier", type="string", unique=true, length=200)
-     *
-     * @ORM\OrderBy({"identifier" = "ASC"})
-     */
+    /** @var string */
     protected $identifier;
-
-    /**
-     * @var array<array{locale: string, text: string}>
-     *
-     * @ORM\Column(name="content", type="json")
-     */
+    /** @var array<array{locale: string, text: string}> */
     protected array $content = [];
 
     public function __construct()
     {
-        $this->created = DateTime::create('now');
-        $this->modified = DateTime::create('now');
-    }
-
-    /**
-     * Get id.
-     *
-     * @return int
-     */
-    public function getId()
-    {
-        return $this->id;
+        $this->created = new \DateTime();
+        $this->modified = new \DateTime();
     }
 
     /**
@@ -123,6 +87,7 @@ class I18n extends JsonDeserializer implements \JsonSerializable, EntityInterfac
         return $this->identifier;
     }
 
+    #[\Override]
     public function jsonSerialize(): JsonClass
     {
         $json = new JsonClass(\get_object_vars($this), self::class);
@@ -144,6 +109,7 @@ class I18n extends JsonDeserializer implements \JsonSerializable, EntityInterfac
         return $dashboard;
     }
 
+    #[\Override]
     public function getName(): string
     {
         return $this->identifier;

@@ -10,6 +10,7 @@ use EMS\CommonBundle\Helper\EmsFields;
 use EMS\CommonBundle\Storage\Service\StorageInterface;
 use EMS\CommonBundle\Storage\StorageManager;
 use EMS\CommonBundle\Twig\AssetRuntime;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -24,14 +25,18 @@ use Symfony\Component\HttpKernel\HttpKernelInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
+#[AsCommand(
+    name: Commands::CURL,
+    description: 'Curl an internal resource.',
+    hidden: false
+)]
 class CurlCommand extends AbstractCommand
 {
-    final public const ARGUMENT_URL = 'url';
-    final public const ARGUMENT_FILENAME = 'filename';
-    final public const OPTION_METHOD = 'method';
-    final public const OPTION_BASE_URL = 'base-url';
-    final public const OPTION_SAVE = 'save';
-    protected static $defaultName = Commands::CURL;
+    final public const string ARGUMENT_URL = 'url';
+    final public const string ARGUMENT_FILENAME = 'filename';
+    final public const string OPTION_METHOD = 'method';
+    final public const string OPTION_BASE_URL = 'base-url';
+    final public const string OPTION_SAVE = 'save';
     private ?SessionInterface $session = null;
 
     private string $url;
@@ -45,9 +50,9 @@ class CurlCommand extends AbstractCommand
         parent::__construct();
     }
 
+    #[\Override]
     protected function configure(): void
     {
-        $this->setDescription('Curl an internal resource');
         $this->addArgument(self::ARGUMENT_URL, InputArgument::REQUIRED, 'Absolute url to the resource');
         $this->addArgument(self::ARGUMENT_FILENAME, InputArgument::REQUIRED, 'Filename where to save the ouput');
         $this->addOption(self::OPTION_METHOD, null, InputOption::VALUE_OPTIONAL, 'HTTP method (GET, POST)', 'GET');
@@ -55,6 +60,7 @@ class CurlCommand extends AbstractCommand
         $this->addOption(self::OPTION_SAVE, null, InputOption::VALUE_NONE, 'Save the to the file storages');
     }
 
+    #[\Override]
     protected function initialize(InputInterface $input, OutputInterface $output): void
     {
         parent::initialize($input, $output);
@@ -65,6 +71,7 @@ class CurlCommand extends AbstractCommand
         $this->save = $this->getOptionBool(self::OPTION_SAVE);
     }
 
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $this->performRequest();
@@ -104,7 +111,7 @@ class CurlCommand extends AbstractCommand
 
             return '';
         });
-        $response = $kernel->handle($request, HttpKernelInterface::MASTER_REQUEST, false);
+        $response = $kernel->handle($request, HttpKernelInterface::MAIN_REQUEST, false);
         $length = \ob_get_length();
         \ob_end_clean();
 

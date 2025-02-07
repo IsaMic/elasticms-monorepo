@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Controller\ContentManagement;
 
 use EMS\CommonBundle\Contracts\Log\LocalizedLoggerInterface;
@@ -18,7 +20,6 @@ use SensioLabs\AnsiConverter\AnsiToHtmlConverter;
 use SensioLabs\AnsiConverter\Theme\Theme;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\JsonResponse as SymfonyJsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -36,7 +37,7 @@ class JobController extends AbstractController
         private readonly DataTableFactory $dataTableFactory,
         private readonly LocalizedLoggerInterface $logger,
         private readonly bool $triggerJobFromWeb,
-        private readonly string $templateNamespace
+        private readonly string $templateNamespace,
     ) {
     }
 
@@ -50,7 +51,7 @@ class JobController extends AbstractController
             match ($this->getClickedButtonName($form)) {
                 TableAbstract::DELETE_ACTION => $this->jobService->deleteByIds(...$table->getSelected()),
                 JobDataTableType::ACTION_DELETE_ALL => $this->jobService->clean(),
-                default => $this->logger->messageError(t('log.error.invalid_table_action', [], 'emsco-core'))
+                default => $this->logger->messageError(t('log.error.invalid_table_action', [], 'emsco-core')),
             };
 
             return $this->redirectToRoute('job.index');
@@ -74,7 +75,7 @@ class JobController extends AbstractController
         $encoder = new Encoder();
         $converter = new AnsiToHtmlConverter(new Theme());
 
-        if ('json' === $request->getRequestFormat() || 'json' === $request->getContentType()) {
+        if ('json' === $request->getRequestFormat() || 'json' === $request->getContentTypeFormat()) {
             $output = $request->query->getBoolean('output');
 
             return new JsonResponse([
@@ -123,7 +124,7 @@ class JobController extends AbstractController
         }
 
         if ($job->getStarted() && $job->getDone()) {
-            return new SymfonyJsonResponse('job already done');
+            return new JsonResponse('job already done');
         }
 
         if (false === $this->triggerJobFromWeb || $job->hasTag()) {
@@ -162,7 +163,7 @@ class JobController extends AbstractController
 
         return EmsCoreResponse::createJsonResponse($request, true, [
             'message' => \sprintf('job %d flagged has started', $job->getId()),
-            'job_id' => \strval($job->getId()),
+            'job_id' => (string) $job->getId(),
             'command' => $job->getCommand(),
             'output' => $job->getOutput(),
         ]);
@@ -194,8 +195,8 @@ class JobController extends AbstractController
             throw new \RuntimeException('Unexpected non string content');
         }
         $data = Json::decode($content);
-        $message = \strval($data['message'] ?? '');
-        $newLine = \boolval($data['new-line'] ?? false);
+        $message = (string) ($data['message'] ?? '');
+        $newLine = (bool) ($data['new-line'] ?? false);
         $this->jobService->write($job, $message, $newLine);
 
         return EmsCoreResponse::createJsonResponse($request, true);

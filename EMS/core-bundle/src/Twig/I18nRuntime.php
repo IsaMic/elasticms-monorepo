@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Twig;
 
 use EMS\CoreBundle\Core\User\UserManager;
@@ -12,14 +14,14 @@ class I18nRuntime implements RuntimeExtensionInterface
 {
     public function __construct(
         private readonly I18nService $i18nService,
-        private readonly UserManager $userManager
+        private readonly UserManager $userManager,
     ) {
     }
 
-    public function i18n(string $key, string $locale = null): string
+    public function i18n(string $key, ?string $locale = null): string
     {
         $i18n = $this->i18nService->getAsList($key);
-        $locale = $locale ?? $this->userManager->getUserLanguage();
+        $locale ??= $this->userManager->getUserLanguage();
 
         return $i18n[$locale] ?? $i18n[User::DEFAULT_LOCALE] ?? $key;
     }
@@ -37,7 +39,7 @@ class I18nRuntime implements RuntimeExtensionInterface
 
         $content = [];
         \array_map(function ($element) use ($jsonDecode, &$content) {
-            if (!\is_string($element['locale'])) {
+            if ('' === $element['locale']) {
                 throw new \RuntimeException('Unexpected non string locale');
             }
             $content[$element['locale']] = $jsonDecode ? Json::decode($element['text']) : $element['text'];

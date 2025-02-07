@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Controller\ContentManagement;
 
 use EMS\CommonBundle\Helper\EmsFields;
@@ -23,7 +25,7 @@ class AssetController extends AbstractController
     {
     }
 
-    public function assetAction(string $hash, string $hash_config, string $filename, Request $request): Response
+    public function asset(string $hash, string $hash_config, string $filename, Request $request): Response
     {
         $this->closeSession($request);
         try {
@@ -33,7 +35,7 @@ class AssetController extends AbstractController
         }
     }
 
-    public function assetProcessorAction(Request $request, string $processor, string $hash): Response
+    public function assetProcessor(Request $request, string $processor, string $hash): Response
     {
         $this->closeSession($request);
         $assetConfig = $this->assetConfig[$processor] ?? [];
@@ -45,7 +47,7 @@ class AssetController extends AbstractController
             $assetConfig[EmsFields::ASSET_CONFIG_TYPE] = EmsFields::ASSET_CONFIG_TYPE_IMAGE;
         }
         $filename = $processor;
-        $quality = \intval($assetConfig[EmsFields::ASSET_CONFIG_QUALITY] ?? 0);
+        $quality = (int) ($assetConfig[EmsFields::ASSET_CONFIG_QUALITY] ?? 0);
         if (EmsFields::ASSET_CONFIG_TYPE_IMAGE === $assetConfig[EmsFields::ASSET_CONFIG_TYPE] && !isset($assetConfig[EmsFields::ASSET_CONFIG_MIME_TYPE])) {
             $assetConfig[EmsFields::ASSET_CONFIG_MIME_TYPE] = 0 === $quality ? 'image/png' : 'image/jpeg';
         }

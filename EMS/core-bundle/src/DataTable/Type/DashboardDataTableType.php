@@ -24,20 +24,25 @@ class DashboardDataTableType extends AbstractEntityTableType
         parent::__construct($entityService);
     }
 
+    #[\Override]
     public function build(EntityTable $table): void
     {
         $this->addColumnsOrderLabelName($table);
         $table->getColumnByName('label')?->setItemIconCallback(fn (Dashboard $dashboard) => $dashboard->getIcon());
 
-        $table->addColumnDefinition(new TemplateBlockTableColumn(
-            label: t('field.type', [], 'emsco-core'),
-            blockName: 'dashboardType',
-            template: "@$this->templateNamespace/datatable/template_block_columns.html.twig")
+        $table->addColumnDefinition(
+            new TemplateBlockTableColumn(
+                label: t('field.type', [], 'emsco-core'),
+                blockName: 'dashboardType',
+                template: "@$this->templateNamespace/datatable/template_block_columns.html.twig"
+            )
         );
-        $table->addColumnDefinition(new TemplateBlockTableColumn(
-            label: t('field.definition', [], 'emsco-core'),
-            blockName: 'dashboardDefinition',
-            template: "@$this->templateNamespace/datatable/template_block_columns.html.twig")
+        $table->addColumnDefinition(
+            new TemplateBlockTableColumn(
+                label: t('field.definition', [], 'emsco-core'),
+                blockName: 'dashboardDefinition',
+                template: "@$this->templateNamespace/datatable/template_block_columns.html.twig"
+            )
         );
 
         $this->addItemEdit($table, Routes::DASHBOARD_ADMIN_EDIT);
@@ -64,6 +69,7 @@ class DashboardDataTableType extends AbstractEntityTableType
             ->addTableActionDelete($table, 'dashboard');
     }
 
+    #[\Override]
     public function getRoles(): array
     {
         return [Roles::ROLE_ADMIN];

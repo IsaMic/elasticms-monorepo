@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Service;
 
 use Doctrine\Bundle\DoctrineBundle\Registry;
@@ -42,7 +44,7 @@ use function Symfony\Component\Translation\t;
 
 class ContentTypeService implements EntityServiceInterface
 {
-    private const CONTENT_TYPE_AGGREGATION_NAME = 'content-types';
+    private const string CONTENT_TYPE_AGGREGATION_NAME = 'content-types';
     /** @var ContentType[] */
     protected array $orderedContentTypes = [];
     /** @var ContentType[] */
@@ -60,8 +62,8 @@ class ContentTypeService implements EntityServiceInterface
         private readonly TokenStorageInterface $tokenStorage,
         private readonly TranslatorInterface $translator,
         private readonly RouterInterface $router,
-        private readonly ?string $circleContentTypeName)
-    {
+        private readonly ?string $circleContentTypeName
+    ) {
     }
 
     public function getChildByPath(FieldType $fieldType, string $path, bool $skipVirtualFields = false): FieldType|false
@@ -139,7 +141,7 @@ class ContentTypeService implements EntityServiceInterface
         ]);
     }
 
-    public function getIndex(ContentType $contentType, Environment $environment = null): string
+    public function getIndex(ContentType $contentType, ?Environment $environment = null): string
     {
         $environment ??= $contentType->giveEnvironment();
 
@@ -225,11 +227,10 @@ class ContentTypeService implements EntityServiceInterface
     public function giveByName(string $name): ContentType
     {
         $this->loadEnvironment();
+        $contentType = $this->contentTypeArrayByName[$name] ?? null;
 
-        $contentType = $this->contentTypeArrayByName[$name] ?? false;
-
-        if (!$contentType) {
-            throw new \RuntimeException(\sprintf('Could not find contentType with name %s', $name));
+        if (null === $contentType) {
+            throw new \RuntimeException(\sprintf('Could not find contentType with the name %s', $name));
         }
 
         return $contentType;
@@ -240,6 +241,12 @@ class ContentTypeService implements EntityServiceInterface
         $this->loadEnvironment();
 
         return $this->contentTypeArrayByName[$name] ?? false;
+    }
+
+    /** @return ContentType[] */
+    public function getByNames(string ...$names): array
+    {
+        return $this->contentTypeRepository->findBy(['name' => $names]);
     }
 
     /**
@@ -364,7 +371,7 @@ class ContentTypeService implements EntityServiceInterface
         return $this->importContentType($updatedContentType);
     }
 
-    public function contentTypeFromJson(string $json, Environment $environment = null, ContentType $contentType = null): ContentType
+    public function contentTypeFromJson(string $json, ?Environment $environment = null, ?ContentType $contentType = null): ContentType
     {
         $meta = JsonClass::fromJsonString($json);
         $contentType = $meta->jsonDeserialize($contentType);
@@ -564,7 +571,7 @@ class ContentTypeService implements EntityServiceInterface
                 color: $contentType->getColor()
             );
             if (isset($counters[$contentType->getId()])) {
-                $menuEntry->setBadge(\strval($counters[$contentType->getId()]));
+                $menuEntry->setBadge((string) $counters[$contentType->getId()]);
             }
             $this->addMenuSearchLinks($contentType, $menuEntry, $circleContentType, $user);
             $this->addMenuViewLinks($contentType, $menuEntry);
@@ -634,26 +641,26 @@ class ContentTypeService implements EntityServiceInterface
         $draftInProgress->setBadge($menuEntry->getBadge(), $contentType->getColor());
     }
 
+    #[\Override]
     public function isSortable(): bool
     {
         return true;
     }
 
     /**
-     * @param mixed|null $context
-     *
      * @return ContentType[]
      */
-    public function get(int $from, int $size, ?string $orderField, string $orderDirection, string $searchValue, $context = null): array
+    #[\Override]
+    public function get(int $from, int $size, ?string $orderField, string $orderDirection, string $searchValue, mixed $context = null): array
     {
         if (null !== $context) {
             throw new \RuntimeException('Unexpected non-null object');
         }
-        $contentTypeRepository = $this->getContentTypeRepository();
 
-        return $contentTypeRepository->get($from, $size, $orderField, $orderDirection, $searchValue);
+        return $this->getContentTypeRepository()->get($from, $size, $orderField, $orderDirection, $searchValue);
     }
 
+    #[\Override]
     public function getEntityName(): string
     {
         return 'content-type';
@@ -662,6 +669,7 @@ class ContentTypeService implements EntityServiceInterface
     /**
      * @return string[]
      */
+    #[\Override]
     public function getAliasesName(): array
     {
         return [
@@ -673,7 +681,8 @@ class ContentTypeService implements EntityServiceInterface
         ];
     }
 
-    public function count(string $searchValue = '', $context = null): int
+    #[\Override]
+    public function count(string $searchValue = '', mixed $context = null): int
     {
         if (null !== $context) {
             throw new \RuntimeException('Unexpected non-null object');
@@ -683,6 +692,7 @@ class ContentTypeService implements EntityServiceInterface
         return $contentTypeRepository->counter($searchValue);
     }
 
+    #[\Override]
     public function getByItemName(string $name): ?EntityInterface
     {
         $contentTypeRepository = $this->getContentTypeRepository();
@@ -690,6 +700,7 @@ class ContentTypeService implements EntityServiceInterface
         return $contentTypeRepository->findByName($name);
     }
 
+    #[\Override]
     public function updateEntityFromJson(EntityInterface $entity, string $json): EntityInterface
     {
         if (!$entity instanceof ContentType) {
@@ -699,6 +710,7 @@ class ContentTypeService implements EntityServiceInterface
         return $this->updateFromJson($entity, $json, false, false);
     }
 
+    #[\Override]
     public function createEntityFromJson(string $json, ?string $name = null): EntityInterface
     {
         $contentType = $this->contentTypeFromJson($json);
@@ -750,13 +762,11 @@ class ContentTypeService implements EntityServiceInterface
         }
 
         $versionTags = $contentType->getVersionTags();
-        $versionTagsLabels = \array_map(function (string $versionTag) {
-            return $this->translator->trans(
-                'field.revision_version_tag',
-                ['%version_tag%' => $versionTag],
-                'emsco-core'
-            );
-        }, $versionTags);
+        $versionTagsLabels = \array_map(fn (string $versionTag) => $this->translator->trans(
+            'field.revision_version_tag',
+            ['%version_tag%' => $versionTag],
+            'emsco-core'
+        ), $versionTags);
 
         $emptyLabel = $this->translator->trans('field.revision_version_tag_empty', [], 'emsco-core');
         $emptyValue = ($notBlankNewVersion ? Revision::VERSION_BLANK : null);
@@ -819,6 +829,7 @@ class ContentTypeService implements EntityServiceInterface
         }
     }
 
+    #[\Override]
     public function deleteByItemName(string $name): string
     {
         $contentTypeRepository = $this->getContentTypeRepository();
@@ -832,7 +843,7 @@ class ContentTypeService implements EntityServiceInterface
         $id = $contentType->getId();
         $contentTypeRepository->delete($contentType);
 
-        return \strval($id);
+        return (string) $id;
     }
 
     public function switchDefaultEnvironment(ContentType $contentType, Environment $target, string $username): void

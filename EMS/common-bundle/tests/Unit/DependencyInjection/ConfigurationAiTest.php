@@ -13,6 +13,7 @@ final class ConfigurationAiTest extends TestCase
 {
     private Configuration $configuration;
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->configuration = new Configuration();
@@ -37,7 +38,6 @@ final class ConfigurationAiTest extends TestCase
             'excluded_content_types' => [],
             'core_api' => [
                 'headers' => [],
-                'max_connections' => 6,
                 'verify' => true,
                 'timeout' => 30,
             ],
@@ -58,6 +58,7 @@ final class ConfigurationAiTest extends TestCase
             'request' => [
                 'trusted_ips' => [],
             ],
+            'vite_dev_server' => null,
         ];
 
         $this->assertEquals($expected, $config);

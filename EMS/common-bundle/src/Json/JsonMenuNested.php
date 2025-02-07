@@ -22,7 +22,6 @@ final class JsonMenuNested implements \IteratorAggregate, \Countable, \Stringabl
     private array $object;
     /** @var JsonMenuNested[] */
     private array $children = [];
-    /** @var ?JsonMenuNested */
     private ?JsonMenuNested $parent = null;
     /** @var string[] */
     private array $descendantIds = [];
@@ -34,7 +33,7 @@ final class JsonMenuNested implements \IteratorAggregate, \Countable, \Stringabl
     {
         $this->id = $data['id'];
         $this->type = $data['type'];
-        $this->label = \strval($data['label'] ?? '');
+        $this->label = (string) ($data['label'] ?? '');
         $this->object = $data['object'] ?? [];
 
         $children = $data['children'] ?? [];
@@ -65,13 +64,14 @@ final class JsonMenuNested implements \IteratorAggregate, \Countable, \Stringabl
     public static function fromStructure(string|array $structure): JsonMenuNested
     {
         return new self([
-           'id' => '_root',
-           'type' => '_root',
-           'label' => '_root',
-           'children' => \is_string($structure) ? Json::decode($structure) : $structure,
+            'id' => '_root',
+            'type' => '_root',
+            'label' => '_root',
+            'children' => \is_string($structure) ? Json::decode($structure) : $structure,
         ]);
     }
 
+    #[\Override]
     public function __toString(): string
     {
         return $this->label;
@@ -130,6 +130,7 @@ final class JsonMenuNested implements \IteratorAggregate, \Countable, \Stringabl
     /**
      * @return \Traversable<JsonMenuNested>
      */
+    #[\Override]
     public function getIterator(): \Traversable
     {
         foreach ($this->children as $child) {
@@ -141,6 +142,7 @@ final class JsonMenuNested implements \IteratorAggregate, \Countable, \Stringabl
         }
     }
 
+    #[\Override]
     public function count(): int
     {
         return \count($this->children);

@@ -14,11 +14,12 @@ use EMS\CommonBundle\Elasticsearch\Response\ResponseInterface;
 use EMS\CommonBundle\Search\Search as SearchObject;
 use PHPUnit\Framework\TestCase;
 
-final class SearchAiTest extends TestCase
+class SearchAiTest extends TestCase
 {
     private Client $client;
     private Search $search;
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->client = $this->createMock(Client::class);

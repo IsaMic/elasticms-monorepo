@@ -1,17 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Form\Field;
 
 use EMS\CoreBundle\Service\WysiwygStylesSetService;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-class WysiwygStylesSetPickerType extends SelectPickerType
+class WysiwygStylesSetPickerType extends Select2Type
 {
     public function __construct(private readonly WysiwygStylesSetService $stylesSetService)
     {
         parent::__construct();
     }
 
+    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         $choices = $this->getExistingStylesSets();
@@ -24,8 +27,8 @@ class WysiwygStylesSetPickerType extends SelectPickerType
             ],
             'choice_attr' => fn ($category, $key, $index) => // TODO: it would be nice to translate the roles
 [
-                    'data-content' => "<div class='text-".$category."'><i class='fa fa-css3'></i>&nbsp;&nbsp;".$key.'</div>',
-            ],
+    'data-content' => "<div class='text-".$category."'><i class='fa fa-css3'></i>&nbsp;&nbsp;".$key.'</div>',
+],
             'choice_value' => fn ($value) => $value,
         ]);
     }

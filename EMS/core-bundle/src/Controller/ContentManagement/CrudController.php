@@ -1,13 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Controller\ContentManagement;
 
 use EMS\CommonBundle\Helper\EmsFields;
+use EMS\CoreBundle\Core\UI\FlashMessageLogger;
 use EMS\CoreBundle\Entity\ContentType;
 use EMS\CoreBundle\Entity\User;
 use EMS\CoreBundle\Exception\DataStateException;
 use EMS\CoreBundle\Service\ContentTypeService;
 use EMS\CoreBundle\Service\DataService;
+use EMS\CoreBundle\Service\Revision\RevisionService;
 use EMS\CoreBundle\Service\UserService;
 use EMS\Helpers\Standard\Json;
 use EMS\Helpers\Standard\Type;
@@ -22,11 +26,17 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class CrudController extends AbstractController
 {
-    public function __construct(private readonly LoggerInterface $logger, private readonly UserService $userService, private readonly DataService $dataService, private readonly ContentTypeService $contentTypeService, private readonly string $templateNamespace)
-    {
+    public function __construct(
+        private readonly LoggerInterface $logger,
+        private readonly UserService $userService,
+        private readonly DataService $dataService,
+        private readonly ContentTypeService $contentTypeService,
+        private readonly FlashMessageLogger $flashMessageLogger,
+        private readonly RevisionService $revisionService,
+    ) {
     }
 
-    public function createAction(?string $ouuid, string $name, Request $request): Response
+    public function create(?string $ouuid, string $name, Request $request): Response
     {
         $contentType = $this->giveContentType($name);
         if (!$contentType->giveEnvironment()->getManaged()) {
@@ -55,21 +65,31 @@ class CrudController extends AbstractController
                 EmsFields::LOG_EXCEPTION_FIELD => $e,
             ]);
 
-            return $this->render("@$this->templateNamespace/ajax/notification.json.twig", [
+            return $this->flashMessageLogger->buildJsonResponse([
                 'success' => false,
                 'ouuid' => $ouuid,
                 'type' => $contentType->getName(),
             ]);
         }
 
-        return $this->render("@$this->templateNamespace/ajax/notification.json.twig", [
-                'success' => true,
-                'revision_id' => $newRevision->getId(),
-                'ouuid' => $newRevision->getOuuid(),
+        return $this->flashMessageLogger->buildJsonResponse([
+            'success' => true,
+            'revision_id' => $newRevision->getId(),
+            'ouuid' => $newRevision->getOuuid(),
         ]);
     }
 
-    public function getAction(string $ouuid, string $name): Response
+    public function autoSave(Request $request, int $revisionId): JsonResponse
+    {
+        $this->revisionService->autoSave(
+            revision: $this->revisionService->getByRevisionId($revisionId),
+            autoSave: Json::decode(Type::string($request->getContent()))
+        );
+
+        return $this->flashMessageLogger->buildJsonResponse(['success' => true]);
+    }
+
+    public function get(string $ouuid, string $name): Response
     {
         $contentType = $this->giveContentType($name);
         try {
@@ -85,59 +105,69 @@ class CrudController extends AbstractController
                 ]);
             }
 
-            return $this->render("@$this->templateNamespace/ajax/revision.json.twig", [
-                    'success' => false,
-                    'ouuid' => $ouuid,
-                    'type' => $contentType->getName(),
+            return $this->flashMessageLogger->buildJsonResponse([
+                'success' => false,
+                'ouuid' => $ouuid,
+                'type' => $contentType->getName(),
             ]);
         }
 
-        return $this->render("@$this->templateNamespace/ajax/revision.json.twig", [
-                'success' => true,
-                'revision' => $revision->getRawData(),
-                'ouuid' => $revision->getOuuid(),
-                'id' => $revision->getId(),
+        return $this->flashMessageLogger->buildJsonResponse([
+            'success' => true,
+            'revision' => $revision->getRawData(),
+            'ouuid' => $revision->getOuuid(),
+            'id' => $revision->getId(),
         ]);
     }
 
-    /**
-     * @param int $id
-     */
-    public function finalizeAction($id, string $name): Response
+    public function getDraft(int $revisionId): JsonResponse
     {
-        $contentType = $this->giveContentType($name);
-        if (!$contentType->giveEnvironment()->getManaged()) {
-            throw new BadRequestHttpException('You can not finalize content for a managed content type');
-        }
+        $revision = $this->revisionService->getByRevisionId($revisionId);
 
-        $out = [
-            'success' => 'false',
-        ];
-        try {
-            $revision = $this->dataService->getRevisionById($id, $contentType);
-            $newRevision = $this->dataService->finalizeDraft($revision);
-            $out['success'] = !$newRevision->getDraft();
-            $out['ouuid'] = $newRevision->getOuuid();
-        } catch (\Exception $e) {
-            if (($e instanceof NotFoundHttpException) or ($e instanceof DataStateException)) {
-                throw $e;
-            } else {
-                $this->logger->error('log.crud.finalize_error', [
-                    EmsFields::LOG_CONTENTTYPE_FIELD => $contentType->getName(),
-                    EmsFields::LOG_ERROR_MESSAGE_FIELD => $e->getMessage(),
-                    EmsFields::LOG_EXCEPTION_FIELD => $e,
-                ]);
-            }
-            $out['success'] = false;
-        }
-
-        return $this->render("@$this->templateNamespace/ajax/notification.json.twig", $out);
+        return $this->flashMessageLogger->buildJsonResponse([
+            'success' => true,
+            'id' => $revision->getId(),
+            'data' => $revision->getDraftData(),
+        ]);
     }
 
-    /**
-     * @param int $id
-     */
-    public function discardAction($id, string $name): Response
+    public function finalize(Request $request, int $id, string $name): Response
+    {
+        try {
+            $contentType = $this->giveContentType($name)->validate();
+            $revision = $this->dataService->getRevisionById($id, $contentType);
+
+            $rawData = Json::decode(Type::string($request->getContent()));
+            if (\count($rawData) > 0) {
+                $this->revisionService->autoSave($revision, $rawData);
+            }
+
+            $revision->autoSaveToRawData();
+
+            $newRevision = $this->dataService->finalizeDraft($revision);
+
+            $this->dataService->refresh($contentType->giveEnvironment());
+
+            return $this->flashMessageLogger->buildJsonResponse([
+                'success' => !$newRevision->getDraft(),
+                'ouuid' => $newRevision->getOuuid(),
+            ]);
+        } catch (\Exception $e) {
+            if ($e instanceof NotFoundHttpException || $e instanceof DataStateException) {
+                throw $e;
+            }
+
+            $this->logger->error('log.crud.finalize_error', [
+                EmsFields::LOG_CONTENTTYPE_FIELD => $contentType->getName(),
+                EmsFields::LOG_ERROR_MESSAGE_FIELD => $e->getMessage(),
+                EmsFields::LOG_EXCEPTION_FIELD => $e,
+            ]);
+
+            return $this->flashMessageLogger->buildJsonResponse(['success' => false]);
+        }
+    }
+
+    public function discard(int $id, string $name): Response
     {
         $contentType = $this->giveContentType($name);
         if (!$contentType->giveEnvironment()->getManaged()) {
@@ -160,56 +190,52 @@ class CrudController extends AbstractController
                 ]);
             }
 
-            return $this->render("@$this->templateNamespace/ajax/notification.json.twig", [
-                    'success' => $isDiscard,
-                    'type' => $contentType->getName(),
-                    'revision_id' => $id,
+            return $this->flashMessageLogger->buildJsonResponse([
+                'success' => $isDiscard,
+                'type' => $contentType->getName(),
+                'revision_id' => $id,
             ]);
         }
 
-        return $this->render("@$this->templateNamespace/ajax/notification.json.twig", [
-                'success' => $isDiscard,
-                'type' => $contentType->getName(),
-                'revision_id' => $revision->getId(),
+        return $this->flashMessageLogger->buildJsonResponse([
+            'success' => $isDiscard,
+            'type' => $contentType->getName(),
+            'revision_id' => $revision->getId(),
         ]);
     }
 
-    public function deleteAction(string $ouuid, string $name): Response
+    public function delete(string $ouuid, string $name): Response
     {
-        $contentType = $this->giveContentType($name);
         $isDeleted = false;
-        if (!$contentType->giveEnvironment()->getManaged()) {
-            throw new BadRequestHttpException('You can not delete content for a managed content type');
-        }
 
         try {
-            $this->dataService->delete($contentType->getName(), $ouuid);
+            $this->dataService->delete($name, $ouuid);
             $this->logger->notice('log.crud.deleted', [
-                EmsFields::LOG_CONTENTTYPE_FIELD => $contentType->getName(),
+                EmsFields::LOG_CONTENTTYPE_FIELD => $name,
                 EmsFields::LOG_OUUID_FIELD => $ouuid,
             ]);
             $isDeleted = true;
         } catch (\Exception $e) {
-            if (($e instanceof NotFoundHttpException) || ($e instanceof BadRequestHttpException)) {
+            if ($e instanceof NotFoundHttpException || $e instanceof BadRequestHttpException) {
                 throw $e;
-            } else {
-                $this->logger->error('log.crud.delete_error', [
-                    EmsFields::LOG_CONTENTTYPE_FIELD => $contentType->getName(),
-                    EmsFields::LOG_OUUID_FIELD => $ouuid,
-                    EmsFields::LOG_ERROR_MESSAGE_FIELD => $e->getMessage(),
-                    EmsFields::LOG_EXCEPTION_FIELD => $e,
-                ]);
             }
+
+            $this->logger->error('log.crud.delete_error', [
+                EmsFields::LOG_CONTENTTYPE_FIELD => $name,
+                EmsFields::LOG_OUUID_FIELD => $ouuid,
+                EmsFields::LOG_ERROR_MESSAGE_FIELD => $e->getMessage(),
+                EmsFields::LOG_EXCEPTION_FIELD => $e,
+            ]);
         }
 
-        return $this->render("@$this->templateNamespace/ajax/notification.json.twig", [
-                'success' => $isDeleted,
-                'ouuid' => $ouuid,
-                'type' => $contentType->getName(),
+        return $this->flashMessageLogger->buildJsonResponse([
+            'success' => $isDeleted,
+            'ouuid' => $ouuid,
+            'type' => $name,
         ]);
     }
 
-    public function replaceAction(string $ouuid, string $name, Request $request): Response
+    public function replace(string $ouuid, string $name, Request $request): Response
     {
         $contentType = $this->giveContentType($name);
         if (!$contentType->giveEnvironment()->getManaged()) {
@@ -237,23 +263,23 @@ class CrudController extends AbstractController
                 ]);
             }
 
-            return $this->render("@$this->templateNamespace/ajax/notification.json.twig", [
-                    'success' => $isReplaced,
-                    'ouuid' => $ouuid,
-                    'type' => $contentType->getName(),
-                    'revision_id' => null,
-            ]);
-        }
-
-        return $this->render("@$this->templateNamespace/ajax/notification.json.twig", [
+            return $this->flashMessageLogger->buildJsonResponse([
                 'success' => $isReplaced,
                 'ouuid' => $ouuid,
                 'type' => $contentType->getName(),
-                'revision_id' => $newDraft->getId(),
+                'revision_id' => null,
+            ]);
+        }
+
+        return $this->flashMessageLogger->buildJsonResponse([
+            'success' => $isReplaced,
+            'ouuid' => $ouuid,
+            'type' => $contentType->getName(),
+            'revision_id' => $newDraft->getId(),
         ]);
     }
 
-    public function mergeAction(string $ouuid, string $name, Request $request): Response
+    public function merge(string $ouuid, string $name, Request $request): Response
     {
         $contentType = $this->giveContentType($name);
         if (!$contentType->giveEnvironment()->getManaged()) {
@@ -281,26 +307,26 @@ class CrudController extends AbstractController
             }
             $isMerged = false;
 
-            return $this->render("@$this->templateNamespace/ajax/notification.json.twig", [
-                    'success' => $isMerged,
-                    'ouuid' => $ouuid,
-                    'type' => $contentType->getName(),
-                    'revision_id' => null,
-            ]);
-        }
-
-        return $this->render("@$this->templateNamespace/ajax/notification.json.twig", [
+            return $this->flashMessageLogger->buildJsonResponse([
                 'success' => $isMerged,
                 'ouuid' => $ouuid,
                 'type' => $contentType->getName(),
-                'revision_id' => $newDraft->getId(),
+                'revision_id' => null,
+            ]);
+        }
+
+        return $this->flashMessageLogger->buildJsonResponse([
+            'success' => $isMerged,
+            'ouuid' => $ouuid,
+            'type' => $contentType->getName(),
+            'revision_id' => $newDraft->getId(),
         ]);
     }
 
-    public function testAction(): Response
+    public function test(): Response
     {
-        return $this->render("@$this->templateNamespace/ajax/notification.json.twig", [
-                'success' => true,
+        return $this->flashMessageLogger->buildJsonResponse([
+            'success' => true,
         ]);
     }
 
@@ -308,9 +334,12 @@ class CrudController extends AbstractController
     {
         $contentType = $this->giveContentType($name);
 
-        return $this->render("@$this->templateNamespace/ajax/contenttype_info.json.twig", [
-                'success' => true,
-                'contentType' => $contentType,
+        return $this->flashMessageLogger->buildJsonResponse([
+            'success' => true,
+            'singular_name' => $contentType->getSingularName(),
+            'plural_name' => $contentType->getPluralName(),
+            'default_alias' => $contentType->giveEnvironment()->getAlias(),
+            'default_name' => $contentType->giveEnvironment()->getName(),
         ]);
     }
 
@@ -362,18 +391,18 @@ class CrudController extends AbstractController
             $revision = $this->dataService->replaceData($revision, $rawData, $replaceOrMerge);
         }
 
-        $this->dataService->finalizeDraft($revision, $form);
+        $this->dataService->finalizeDraft($revision);
 
         if ($request->query->getBoolean('refresh')) {
             $this->dataService->refresh($revision->giveContentType()->giveEnvironment());
         }
 
-        return new JsonResponse(Json::decode($this->renderView("@$this->templateNamespace/ajax/notification.json.twig", [
+        return $this->flashMessageLogger->buildJsonResponse([
             'success' => !$revision->getDraft(),
             'ouuid' => $revision->getOuuid(),
             'type' => $revision->giveContentType()->getName(),
             'revision_id' => $revision->getId(),
-        ])));
+        ]);
     }
 
     private function giveContentType(string $contentTypeName): ContentType

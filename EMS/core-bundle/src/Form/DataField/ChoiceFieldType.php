@@ -1,10 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Form\DataField;
 
 use EMS\CoreBundle\Entity\DataField;
 use EMS\CoreBundle\Entity\FieldType;
 use EMS\CoreBundle\Form\Field\AnalyzerPickerType;
+use EMS\Helpers\Standard\Json;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
@@ -18,19 +21,19 @@ class ChoiceFieldType extends DataFieldType
 {
     private ?int $fakeIndex = null;
 
+    #[\Override]
     public function getLabel(): string
     {
         return 'Choice field';
     }
 
+    #[\Override]
     public static function getIcon(): string
     {
         return 'glyphicon glyphicon-check';
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function buildObjectArray(DataField $data, array &$out): void
     {
         if (!$data->giveFieldType()->getDeleted()) {
@@ -56,9 +59,10 @@ class ChoiceFieldType extends DataFieldType
     }
 
     /**
-     * @param FormBuilderInterface<FormBuilderInterface> $builder
-     * @param array<string, mixed>                       $options
+     * @param FormBuilderInterface<mixed> $builder
+     * @param array<string, mixed>        $options
      */
+    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         /** @var FieldType $fieldType */
@@ -66,22 +70,23 @@ class ChoiceFieldType extends DataFieldType
         $choices = $this->buildChoices($options);
 
         $builder->add('value', ChoiceType::class, [
-                'label' => ($options['label'] ?? $fieldType->getName()),
-                'required' => false,
-                'disabled' => $this->isDisabled($options),
-                'choices' => $choices,
-                'empty_data' => $options['multiple'] ? [] : null,
-                'multiple' => $options['multiple'],
-                'expanded' => $options['expanded'],
-                'placeholder' => $options['placeholder'] ?? '',
-                'choice_attr' => $this->choiceAttr(...),
+            'label' => ($options['label'] ?? $fieldType->getName()),
+            'required' => false,
+            'disabled' => $this->isDisabled($options),
+            'choices' => $choices,
+            'empty_data' => $options['multiple'] ? [] : null,
+            'multiple' => $options['multiple'],
+            'expanded' => $options['expanded'],
+            'placeholder' => $options['placeholder'] ?? '',
+            'choice_attr' => $this->choiceAttr(...),
         ]);
     }
 
     /**
-     * @param FormInterface<FormInterface> $form
-     * @param array<string, mixed>         $options
+     * @param FormInterface<mixed> $form
+     * @param array<string, mixed> $options
      */
+    #[\Override]
     public function buildView(FormView $view, FormInterface $form, array $options): void
     {
         parent::buildView($view, $form, $options);
@@ -95,6 +100,7 @@ class ChoiceFieldType extends DataFieldType
         ];
     }
 
+    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         /* set the default option value for this kind of compound field */
@@ -109,9 +115,7 @@ class ChoiceFieldType extends DataFieldType
         $resolver->setDefault('placeholder', null);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function buildOptionsForm(FormBuilderInterface $builder, array $options): void
     {
         parent::buildOptionsForm($builder, $options);
@@ -119,15 +123,15 @@ class ChoiceFieldType extends DataFieldType
 
         // String specific display options
         $optionsForm->get('displayOptions')->add('multiple', CheckboxType::class, [
-                'required' => false,
+            'required' => false,
         ])->add('expanded', CheckboxType::class, [
             'required' => false,
         ])->add('select2', CheckboxType::class, [
             'required' => false,
         ])->add('choices', TextareaType::class, [
-                'required' => false,
+            'required' => false,
         ])->add('labels', TextareaType::class, [
-                'required' => false,
+            'required' => false,
         ])->add('placeholder', TextType::class, [
             'required' => false,
         ])->add('linked_collection', TextType::class, [
@@ -145,28 +149,26 @@ class ChoiceFieldType extends DataFieldType
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function getDefaultOptions(string $name): array
     {
         $out = parent::getDefaultOptions($name);
 
-        $out['mappingOptions']['index'] = 'not_analyzed';
+        $out['mappingOptions']['analyzer'] = 'keyword';
 
         return $out;
     }
 
+    #[\Override]
     public function getBlockPrefix(): string
     {
         return 'ems_choice';
     }
 
     /**
-     * {@inheritDoc}
-     *
      * @param array<mixed> $data
      */
+    #[\Override]
     public function reverseViewTransform($data, FieldType $fieldType): DataField
     {
         $value = $data['value'] ?? null;
@@ -178,9 +180,7 @@ class ChoiceFieldType extends DataFieldType
         return parent::reverseViewTransform($value, $fieldType);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function viewTransform(DataField $dataField)
     {
         $temp = parent::viewTransform($dataField);
@@ -193,26 +193,26 @@ class ChoiceFieldType extends DataFieldType
             } elseif (\is_array($temp)) {
                 $out = [];
                 foreach ($temp as $item) {
-                    if (\is_string($item) || \is_integer($item)) {
+                    if (\is_string($item) || \is_int($item)) {
                         $out[] = $item;
                     } else {
-                        $dataField->addMessage('Was not able to import the data : '.\json_encode($item, JSON_THROW_ON_ERROR));
+                        $dataField->addMessage('Was not able to import the data : '.Json::encode($item));
                     }
                 }
             } else {
-                $dataField->addMessage('Was not able to import the data : '.\json_encode($out));
+                $dataField->addMessage('Was not able to import the data : '.Json::encode($out));
                 $out = [];
             }
         } else { // not mutiple
             if (null === $temp) {
                 $out = null;
-            } elseif (\is_string($temp) || \is_integer($temp)) {
+            } elseif (\is_string($temp) || \is_int($temp)) {
                 $out = $temp;
-            } elseif (\is_array($temp) && null != $temp && (\is_string(\array_values($temp)[0]) || \is_integer(\array_values($temp)[0]))) {
+            } elseif (\is_array($temp) && null != $temp && (\is_string(\array_values($temp)[0]) || \is_int(\array_values($temp)[0]))) {
                 $out = \array_values($temp)[0];
-                $dataField->addMessage('Only the first item has been imported : '.\json_encode($temp, JSON_THROW_ON_ERROR));
+                $dataField->addMessage('Only the first item has been imported : '.Json::encode($temp));
             } else {
-                $dataField->addMessage('Was not able to import the data : '.\json_encode($temp, JSON_THROW_ON_ERROR));
+                $dataField->addMessage('Was not able to import the data : '.Json::encode($temp));
                 $out = [];
             }
         }

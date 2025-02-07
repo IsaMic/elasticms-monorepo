@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Elasticsearch;
 
 use EMS\CoreBundle\Service\AliasService;
@@ -55,7 +57,7 @@ class Indexer
      * When clean is true, the old index will be removed!
      * Use oldIndexRegex when the alias has multiple indexes attached and you only want to switch aggainst a regex.
      */
-    public function atomicSwitch(string $alias, string $newIndex, string $removeRegex = null, bool $clean = false): void
+    public function atomicSwitch(string $alias, string $newIndex, ?string $removeRegex = null, bool $clean = false): void
     {
         $indexesToAdd = [$newIndex];
         $indexesToRemove = [];

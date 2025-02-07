@@ -13,8 +13,9 @@ use EMS\SubmissionBundle\Handler\EmailHandler;
 use EMS\SubmissionBundle\Response\EmailHandleResponse;
 use EMS\SubmissionBundle\Response\PdfHandleResponse;
 
-final class PdfHandlerTest extends AbstractHandlerTest
+final class PdfHandlerTest extends AbstractHandlerTestCase
 {
+    #[\Override]
     protected function getHandler(): AbstractHandler
     {
         return $this->container->get('functional_test.emss.handler.pdf');

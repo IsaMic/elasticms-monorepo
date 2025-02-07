@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Form\Field;
 
 use EMS\CoreBundle\Entity\Environment;
@@ -13,36 +15,31 @@ class EnvironmentPickerType extends ChoiceType
     /** @var array<mixed> */
     private array $environments = [];
 
-    public function __construct(private readonly EnvironmentService $service)
+    public function __construct(private readonly EnvironmentService $environmentService)
     {
         parent::__construct();
     }
 
-    public function getBlockPrefix(): string
-    {
-        return 'selectpicker';
-    }
-
     /**
-     * @param FormBuilderInterface<FormBuilderInterface> $builder
-     * @param array<string, mixed>                       $options
+     * @param FormBuilderInterface<mixed> $builder
+     * @param array<string, mixed>        $options
      */
+    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $choices = [];
-
         if ($options['userPublishEnvironments']) {
-            $environments = $this->service->getUserPublishEnvironments()->toArray();
+            $environments = $this->environmentService->getUserPublishEnvironments()->toArray();
         } else {
-            $environments = $this->service->getEnvironments();
+            $environments = $this->environmentService->getEnvironments();
         }
 
         $defaultEnvironment = $options['defaultEnvironment'];
         if (\is_bool($defaultEnvironment)) {
-            $defaultEnvironmentIds = $this->service->getDefaultEnvironmentIds();
+            $defaultEnvironmentIds = $this->environmentService->getDefaultEnvironmentIds();
             $filterDefaultEnvironments = \array_filter($environments, static fn (Environment $e) => match ($defaultEnvironment) {
                 true => $defaultEnvironmentIds->contains($e->getId()),
-                false => !$defaultEnvironmentIds->contains($e->getId())
+                false => !$defaultEnvironmentIds->contains($e->getId()),
             });
 
             if (\count($filterDefaultEnvironments) > 0) {
@@ -60,6 +57,7 @@ class EnvironmentPickerType extends ChoiceType
         parent::buildForm($builder, $options);
     }
 
+    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         $this->environments = [];
@@ -67,9 +65,8 @@ class EnvironmentPickerType extends ChoiceType
 
         $resolver
             ->setDefaults([
-                'choices' => [],
                 'attr' => [
-                    'data-live-search' => false,
+                    'class' => 'select2',
                 ],
                 'choice_attr' => function ($category, $key, $index) {
                     /** @var Environment $dataFieldType */

@@ -20,7 +20,7 @@ class LogRepository extends ServiceEntityRepository
 {
     private readonly Connection $connection;
 
-    private const COLUMN_TYPES = [
+    private const array COLUMN_TYPES = [
         'id' => Types::STRING,
         'created' => Types::DATETIME_MUTABLE,
         'modified' => Types::DATETIME_MUTABLE,
@@ -49,19 +49,19 @@ class LogRepository extends ServiceEntityRepository
     public function insertRecord(array $record): void
     {
         $query = <<<QUERY
-            INSERT INTO log_message (
-                id, created, modified, message, context,
-                level, level_name, channel, extra, formatted,
-                username, impersonator, ouuid
-            ) VALUES (
-                :id, :created, :modified, :message, :context,
-                :level, :level_name, :channel, :extra, :formatted,
-                :username, :impersonator, :ouuid);
-QUERY;
+                        INSERT INTO log_message (
+                            id, created, modified, message, context,
+                            level, level_name, channel, extra, formatted,
+                            username, impersonator, ouuid
+                        ) VALUES (
+                            :id, :created, :modified, :message, :context,
+                            :level, :level_name, :channel, :extra, :formatted,
+                            :username, :impersonator, :ouuid);
+            QUERY;
 
         $record['id'] = Uuid::uuid1()->toString();
-        $record['created'] = $record['datetime'];
-        $record['modified'] = $record['datetime'];
+        $record['created'] = \DateTime::createFromImmutable($record['datetime']);
+        $record['modified'] = \DateTime::createFromImmutable($record['datetime']);
         $record['ouuid'] = $record['context'][EmsFields::LOG_OUUID_FIELD] ?? null;
 
         $stmt = $this->connection->prepare($query);

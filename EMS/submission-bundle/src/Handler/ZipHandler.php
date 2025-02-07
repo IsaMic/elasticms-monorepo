@@ -20,6 +20,7 @@ final class ZipHandler extends AbstractHandler
     {
     }
 
+    #[\Override]
     public function handle(HandleRequestInterface $handleRequest): HandleResponseInterface
     {
         try {
@@ -36,6 +37,11 @@ final class ZipHandler extends AbstractHandler
             }
 
             $zip->close();
+
+            if (!$tempFile->exists()) {
+                throw new \RuntimeException('File not found');
+            }
+
             $handleResponse = new ZipHandleResponse($zipRequest, $tempFile->getContents());
 
             return $this->responseTransformer->transform($handleRequest, $handleResponse);

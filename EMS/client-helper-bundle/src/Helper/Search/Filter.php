@@ -37,7 +37,7 @@ final class Filter
     /** if not all doc contain the filter */
     private bool $optional = false;
     private ?AbstractQuery $queryFilters = null;
-    /** @var string[] */
+    /** @var list<string> */
     private array $queryTypes = [];
 
     private ?AbstractQuery $query = null;
@@ -46,22 +46,22 @@ final class Filter
     /** @var array<mixed>|null */
     private ?array $choices = null;
 
-    private bool|string $dateFormat;
+    private readonly bool|string $dateFormat;
 
-    private const TYPE_TERM = 'term';
-    private const TYPE_TERMS = 'terms';
-    private const TYPE_DATE_RANGE = 'date_range';
-    private const TYPE_DATE_TIME_RANGE = 'datetime_range';
-    private const TYPE_DATE_VERSION = 'date_version';
+    private const string TYPE_TERM = 'term';
+    private const string TYPE_TERMS = 'terms';
+    private const string TYPE_DATE_RANGE = 'date_range';
+    private const string TYPE_DATE_TIME_RANGE = 'datetime_range';
+    private const string TYPE_DATE_VERSION = 'date_version';
 
-    private const TYPES = [
+    private const array TYPES = [
         self::TYPE_TERM,
         self::TYPE_TERMS,
         self::TYPE_DATE_RANGE,
         self::TYPE_DATE_TIME_RANGE,
         self::TYPE_DATE_VERSION,
     ];
-    private string $clause;
+    private readonly string $clause;
 
     /**
      * @param array<mixed> $options
@@ -190,7 +190,7 @@ final class Filter
 
     /**
      * @param array<mixed> $aggregation
-     * @param string[]     $types
+     * @param list<string> $types
      */
     public function handleAggregation(array $aggregation, array $types = [], ?AbstractQuery $queryFilters = null): void
     {

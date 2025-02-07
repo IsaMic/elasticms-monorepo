@@ -9,7 +9,6 @@ use EMS\ClientHelperBundle\Helper\Request\ExceptionHelper;
 use EMS\ClientHelperBundle\Helper\Request\Handler;
 use EMS\CommonBundle\Helper\MimeTypeHelper;
 use EMS\CommonBundle\Storage\Processor\Processor;
-use EMS\Helpers\Standard\Json;
 use Symfony\Component\ErrorHandler\Exception\FlattenException;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -18,30 +17,21 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\HttpKernel;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
-use Twig\Environment;
-use Twig\Error\RuntimeError;
 
-final class RouterController
+final readonly class RouterController
 {
     public function __construct(
-        private readonly Handler $handler,
-        private readonly Environment $templating,
-        private readonly Processor $processor,
-        private readonly CacheHelper $cacheHelper,
-        private readonly ExceptionHelper $exceptionHelper,
-        private readonly HttpKernel $httpKernel)
-    {
+        private Handler $handler,
+        private Processor $processor,
+        private CacheHelper $cacheHelper,
+        private ExceptionHelper $exceptionHelper,
+        private HttpKernel $httpKernel
+    ) {
     }
 
     public function handle(Request $request): Response
     {
-        $result = $this->handler->handle($request);
-
-        try {
-            $response = new Response($this->templating->render($result['template'], $result['context']));
-        } catch (RuntimeError $e) {
-            throw $e->getPrevious() instanceof HttpException ? $e->getPrevious() : $e;
-        }
+        $response = new Response($this->handler->handle($request)->render());
         $this->cacheHelper->makeResponseCacheable($request, $response);
 
         return $response;
@@ -49,13 +39,7 @@ final class RouterController
 
     public function redirect(Request $request): Response
     {
-        $result = $this->handler->handle($request);
-        try {
-            $json = $this->templating->render($result['template'], $result['context']);
-        } catch (RuntimeError $e) {
-            throw $e->getPrevious() instanceof HttpException ? $e->getPrevious() : $e;
-        }
-        $data = Json::decode($json);
+        $data = $this->handler->handle($request)->json();
 
         if (isset($data['controller'])) {
             $path = $data['path'] ?? [];
@@ -79,14 +63,7 @@ final class RouterController
 
     public function asset(Request $request): Response
     {
-        $result = $this->handler->handle($request);
-        try {
-            $json = $this->templating->render($result['template'], $result['context']);
-        } catch (RuntimeError $e) {
-            throw $e->getPrevious() instanceof HttpException ? $e->getPrevious() : $e;
-        }
-
-        $data = \json_decode($json, true, 512, JSON_THROW_ON_ERROR);
+        $data = $this->handler->handle($request)->json();
 
         if (\is_string($data['config'] ?? false)) {
             $response = $this->processor->getResponse($request, $data['hash'], $data['config'], $data['filename'], $data['immutable'] ?? false);
@@ -105,18 +82,7 @@ final class RouterController
 
     public function makeResponse(Request $request): Response
     {
-        $result = $this->handler->handle($request);
-        try {
-            $json = $this->templating->render($result['template'], $result['context']);
-        } catch (RuntimeError $e) {
-            throw $e->getPrevious() instanceof HttpException ? $e->getPrevious() : $e;
-        }
-
-        $data = \json_decode($json, true, 512, JSON_THROW_ON_ERROR);
-
-        if (false === $data) {
-            throw new \RuntimeException('JSON is expected with at least a content field as a string');
-        }
+        $data = $this->handler->handle($request)->json();
 
         if (!\is_string($data['content'] ?? null)) {
             throw new \RuntimeException('JSON requires at least a content field as a string');

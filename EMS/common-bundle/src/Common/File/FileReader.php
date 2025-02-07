@@ -8,22 +8,18 @@ use EMS\CommonBundle\Contracts\File\FileReaderInterface;
 use EMS\Helpers\File\CsvFile;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Reader\Csv;
-use PhpOffice\PhpSpreadsheet\Reader\Html;
-use PhpOffice\PhpSpreadsheet\Reader\Slk;
 
 use function Symfony\Component\String\u;
 
 final class FileReader implements FileReaderInterface
 {
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function getData(string $filename, array $options = []): array
     {
         $reader = IOFactory::createReaderForFile($filename);
 
         $encoding = $options['encoding'] ?? null;
-        if (($reader instanceof Csv || $reader instanceof Html || $reader instanceof Slk) && null !== $encoding) {
+        if ($reader instanceof Csv && null !== $encoding) {
             $reader->setInputEncoding($encoding);
         }
 
@@ -34,9 +30,7 @@ final class FileReader implements FileReaderInterface
         return $reader->load($filename)->getActiveSheet()->toArray();
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function readCells(string $filename, array $options = []): \Generator
     {
         $isCsv = 0 === \strcasecmp(\pathinfo($filename, PATHINFO_EXTENSION), 'csv');
@@ -66,7 +60,7 @@ final class FileReader implements FileReaderInterface
             }
 
             if (!$headings) {
-                $headings = \array_map(static fn ($v, $k) => ('' === u($v)->trim()->toString()) ? \strval($k) : u($v)->trim()->toString(), $row, \array_keys($row));
+                $headings = \array_map(static fn ($v, $k) => ('' === u($v)->trim()->toString()) ? (string) $k : u($v)->trim()->toString(), $row, \array_keys($row));
                 continue;
             }
 

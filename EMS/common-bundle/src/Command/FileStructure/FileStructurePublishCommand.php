@@ -14,37 +14,42 @@ use EMS\CommonBundle\Exception\FileStructureNotSyncException;
 use EMS\CommonBundle\Storage\Archive;
 use EMS\CommonBundle\Storage\StorageManager;
 use EMS\Helpers\Standard\Json;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
+#[AsCommand(
+    name: Commands::FILE_STRUCTURE_PUBLISH,
+    description: 'Publish the file structure of an ElasticMS archive into a S3 bucket',
+    hidden: false
+)]
 class FileStructurePublishCommand extends AbstractCommand
 {
-    protected static $defaultName = Commands::FILE_STRUCTURE_PUBLISH;
     public const ARGUMENT_ARCHIVE_HASH = 'hash';
     public const ARGUMENT_TARGET = 'target';
     public const OPTION_S3_CREDENTIAL = 's3-credential';
     public const OPTION_FORCE = 'force';
     public const OPTION_ADMIN = 'admin';
     private string $target;
-    private ?string $s3Credential;
+    private ?string $s3Credential = null;
     private string $archiveHash;
     private bool $force;
     private FileManagerInterface $fileManager;
 
     public function __construct(
         private readonly AdminHelper $adminHelper,
-        private readonly StorageManager $storageManager
+        private readonly StorageManager $storageManager,
     ) {
         parent::__construct();
     }
 
+    #[\Override]
     protected function configure(): void
     {
         parent::configure();
         $this
-            ->setDescription('Publish the file structure of an ElasticMS archive into a S3 bucket')
             ->addArgument(self::ARGUMENT_ARCHIVE_HASH, InputArgument::REQUIRED, 'Elasticsearch index')
             ->addArgument(self::ARGUMENT_TARGET, InputArgument::REQUIRED, 'Target (S3 bucket)')
             ->addOption(self::OPTION_S3_CREDENTIAL, null, InputOption::VALUE_OPTIONAL, 'S3 credential in a JSON format')
@@ -53,6 +58,7 @@ class FileStructurePublishCommand extends AbstractCommand
         ;
     }
 
+    #[\Override]
     protected function initialize(InputInterface $input, OutputInterface $output): void
     {
         parent::initialize($input, $output);
@@ -67,6 +73,7 @@ class FileStructurePublishCommand extends AbstractCommand
         };
     }
 
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $this->io->title('EMS - File structure - Publish');

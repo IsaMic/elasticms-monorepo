@@ -53,15 +53,17 @@ class MediaLibraryConfig implements ConfigInterface
         public readonly string $fieldPath,
         public readonly string $fieldFolder,
         public readonly string $fieldFile,
-        private readonly array $sort = []
+        private readonly array $sort = [],
     ) {
     }
 
+    #[\Override]
     public function getHash(): string
     {
         return $this->hash;
     }
 
+    #[\Override]
     public function getId(): string
     {
         return $this->id;

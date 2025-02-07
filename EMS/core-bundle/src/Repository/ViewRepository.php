@@ -6,6 +6,7 @@ namespace EMS\CoreBundle\Repository;
 
 use Doctrine\Bundle\DoctrineBundle\Registry;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\ORM\QueryBuilder;
 use EMS\CoreBundle\Entity\ContentType;
 use EMS\CoreBundle\Entity\View;
@@ -14,7 +15,7 @@ use EMS\CoreBundle\Entity\View;
  * @extends ServiceEntityRepository<View>
  *
  * @method View|null find($id)
- * @method View|null findOneBy(array $criteria, array $orderBy = null)
+ * @method View|null findOneBy(mixed[] $criteria, mixed[] $orderBy = null)
  */
 class ViewRepository extends ServiceEntityRepository
 {
@@ -43,7 +44,7 @@ class ViewRepository extends ServiceEntityRepository
             ->setParameter('contentType', $contentType);
         $this->addSearchFilters($qb, $searchValue);
 
-        return \intval($qb->getQuery()->getSingleScalarResult());
+        return (int) $qb->getQuery()->getSingleScalarResult();
     }
 
     public function create(View $view): void
@@ -64,7 +65,7 @@ class ViewRepository extends ServiceEntityRepository
     public function getByIds(string ...$ids): array
     {
         $qb = $this->createQueryBuilder('v');
-        $qb->andWhere('v.id IN (:ids)')->setParameter('ids', $ids);
+        $qb->andWhere('v.id IN (:ids)')->setParameter('ids', $ids, ArrayParameterType::INTEGER);
 
         return $qb->getQuery()->getResult();
     }

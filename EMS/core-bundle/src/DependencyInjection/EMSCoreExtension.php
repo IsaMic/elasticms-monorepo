@@ -16,17 +16,18 @@ use Symfony\Component\HttpKernel\DependencyInjection\Extension;
 
 class EMSCoreExtension extends Extension implements PrependExtensionInterface
 {
-    final public const TRANS_DOMAIN = 'EMSCoreBundle';
+    final public const string TRANS_DOMAIN = 'EMSCoreBundle';
 
     /**
      * @param array<mixed> $configs
      */
+    #[\Override]
     public function load(array $configs, ContainerBuilder $container): void
     {
         $configuration = new Configuration();
         $config = $this->processConfiguration($configuration, $configs);
 
-        $xmlLoader = new XmlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
+        $xmlLoader = new XmlFileLoader($container, new FileLocator(__DIR__.'/../../config'));
         $xmlLoader->load('command.xml');
         $xmlLoader->load('contracts.xml');
         $xmlLoader->load('controllers.xml');
@@ -74,6 +75,7 @@ class EMSCoreExtension extends Extension implements PrependExtensionInterface
         $container->setParameter('ems_core.url_user', $config['url_user']);
         $container->setParameter('ems_core.custom_user_options_form', $config['custom_user_options_form']);
         $container->setParameter('ems_core.template_namespace', $config['template_namespace']);
+        $container->setParameter('ems_core.dynamic_mapping', $config['dynamic_mapping']);
         $container->setParameter('ems_core.image_max_size', $config['image_max_size']);
 
         $container->setParameter('ems_core.security.firewall.core', $config['security']['firewall']['core']);
@@ -83,6 +85,7 @@ class EMSCoreExtension extends Extension implements PrependExtensionInterface
         $container->setParameter('ems_core.security.ldap.config', $config['ldap']);
     }
 
+    #[\Override]
     public function prepend(ContainerBuilder $container): void
     {
         $bundles = $container->getParameter('kernel.bundles');

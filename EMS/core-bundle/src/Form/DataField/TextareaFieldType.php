@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EMS\CoreBundle\Form\DataField;
 
 use EMS\CoreBundle\Entity\DataField;
@@ -21,39 +23,43 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  */
 class TextareaFieldType extends DataFieldType
 {
+    #[\Override]
     public function getLabel(): string
     {
         return 'Textarea field';
     }
 
+    #[\Override]
     public static function getIcon(): string
     {
         return 'fa fa-edit';
     }
 
     /**
-     * @param FormBuilderInterface<FormBuilderInterface> $builder
-     * @param array<string, mixed>                       $options
+     * @param FormBuilderInterface<mixed> $builder
+     * @param array<string, mixed>        $options
      */
+    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         /** @var FieldType $fieldType */
         $fieldType = $builder->getOptions()['metadata'];
         $builder->add('value', TextareaType::class, [
-                'attr' => [
-                        'rows' => $options['rows'],
-                        'placeholder' => $options['placeholder'],
-                ],
-                'label' => (null != $options['label'] ? $options['label'] : $fieldType->getName()),
-                'required' => false,
-                'disabled' => $this->isDisabled($options),
+            'attr' => [
+                'rows' => $options['rows'],
+                'placeholder' => $options['placeholder'],
+            ],
+            'label' => (null != $options['label'] ? $options['label'] : $fieldType->getName()),
+            'required' => false,
+            'disabled' => $this->isDisabled($options),
         ]);
     }
 
     /**
-     * @param FormInterface<FormInterface> $form
-     * @param array<string, mixed>         $options
+     * @param FormInterface<mixed> $form
+     * @param array<string, mixed> $options
      */
+    #[\Override]
     public function buildView(FormView $view, FormInterface $form, array $options): void
     {
         /* get options for twig context */
@@ -61,6 +67,7 @@ class TextareaFieldType extends DataFieldType
         $view->vars['icon'] = $options['icon'];
     }
 
+    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         /* set the default option value for this kind of compound field */
@@ -70,9 +77,7 @@ class TextareaFieldType extends DataFieldType
         $resolver->setDefault('placeholder', null);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function buildOptionsForm(FormBuilderInterface $builder, array $options): void
     {
         parent::buildOptionsForm($builder, $options);
@@ -84,20 +89,19 @@ class TextareaFieldType extends DataFieldType
                 ->add('copy_to', TextType::class, ['required' => false]);
         }
         $optionsForm->get('displayOptions')->add('rows', IntegerType::class, [
-                'required' => false,
+            'required' => false,
         ])->add('placeholder', TextareaType::class, [
             'required' => false,
         ]);
     }
 
+    #[\Override]
     public function getBlockPrefix(): string
     {
         return 'bypassdatafield';
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    #[\Override]
     public function viewTransform(DataField $dataField)
     {
         $out = parent::viewTransform($dataField);
@@ -106,10 +110,9 @@ class TextareaFieldType extends DataFieldType
     }
 
     /**
-     * {@inheritDoc}
-     *
      * @param array<mixed> $data
      */
+    #[\Override]
     public function reverseViewTransform($data, FieldType $fieldType): DataField
     {
         $value = $data['value'];

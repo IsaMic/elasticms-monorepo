@@ -27,11 +27,12 @@ class ContentTypeViewDataTableType extends AbstractEntityTableType
     public function __construct(
         ViewManager $entityService,
         private readonly ContentTypeService $contentTypeService,
-        private readonly string $templateNamespace
+        private readonly string $templateNamespace,
     ) {
         parent::__construct($entityService);
     }
 
+    #[\Override]
     public function build(EntityTable $table): void
     {
         /** @var ContentType $contentType */
@@ -40,15 +41,19 @@ class ContentTypeViewDataTableType extends AbstractEntityTableType
         $this->addColumnsOrderLabelName($table);
         $table->getColumnByName('label')?->setItemIconCallback(fn (View $view) => $view->getIcon());
 
-        $table->addColumnDefinition(new TemplateBlockTableColumn(
-            label: t('field.type', [], 'emsco-core'),
-            blockName: 'contentTypeViewType',
-            template: "@$this->templateNamespace/datatable/template_block_columns.html.twig")
+        $table->addColumnDefinition(
+            new TemplateBlockTableColumn(
+                label: t('field.type', [], 'emsco-core'),
+                blockName: 'contentTypeViewType',
+                template: "@$this->templateNamespace/datatable/template_block_columns.html.twig"
+            )
         );
-        $table->addColumnDefinition(new TemplateBlockTableColumn(
-            label: t('field.definition', [], 'emsco-core'),
-            blockName: 'contentTypeViewDefinition',
-            template: "@$this->templateNamespace/datatable/template_block_columns.html.twig")
+        $table->addColumnDefinition(
+            new TemplateBlockTableColumn(
+                label: t('field.definition', [], 'emsco-core'),
+                blockName: 'contentTypeViewDefinition',
+                template: "@$this->templateNamespace/datatable/template_block_columns.html.twig"
+            )
         );
 
         $table->addColumnDefinition(new BoolTableColumn(t('field.public_access', [], 'emsco-core'), 'public'));
@@ -81,16 +86,19 @@ class ContentTypeViewDataTableType extends AbstractEntityTableType
             ->addTableActionDelete($table, 'content_type_view');
     }
 
+    #[\Override]
     public function getRoles(): array
     {
         return [Roles::ROLE_ADMIN];
     }
 
+    #[\Override]
     public function getContext(array $options): ContentType
     {
         return $this->contentTypeService->giveByName($options['content_type_name']);
     }
 
+    #[\Override]
     public function configureOptions(OptionsResolver $optionsResolver): void
     {
         $optionsResolver->setRequired(['content_type_name']);
