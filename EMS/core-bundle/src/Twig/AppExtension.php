@@ -231,6 +231,7 @@ class AppExtension extends AbstractExtension
             new TwigFilter('emsco_asset_meta', [DataExtractorRuntime::class, 'assetMeta']),
             new TwigFilter('emsco_get', $this->get(...)),
             new TwigFilter('emsco_get_content_type', [ContentTypeRuntime::class, 'getContentType']),
+            new TwigFilter('emsco_get_file_object', $this->getFileObject(...)),
             new TwigFilter('url_generator', Encoder::webalize(...), [
                 'deprecation_info' => new DeprecatedCallableInfo('elasticms/core-bundle', '5.0.0', 'ems_slug', 'elasticms/common-bundle', '5.17.1'),
             ]),
@@ -390,6 +391,14 @@ class AppExtension extends AbstractExtension
     public function getFile(string $hash): ?string
     {
         return $this->fileService->getFile($hash);
+    }
+
+    /**
+     * @return array{sha1: string, _hash: string, filesize: int, _size: int, filename: string, _name: string, mimetype: string, _type: string, _algo: string}
+     */
+    public function getFileObject(string $hash, ?string $filename = null, ?string $type = null): array
+    {
+        return $this->fileService->getFileObject($hash, $filename, $type);
     }
 
     /**
@@ -1056,7 +1065,7 @@ class AppExtension extends AbstractExtension
         $label = \sprintf('<i class="%s"></i>', $contentType->getIcon() ?? 'fa fa-book');
 
         try {
-            $document = $this->searchService->getDocument($contentType, $emsLink->getOuuid());
+            $document = $this->searchService->findDocument($contentType, $emsLink->getOuuid());
             $emsLink = $document->getEmsLink(); // versioned documents
             $emsSource = $document->getEMSSource();
             $label .= \sprintf('<span>%s</span>', \htmlentities($this->revisionService->display($document)));

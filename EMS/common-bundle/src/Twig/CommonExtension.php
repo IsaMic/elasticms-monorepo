@@ -76,6 +76,7 @@ class CommonExtension extends AbstractExtension
             new TwigFilter('ems_stringify', Converter::stringify(...)),
             new TwigFilter('ems_temp_file', [AssetRuntime::class, 'temporaryFile']),
             new TwigFilter('ems_asset_average_color', [AssetRuntime::class, 'assetAverageColor'], ['is_safe' => ['html']]),
+            new TwigFilter('ems_get_file_object', [AssetRuntime::class, 'getFileObject']),
             new TwigFilter('ems_replace_regex', [TextRuntime::class, 'replaceRegex'], ['is_safe' => ['html']]),
             new TwigFilter('ems_dom_crawler', [TextRuntime::class, 'domCrawler']),
             new TwigFilter('ems_base64_encode', Base64::encode(...)),
@@ -95,6 +96,7 @@ class CommonExtension extends AbstractExtension
             new TwigFilter('ems_luma', $this->relativeLuminance(...)),
             new TwigFilter('ems_contrast_ratio', $this->contrastRatio(...)),
             new TwigFilter('ems_first_in_array', $this->firstInArray(...)),
+            new TwigFilter('ems_url_decode', [TextRuntime::class, 'urlDecode']),
             new TwigFilter('ems_webalize', [Encoder::class, 'webalizeForUsers'], [
                 'deprecation_info' => new DeprecatedCallableInfo('elasticms/common-bundle', '5.17.1', 'ems_slug'),
             ]),

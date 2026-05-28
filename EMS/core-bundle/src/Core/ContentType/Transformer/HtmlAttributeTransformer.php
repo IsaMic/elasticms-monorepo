@@ -17,15 +17,15 @@ final class HtmlAttributeTransformer extends BaseHtmlTransformer
     }
 
     #[\Override]
-    public function supports(string $class): bool
+    public function supports(string $fieldTypeClass): bool
     {
-        return WysiwygFieldType::class === $class;
+        return WysiwygFieldType::class === $fieldTypeClass;
     }
 
     #[\Override]
     public function transform(TransformContext $context): void
     {
-        if (null == $data = $context->getData()) {
+        if (null === $context->getData()) {
             return;
         }
 
@@ -70,6 +70,9 @@ final class HtmlAttributeTransformer extends BaseHtmlTransformer
 
         foreach ($this->crawl($crawler, $xpath) as $element) {
             $element->removeAttribute($attribute);
+            if (0 === $element->attributes->length) {
+                $this->unwrap($element);
+            }
             ++$result;
         }
 
@@ -120,6 +123,9 @@ final class HtmlAttributeTransformer extends BaseHtmlTransformer
 
             if (0 === \count($filter)) {
                 $element->removeAttribute('class');
+                if (0 === $element->attributes->length) {
+                    $this->unwrap($element);
+                }
                 continue;
             }
 
@@ -154,6 +160,9 @@ final class HtmlAttributeTransformer extends BaseHtmlTransformer
 
             if (0 === \count($filter)) {
                 $element->removeAttribute('style');
+                if (0 === $element->attributes->length) {
+                    $this->unwrap($element);
+                }
                 continue;
             }
 
